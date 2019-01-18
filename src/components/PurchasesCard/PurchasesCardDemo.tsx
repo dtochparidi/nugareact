@@ -73,6 +73,7 @@ export default class PurchasesCardDemo extends React.Component<IProps, IState> {
           value="Add a purchase"
           style={{
             background: "lightgrey",
+            outline: "none",
             position: "fixed",
             right: "10px",
             top: "10px"
