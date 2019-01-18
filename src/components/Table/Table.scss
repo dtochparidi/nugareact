@@ -1,0 +1,31 @@
+@import "src/common/variables.scss";
+
+.table {
+  $horizontal-gap: $padding-normal;
+  $vertical-gap: $padding-normal / 2;
+
+  --columns-count: 0;
+
+  display: grid;
+  grid-template-columns: repeat(var(--columns-count), min-content);
+  grid-auto-rows: min-content;
+  gap: $vertical-gap $horizontal-gap;
+
+  .columnName {
+    border-bottom: solid lightgrey 1px;
+    margin-right: -1 * $horizontal-gap;
+    padding-right: $horizontal-gap;
+    padding-bottom: $vertical-gap;
+
+    &.last {
+      margin-right: 0;
+      padding-right: 0;
+    }
+  }
+
+  .value {
+    white-space: nowrap;
+
+    transition: max-height 0.25s ease-in;
+  }
+}

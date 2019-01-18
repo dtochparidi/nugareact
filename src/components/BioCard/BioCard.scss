@@ -1,0 +1,68 @@
+@import "src/common/variables.scss";
+@import "src/common/fonts.scss";
+
+.bioCard {
+  $columns-gap: 45px;
+  $rows-gap: 10px;
+  $menu-button-size: 13px;
+  $avatar-size: 90px;
+
+  position: relative;
+  padding-bottom: $padding-large * 3;
+
+  .information {
+    display: grid;
+
+    width: 50%;
+
+    grid-template-columns: min-content auto;
+    grid-column-gap: $columns-gap;
+    grid-row-gap: $rows-gap;
+
+    .prop {
+      @extend .font-primary-semibold;
+
+      white-space: nowrap;
+    }
+
+    .info {
+      .date {
+        @extend .font-secondary-middle;
+      }
+
+      a {
+        color: #1200ff;
+        text-decoration: none;
+      }
+
+      a:visited {
+        color: #1200ff;
+        text-decoration: none;
+      }
+    }
+  }
+
+  $right-block-margin: 20px;
+  .menuButton {
+    position: absolute;
+    right: $right-block-margin;
+    top: $right-block-margin;
+
+    width: $menu-button-size;
+    height: $menu-button-size;
+
+    background: lightgrey;
+  }
+
+  .avatar {
+    position: absolute;
+    right: $right-block-margin + $menu-button-size + $padding-normal;
+    top: $right-block-margin;
+
+    width: $avatar-size;
+    height: $avatar-size;
+    border-radius: 50%;
+
+    background: lightgrey;
+  }
+}

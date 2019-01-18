@@ -1,0 +1,17 @@
+@import "src/common/variables.scss";
+@import "src/common/decorations.scss";
+@import "src/common/fonts.scss";
+
+.card {
+  @extend .light-box-shadow;
+
+  display: inline-block;
+  padding: $padding-large;
+  background: white;
+
+  .head {
+    @extend .font-middle-semibold;
+
+    margin-bottom: $padding-large;
+  }
+}

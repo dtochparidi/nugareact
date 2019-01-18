@@ -1,0 +1,12 @@
+@import "src/common/variables.scss";
+@import "src/common/fonts.scss";
+@import "src/common/colors.scss";
+
+body {
+  @extend .font-primary;
+
+  margin: 0;
+  padding: $padding-normal;
+
+  background: $color-body-background;
+}
