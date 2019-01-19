@@ -49,21 +49,28 @@ export default class BioCard extends React.Component<IBioCardProps, any> {
 
     return (
       <Card cardClass="bioCard">
-        <div className="head">
-          {this.props.personData.name} {this.props.personData.surname}
+        <div className="container">
+          <div className="leftBlock">
+            <div className="head">
+              {this.props.personData.name} {this.props.personData.surname}
+            </div>
+            <div className="information">
+              {visibleInfoFilter.map(entrie => [
+                <span className="prop" key={`${entrie[0]}_prop`}>
+                  {entrie[1]}
+                </span>,
+                <span className={`info ${entrie[0]}`} key={`${entrie[0]}_info`}>
+                  {entrie[2](this.props.personData[entrie[0]])}
+                </span>
+              ])}
+            </div>
+          </div>
+
+          <div className="rightBlock">
+            <div className="avatar" />
+            <div className="menuButton" />
+          </div>
         </div>
-        <div className="information">
-          {visibleInfoFilter.map(entrie => [
-            <span className="prop" key={`${entrie[0]}_prop`}>
-              {entrie[1]}
-            </span>,
-            <span className="info" key={`${entrie[0]}_info`}>
-              {entrie[2](this.props.personData[entrie[0]])}
-            </span>
-          ])}
-        </div>
-        <div className="menuButton" />
-        <div className="avatar" />
       </Card>
     );
   }

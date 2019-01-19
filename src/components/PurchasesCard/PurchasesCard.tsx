@@ -38,13 +38,23 @@ export default class Purchases extends React.Component<IProps, object> {
 
     const transformedData: Array<
       Array<ITableElement<any>>
-    > = this.props.purchases.map(p =>
-      Object.entries(p).map(entrie => ({
-        name: entrie[0],
-        toString: (val: any) => transormationMap[entrie[0]](val),
-        value: entrie[1]
-      }))
-    );
+    > = this.props.purchases
+      .map(p =>
+        Object.entries(p).map(entrie => ({
+          name: entrie[0],
+          toString: (val: any) => transormationMap[entrie[0]](val),
+          value: entrie[1]
+        }))
+      )
+      .sort(
+        (row1, row2) =>
+          (row1.find(elem => elem.name === "date") as ITableElement<
+            moment.Moment
+          >).value.valueOf() -
+          (row2.find(elem => elem.name === "date") as ITableElement<
+            moment.Moment
+          >).value.valueOf()
+      );
 
     return (
       <Card cardClass="purchasesCard">

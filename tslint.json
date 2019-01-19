@@ -8,9 +8,11 @@
     ]
   },
   "rules": {
-    "no-console": false
+    "no-console": false,
+    "curly": [true, "as-needed"]
   },
   "jsRules": {
-    "no-console": false
+    "no-console": false,
+    "curly": [true, "as-needed"]
   }
 }

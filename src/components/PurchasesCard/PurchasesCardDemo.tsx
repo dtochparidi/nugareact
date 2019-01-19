@@ -3,6 +3,7 @@ import * as React from "react";
 import IPurchase from "src/interfaces/IPurchase";
 
 import PurchasesCard from ".";
+import Button from "../Button";
 
 function takeRandom(array: any[]) {
   return array[Math.floor(Math.random() * array.length)];
@@ -68,17 +69,10 @@ export default class PurchasesCardDemo extends React.Component<IProps, IState> {
   public render() {
     return (
       <div>
-        <input
-          type="button"
+        <Button
           value="Add a purchase"
-          style={{
-            background: "lightgrey",
-            outline: "none",
-            position: "fixed",
-            right: "10px",
-            top: "10px"
-          }}
           onClick={this.addPurchase}
+          style={{ position: "absolute", top: "10px", right: "10px" }}
         />
         <PurchasesCard purchases={this.state.purchases} />
       </div>

@@ -5,9 +5,9 @@
 .card {
   @extend .light-box-shadow;
 
-  display: inline-block;
   padding: $padding-large;
   background: white;
+  width: max-content;
 
   .head {
     @extend .font-middle-semibold;

@@ -7,62 +7,73 @@
   $menu-button-size: 13px;
   $avatar-size: 90px;
 
-  position: relative;
+  max-width: max-content;
+  min-width: min-content;
+  width: initial;
+
   padding-bottom: $padding-large * 3;
 
-  .information {
-    display: grid;
+  .container {
+    display: flex;
+    justify-content: space-between;
 
-    width: 50%;
+    .leftBlock {
+      margin-right: $padding-large;
 
-    grid-template-columns: min-content auto;
-    grid-column-gap: $columns-gap;
-    grid-row-gap: $rows-gap;
+      .information {
+        display: grid;
 
-    .prop {
-      @extend .font-primary-semibold;
+        // width: 50%;
 
-      white-space: nowrap;
+        grid-template-columns: min-content auto;
+        grid-column-gap: $columns-gap;
+        grid-row-gap: $rows-gap;
+
+        .prop {
+          @extend .font-primary-semibold;
+
+          white-space: nowrap;
+        }
+
+        .info {
+          &.birthdate .date {
+            @extend .font-secondary-middle;
+          }
+
+          a {
+            color: #1200ff;
+            text-decoration: none;
+          }
+
+          a:visited {
+            color: #1200ff;
+            text-decoration: none;
+          }
+        }
+      }
     }
 
-    .info {
-      .date {
-        @extend .font-secondary-middle;
+    .rightBlock {
+      display: flex;
+      align-self: flex-start;
+
+      .menuButton {
+        display: inline-block;
+
+        width: $menu-button-size;
+        height: $menu-button-size;
+
+        background: lightgrey;
       }
 
-      a {
-        color: #1200ff;
-        text-decoration: none;
-      }
+      .avatar {
+        display: inline-block;
+        width: $avatar-size;
+        height: $avatar-size;
+        border-radius: 50%;
 
-      a:visited {
-        color: #1200ff;
-        text-decoration: none;
+        background: lightgrey;
       }
     }
-  }
-
-  $right-block-margin: 20px;
-  .menuButton {
-    position: absolute;
-    right: $right-block-margin;
-    top: $right-block-margin;
-
-    width: $menu-button-size;
-    height: $menu-button-size;
-
-    background: lightgrey;
-  }
-
-  .avatar {
-    position: absolute;
-    right: $right-block-margin + $menu-button-size + $padding-normal;
-    top: $right-block-margin;
-
-    width: $avatar-size;
-    height: $avatar-size;
-    border-radius: 50%;
-
-    background: lightgrey;
   }
 }
