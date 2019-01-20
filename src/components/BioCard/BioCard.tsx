@@ -1,69 +1,79 @@
-import * as moment from "moment";
-import * as React from "react";
-import { IPerson } from "src/interfaces/IPerson";
-import Card from "../Card";
 import "./BioCard.scss";
 
+import { observer } from "mobx-react";
+import MobxReactForm from "mobx-react-form";
+import * as React from "react";
+import { IPerson } from "src/interfaces/IPerson";
+import { IUpdatable } from "src/interfaces/IUpdatable";
+
+import validatorjs from "validatorjs";
+
+const plugins = { dvr: validatorjs };
+
+import Card from "../Card";
+
 export interface IBioCardProps {
-  personData: IPerson;
-  children?: React.ReactNode;
+  personData: IUpdatable<IPerson>;
 }
 
+export interface IState {
+  personData: IPerson;
+}
+
+@observer
 export default class BioCard extends React.Component<IBioCardProps, any> {
+  public onUpdateHandler: any;
+  public fieldsMap: {
+    [s: string]: { label: string; placeholder: string; rules: string };
+  } = {
+    address: {
+      label: "Адрес",
+      placeholder: "Введите адрес",
+      rules: "required|string"
+    },
+    averageBill: {
+      label: "Средний чек",
+      placeholder: "Введите адрес",
+      rules: "required|string"
+    },
+    birthday: {
+      label: "Возраст",
+      placeholder: "Введите адрес",
+      rules: "required|string"
+    },
+    friends: {
+      label: "Друзья",
+      placeholder: "Введите адрес",
+      rules: "required|string"
+    },
+    invitedBy: {
+      label: "Пригласил/а",
+      placeholder: "Введите адрес",
+      rules: "required|string"
+    },
+    rate: {
+      label: "Рейтинг",
+      placeholder: "Введите адрес",
+      rules: "required|string"
+    }
+  };
+
   constructor(props: IBioCardProps) {
     super(props);
+
+    this.onUpdateHandler = this.props.personData.update.bind(this);
   }
 
   public render() {
-    const visibleInfoFilter: Array<[string, string, (value: any) => string]> = [
-      ["address", "Адрес", val => val],
-      ["phone", "Телефон", val => <a href="">{val}</a>],
-      [
-        "birthdate",
-        "Возраст",
-        (val: moment.Moment) => [
-          <span className="age" key="age">
-            {moment().diff(val, "year")} лет
-          </span>,
-          " ",
-          <span className="date" key="date">
-            {val.format("DD.MM.gg")}
-          </span>
-        ]
-      ],
-      ["rate", "Рейтинг", val => val.toString()],
-      [
-        "friends",
-        "Друзья",
-        (val: string[]) =>
-          val.map((friend, index, array) => [
-            <a href="" key={friend}>
-              {friend}
-            </a>,
-            index === array.length - 1 ? null : ", "
-          ])
-      ],
-      ["averageBill", "Средний чек", val => val],
-      ["invitedBy", "Пригласил/а", val => <a href="">{val}</a>]
-    ];
-
     return (
       <Card cardClass="bioCard">
         <div className="container">
           <div className="leftBlock">
             <div className="head">
-              {this.props.personData.name} {this.props.personData.surname}
+              {this.props.personData.target.name}{" "}
+              {this.props.personData.target.surname}
             </div>
-            <div className="information">
-              {visibleInfoFilter.map(entrie => [
-                <span className="prop" key={`${entrie[0]}_prop`}>
-                  {entrie[1]}
-                </span>,
-                <span className={`info ${entrie[0]}`} key={`${entrie[0]}_info`}>
-                  {entrie[2](this.props.personData[entrie[0]])}
-                </span>
-              ])}
-            </div>
+            <div className="information">{new MobxReactForm()}</div>
           </div>
 
           <div className="rightBlock">

@@ -19,6 +19,13 @@ const personData: IPerson = {
 };
 
 it("renders without crashing", () => {
-  const component = enzyme.render(<BioCard personData={personData} />);
+  const component = enzyme.render(
+    <BioCard
+      personData={{
+        target: personData,
+        update: () => null
+      }}
+    />
+  );
   expect(component);
 });

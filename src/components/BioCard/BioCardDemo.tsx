@@ -1,6 +1,7 @@
 import * as moment from "moment";
 import * as React from "react";
 import { IPerson } from "src/interfaces/IPerson";
+import { IUpdatable } from "src/interfaces/IUpdatable";
 import BioCard from ".";
 
 const personData: IPerson = {
@@ -17,6 +18,11 @@ const personData: IPerson = {
   surname: "Долматов"
 };
 
+const personDataUp: IUpdatable<IPerson> = {
+  target: personData,
+  update: () => null
+};
+
 export default function BioCardDemo() {
-  return <BioCard personData={personData} />;
+  return <BioCard personData={personDataUp} />;
 }
