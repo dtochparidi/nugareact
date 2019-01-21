@@ -78,7 +78,7 @@ export default class InformationForm extends React.Component<IProps> {
           <Button
             onClick={form.onSubmit}
             value="Сохранить"
-            style={{ margin: "1em" }}
+            style={{ margin: "1em", marginLeft: 0 }}
           />
         </form>
       </div>

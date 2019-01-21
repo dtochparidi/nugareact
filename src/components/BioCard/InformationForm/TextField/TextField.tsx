@@ -22,6 +22,9 @@ export default class TextField extends React.Component<IProps> {
 
   public componentDidMount() {
     this.onUpdateInputWidth();
+
+    // dublicate it next tick
+    setTimeout(() => this.onUpdateInputWidth());
   }
 
   public render() {
