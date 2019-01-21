@@ -1,7 +1,7 @@
 import * as moment from "moment";
 import * as React from "react";
-import IPurchase from "src/interfaces/IPurchase";
-import ITableElement from "src/interfaces/ITableElement";
+import IPurchase from "../../interfaces/IPurchase";
+import ITableElement from "../../interfaces/ITableElement";
 import Card from "../Card";
 import Table from "../Table";
 import "./PurchasesCard.scss";

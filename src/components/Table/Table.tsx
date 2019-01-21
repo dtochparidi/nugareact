@@ -1,5 +1,5 @@
 import * as React from "react";
-import ITableElement from "src/interfaces/ITableElement";
+import ITableElement from "../../interfaces/ITableElement";
 import "./Table.scss";
 
 export interface IProps {

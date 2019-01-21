@@ -16,7 +16,7 @@ const mockUser: IPerson = {
   invitedBy: "Ален Евсеев",
   name: "Алексей",
   patronymic: "",
-  phone: "+371 28481181",
+  phone: "+37128481181",
   rate: 20,
   surname: "Долматов"
 };
@@ -34,7 +34,7 @@ class App extends React.Component {
       <BioCard
         personData={{
           target: appStore.currentUser as IPerson,
-          update: (k: string, v: any) => appStore.updateCurrentUserProp(k, v)
+          update: arr => appStore.updateCurrentUserProp(arr)
         }}
       />
     );

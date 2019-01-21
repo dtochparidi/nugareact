@@ -1,4 +1,4 @@
 export interface IUpdatable<T> {
   target: T;
-  update: (key: string, value: any) => void;
+  update: (arr: Array<[string, any]>) => void;
 }

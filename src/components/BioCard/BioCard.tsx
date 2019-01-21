@@ -1,16 +1,20 @@
-import "./BioCard.scss";
-
 import { observer } from "mobx-react";
 import MobxReactForm from "mobx-react-form";
+import { Form } from "mobx-react-form";
 import * as React from "react";
-import { IPerson } from "src/interfaces/IPerson";
-import { IUpdatable } from "src/interfaces/IUpdatable";
+import { IPerson } from "../../interfaces/IPerson";
+import { IUpdatable } from "../../interfaces/IUpdatable";
 
-import validatorjs from "validatorjs";
+import * as validatorjs from "validatorjs";
+
+validatorjs.useLang("ru");
 
 const plugins = { dvr: validatorjs };
 
+import * as moment from "moment";
 import Card from "../Card";
+import "./BioCard.scss";
+import InformationForm from "./InformationForm";
 
 export interface IBioCardProps {
   personData: IUpdatable<IPerson>;
@@ -23,57 +27,98 @@ export interface IState {
 @observer
 export default class BioCard extends React.Component<IBioCardProps, any> {
   public onUpdateHandler: any;
-  public fieldsMap: {
-    [s: string]: { label: string; placeholder: string; rules: string };
-  } = {
-    address: {
-      label: "Адрес",
-      placeholder: "Введите адрес",
-      rules: "required|string"
-    },
-    averageBill: {
-      label: "Средний чек",
-      placeholder: "Введите адрес",
-      rules: "required|string"
-    },
-    birthday: {
-      label: "Возраст",
-      placeholder: "Введите адрес",
-      rules: "required|string"
-    },
-    friends: {
-      label: "Друзья",
-      placeholder: "Введите адрес",
-      rules: "required|string"
-    },
-    invitedBy: {
-      label: "Пригласил/а",
-      placeholder: "Введите адрес",
-      rules: "required|string"
-    },
-    rate: {
-      label: "Рейтинг",
-      placeholder: "Введите адрес",
-      rules: "required|string"
-    }
+  public fields: {
+    [s: string]: any;
   };
+  public hooks: {};
 
   constructor(props: IBioCardProps) {
     super(props);
 
     this.onUpdateHandler = this.props.personData.update.bind(this);
+
+    const personData = this.props.personData.target;
+    this.hooks = {
+      onSuccess: (form: Form) => {
+        const values: { [s: string]: any } = form.values();
+        this.onUpdateHandler(Object.entries(values));
+      },
+      onError(form: Form) {
+        alert("Form has errors!");
+        // get all form errors
+        console.log("All form errors", form.errors());
+      }
+    };
+
+    this.fields = {
+      address: {
+        label: "Адрес",
+        placeholder: "Введите адрес",
+        rules: "required|string",
+        value: personData.address
+      },
+      averageBill: {
+        label: "Средний чек",
+        placeholder: "Введите адрес",
+        value: personData.averageBill
+      },
+      birthday: {
+        input: (value: moment.Moment) => {
+          if (value.format) return value.format("DD.MM.gggg");
+          else return value;
+        },
+        label: "Возраст",
+        output: (value: string) => {
+          const transformed = value.replace(/\./g, "-");
+          const date = moment(transformed, "DD-MM-YYYY");
+          return date;
+        },
+        placeholder: "Введите дату рождения",
+        value: personData.birthdate
+      },
+      friends: {
+        label: "Друзья",
+        value: personData.friends
+      },
+      invitedBy: {
+        label: "Пригласил/а",
+        value: personData.invitedBy
+      },
+      name: {
+        placeholder: "Введите имя",
+        rules: "required|string|regex:/^[a-zA-Zа-яА-Я '.-]*$/",
+        value: personData.name
+      },
+      phone: {
+        label: "Телефон",
+        placeholder: "Введите номер телефона",
+        rules:
+          "required|string|regex:/^[+]*[(]{0,1}[0-9]{1,3}[)]{0,1}[-s./0-9]*$/g",
+        value: personData.phone
+      },
+      rate: {
+        label: "Рейтинг",
+        value: personData.rate
+      },
+      surname: {
+        placeholder: "Введите фамилию",
+        rules: "required|string|regex:/^[a-zA-Zа-яА-Я '.-]*$/",
+        value: personData.surname
+      }
+    };
   }
 
   public render() {
+    const form = new MobxReactForm(
+      { fields: this.fields },
+      { plugins, hooks: this.hooks }
+    );
+
     return (
       <Card cardClass="bioCard">
         <div className="container">
           <div className="leftBlock">
-            <div className="head">
-              {this.props.personData.target.name}{" "}
-              {this.props.personData.target.surname}
-            </div>
-            <div className="information">{new MobxReactForm()}</div>
+            <InformationForm form={form} />
           </div>
 
           <div className="rightBlock">

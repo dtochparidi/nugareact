@@ -1,5 +1,5 @@
-import { action, configure, decorate, observable } from "mobx";
-import { IPerson } from "src/interfaces/IPerson";
+import { action, autorun, configure, decorate, observable, toJS } from "mobx";
+import { IPerson } from "../interfaces/IPerson";
 
 configure({ enforceActions: "observed" });
 
@@ -12,8 +12,11 @@ export class AppStore {
   }
 
   @action
-  public updateCurrentUserProp(propKey: string, propValue: any) {
-    if (this.currentUser) this.currentUser[propKey] = propValue;
+  public updateCurrentUserProp(arr: Array<[string, any]>) {
+    if (this.currentUser) {
+      const user = this.currentUser as IPerson;
+      arr.forEach(entrie => (user[entrie[0]] = entrie[1]));
+    }
   }
 }
 
@@ -22,5 +25,12 @@ decorate(AppStore, {
 });
 
 const appStore = new AppStore();
+
+autorun(r => {
+  if (appStore.currentUser) {
+    const obj = Object.entries(toJS(appStore.currentUser));
+    console.table(obj);
+  }
+});
 
 export default appStore;

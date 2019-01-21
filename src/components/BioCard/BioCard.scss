@@ -3,7 +3,7 @@
 
 .bioCard {
   $columns-gap: 45px;
-  $rows-gap: 10px;
+  $rows-gap: 5px;
   $menu-button-size: 13px;
   $avatar-size: 90px;
 
@@ -34,20 +34,45 @@
 
           white-space: nowrap;
         }
+      }
+
+      .head {
+        display: flex;
+        align-items: flex-start;
 
         .info {
-          &.birthdate .date {
-            @extend .font-secondary-middle;
-          }
+          display: inline-block;
+        }
+      }
 
-          a {
-            color: #1200ff;
-            text-decoration: none;
-          }
+      .info {
+        &.birthday .date {
+          @extend .font-secondary-middle;
+        }
 
-          a:visited {
-            color: #1200ff;
-            text-decoration: none;
+        .linked {
+          color: #1200ff;
+          text-decoration: none;
+        }
+
+        .error {
+          @extend .font-error-middle;
+          margin: 0;
+        }
+
+        input {
+          border: none;
+          outline: none;
+          border-bottom: solid transparent 1px;
+          background-color: transparent !important;
+          font: inherit;
+
+          &:focus,
+          &:placeholder-shown {
+            border-bottom-color: lightgray;
+          }
+          &.inputError {
+            border-bottom-color: darkred;
           }
         }
       }

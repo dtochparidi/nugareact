@@ -1,7 +1,7 @@
 import * as enzyme from "enzyme";
 import * as moment from "moment";
 import * as React from "react";
-import { IPerson } from "src/interfaces/IPerson";
+import { IPerson } from "../../interfaces/IPerson";
 import BioCard from "./BioCard";
 
 const personData: IPerson = {

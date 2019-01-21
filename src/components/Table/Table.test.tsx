@@ -1,6 +1,6 @@
 import * as enzyme from "enzyme";
 import * as React from "react";
-import ITableElement from "src/interfaces/ITableElement";
+import ITableElement from "../../interfaces/ITableElement";
 
 import Table from "./Table";
 

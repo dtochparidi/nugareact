@@ -1,7 +1,7 @@
 import * as enzyme from "enzyme";
 import * as moment from "moment";
 import * as React from "react";
-import IPurchase from "src/interfaces/IPurchase";
+import IPurchase from "../../interfaces/IPurchase";
 import PurchasesCard from "./PurchasesCard";
 
 const testPurchases: IPurchase[] = [

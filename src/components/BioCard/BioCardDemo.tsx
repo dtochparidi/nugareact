@@ -1,8 +1,9 @@
 import * as moment from "moment";
 import * as React from "react";
-import { IPerson } from "src/interfaces/IPerson";
-import { IUpdatable } from "src/interfaces/IUpdatable";
+
 import BioCard from ".";
+import { IPerson } from "../..//interfaces/IPerson";
+import { IUpdatable } from "../../interfaces/IUpdatable";
 
 const personData: IPerson = {
   address: "Москва",
