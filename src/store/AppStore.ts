@@ -1,9 +1,10 @@
-import { action, autorun, configure, decorate, observable, toJS } from "mobx";
-import { Moment } from "moment";
-import fetchDay from "../fetchers/DayFetcher";
-import fetchPerson from "../fetchers/PersonFetcher";
-import ICalendarDay from "../interfaces/ICalendarDay";
-import { IPerson } from "../interfaces/IPerson";
+import { action, configure, decorate, observable } from 'mobx';
+import { Moment } from 'moment';
+
+import fetchDay from '../fetchers/DayFetcher';
+import fetchPerson from '../fetchers/PersonFetcher';
+import ICalendarDay from '../interfaces/ICalendarDay';
+import { IPerson } from '../interfaces/IPerson';
 
 configure({ enforceActions: "observed" });
 
@@ -52,11 +53,11 @@ decorate(AppStore, {
 
 const appStore = new AppStore();
 
-autorun(r => {
-  if (appStore.currentUser) {
-    const obj = Object.entries(toJS(appStore.currentUser));
-    console.table(obj);
-  }
-});
+// autorun(r => {
+//   if (appStore.currentUser) {
+//     const obj = Object.entries(toJS(appStore.currentUser));
+//     console.table(obj);
+//   }
+// });
 
 export default appStore;

@@ -4,36 +4,65 @@
   --rows-count: 5;
 
   $time-column-width: 50px;
-  $calendar-cell-height: 70px;
+  $calendar-cell-height: 60px;
 
   display: grid;
   width: auto !important;
 
+  grid-template-areas: "timeColumn daysContainer";
   grid-template-columns: $time-column-width auto;
+  grid-template-rows: auto;
+
+  .item {
+    // test render borders
+    outline: solid lightgrey 1px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
   .timeColumn {
+    // test render borders
+    outline: solid lightgrey 1px;
+
     display: grid;
-    grid-area: time;
+    grid-area: timeColumn;
 
     grid-template-rows: repeat(var(--rows-count), $calendar-cell-height);
   }
 
-  .day {
-    display: grid;
+  .daysContainer {
+    grid-area: daysContainer;
+    // overflow-x: hidden;
 
-    grid-template-rows: $calendar-cell-height auto;
-    width: 100%;
+    height: 100%;
+    width: auto;
 
-    .positionsRow {
+    .day {
+      // test render borders
+      outline: solid lightgrey 1px;
+
       display: grid;
+      height: 100%;
 
-      .grid {
-        --columns-count: 6;
+      grid-template-rows: $calendar-cell-height auto;
+      width: 100%;
+
+      .positionsRow {
+        // test render borders
+        outline: solid lightgrey 1px;
 
         display: grid;
 
-        grid-template-columns: repeat(var(--columns-count), 1fr);
-        grid-template-rows: repeat(var(--rows-count), $calendar-cell-height);
+        .grid {
+          --columns-count: 6;
+
+          display: grid;
+
+          grid-template-columns: repeat(var(--columns-count), 1fr);
+          grid-template-rows: repeat(var(--rows-count), $calendar-cell-height);
+        }
       }
     }
   }
