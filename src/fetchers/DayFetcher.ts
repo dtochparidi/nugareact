@@ -1,11 +1,6 @@
 import * as moment from "moment";
 import ICalendarDay from "../interfaces/ICalendarDay";
 import IFetcher from "../interfaces/IFetcher";
-import { IPerson } from "../interfaces/IPerson";
-
-function takeRandom(array: any[]) {
-  return array[Math.floor(Math.random() * array.length)];
-}
 
 function random(to: number, from: number = 0) {
   return Math.floor(Math.random() * (to - from)) + from;

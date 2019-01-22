@@ -9,7 +9,8 @@
   },
   "rules": {
     "no-console": false,
-    "curly": [true, "as-needed"]
+    "curly": [true, "as-needed"],
+    "no-unused-variable": true
   },
   "jsRules": {
     "no-console": false,

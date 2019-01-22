@@ -1,11 +1,12 @@
-import { observer } from "mobx-react";
-import * as moment from "moment";
-import * as React from "react";
-import "./App.css";
+import './App.css';
 
-import BioCard from "./components/BioCard";
-import { IPerson } from "./interfaces/IPerson";
-import appStore from "./store/AppStore";
+import { observer } from 'mobx-react';
+import * as moment from 'moment';
+import * as React from 'react';
+
+import CalendarCard from './components/CalendarCard';
+import { IPerson } from './interfaces/IPerson';
+import appStore from './store/AppStore';
 
 const mockUser: IPerson = {
   address: "Москва",
@@ -31,12 +32,16 @@ class App extends React.Component {
 
   public render() {
     return (
-      <BioCard
-        personData={{
-          target: appStore.currentUser as IPerson,
-          update: arr => appStore.updateCurrentUserProp(arr)
-        }}
+      <CalendarCard
+        days={appStore.calendarDays}
+        requestCallback={appStore.loadDay}
       />
+      // <BioCard
+      //   personData={{
+      //     target: appStore.currentUser as IPerson,
+      //     update: arr => appStore.updateCurrentUserProp(arr)
+      //   }}
+      // />
     );
   }
 }
