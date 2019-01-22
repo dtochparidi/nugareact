@@ -1,24 +1,21 @@
 import * as React from "react";
+import ICalendarDay from "src/interfaces/ICalendarDay";
 
-export interface Props {
-  children?: React.ReactNode
+export interface IProps {
+  days: ICalendarDay[];
 }
 
-export interface State {
-}
+// export interface IState {
+// }
 
-export default class CalendarCard extends React.Component<Props, State> {
+export default class CalendarCard extends React.Component<IProps> {
+  constructor(props: IProps) {
+    super(props);
 
-  constructor(props: Props) {
-    super(props)
-
-    this.state = {
-    }
+    this.state = {};
   }
 
-  render() {
-    return (
-      <div>{ this.props.children }</div>
-    )
+  public render() {
+    return <div>{this.props.children}</div>;
   }
 }

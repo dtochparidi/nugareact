@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "paths": { "*": ["types/*"] },
+    "paths": { "*": ["types/*"], "src/*": ["src/*"] },
     "baseUrl": ".",
     "outDir": "build/dist",
     "module": "esnext",
