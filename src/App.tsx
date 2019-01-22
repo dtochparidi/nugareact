@@ -1,5 +1,3 @@
-import './App.css';
-
 import { observer } from 'mobx-react';
 import * as moment from 'moment';
 import * as React from 'react';
@@ -7,6 +5,8 @@ import * as React from 'react';
 import CalendarCard from './components/CalendarCard';
 import { IPerson } from './interfaces/IPerson';
 import appStore from './store/AppStore';
+
+import './App.css';
 
 const mockUser: IPerson = {
   address: "Москва",

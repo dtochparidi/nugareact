@@ -1,6 +1,7 @@
-import * as moment from "moment";
-import IFetcher from "../interfaces/IFetcher";
-import { IPerson } from "../interfaces/IPerson";
+import * as moment from 'moment';
+
+import IFetcher from '../interfaces/IFetcher';
+import { IPerson } from '../interfaces/IPerson';
 
 function takeRandom(array: any[]) {
   return array[Math.floor(Math.random() * array.length)];

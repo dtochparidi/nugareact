@@ -1,17 +1,40 @@
+@import "src/common/variables.scss";
+
 .calendarCard {
+  --rows-count: 5;
+
+  $time-column-width: 50px;
+  $calendar-cell-height: 70px;
+
   display: grid;
+  width: auto !important;
 
-  grid-template-areas:
-    "time positions"
-    "time grid";
+  grid-template-columns: $time-column-width auto;
 
-  .grid {
-    --columns-count: 0;
-    --rows-count: 0;
+  .timeColumn {
+    display: grid;
+    grid-area: time;
 
+    grid-template-rows: repeat(var(--rows-count), $calendar-cell-height);
+  }
+
+  .day {
     display: grid;
 
-    grid-template-columns: repeat(var(--columns-count), 1fr);
-    grid-template-columns: repeat(var(--columns-count), 1fr);
+    grid-template-rows: $calendar-cell-height auto;
+    width: 100%;
+
+    .positionsRow {
+      display: grid;
+
+      .grid {
+        --columns-count: 6;
+
+        display: grid;
+
+        grid-template-columns: repeat(var(--columns-count), 1fr);
+        grid-template-rows: repeat(var(--rows-count), $calendar-cell-height);
+      }
+    }
   }
 }
