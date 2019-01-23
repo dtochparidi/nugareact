@@ -9,6 +9,7 @@ export default class TimeColumn extends React.Component<IProps> {
   public render() {
     return (
       <div className="timeColumn">
+        <div className="item" key="zero" />
         {this.props.stamps.map(stamp => {
           const s = stamp.format("HH:mm");
           return (

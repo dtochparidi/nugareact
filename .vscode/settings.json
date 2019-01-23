@@ -1,4 +1,4 @@
 {
-  // "typescriptHero.imports.organizeOnSave": true,
-  // "typescriptHero.imports.grouping": ["Modules", "Workspace", "Plains"]
+  "typescriptHero.imports.organizeOnSave": true,
+  "typescriptHero.imports.grouping": ["Modules", "Workspace", "Plains"]
 }

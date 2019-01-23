@@ -6,6 +6,6 @@ export interface IProps {
 
 export default class PositionRow extends React.Component<IProps> {
   public render() {
-    return <div>{this.props.children}</div>;
+    return <div className="positionRow" />;
   }
 }

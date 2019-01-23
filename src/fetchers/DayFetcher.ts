@@ -7,7 +7,7 @@ function random(to: number, from: number = 0) {
   return Math.floor(Math.random() * (to - from)) + from;
 }
 
-function generateRandomDay(date: moment.Moment): ICalendarDay {
+export function generateRandomDay(date: moment.Moment): ICalendarDay {
   return {
     date,
     personIds: new Array(random(10)).fill(null).map(

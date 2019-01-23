@@ -1,18 +1,27 @@
-import * as React from 'react';
+import * as React from "react";
 
-import Grid from './Grid';
-import PositionRow from './PositionRow';
+import ICalendarDay from "src/interfaces/ICalendarDay";
+import Grid from "./Grid";
+import PositionRow from "./PositionRow";
 
 export interface IProps {
-  children?: React.ReactNode;
+  rows: number;
+  cols: number;
+  dayData: ICalendarDay;
 }
 
 export default class Day extends React.Component<IProps> {
   public render() {
+    const { rows, cols } = this.props;
     return (
-      <div className="day">
-        <PositionRow />
-        <Grid rows={4} cols={5} />
+      <div className="dayWrapper">
+        <div
+          className="day"
+          style={{ "--columns-count": cols } as React.CSSProperties}
+        >
+          <PositionRow />
+          <Grid rows={rows} cols={cols} />
+        </div>
       </div>
     );
   }

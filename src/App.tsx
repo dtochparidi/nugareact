@@ -28,12 +28,15 @@ class App extends React.Component {
     super(props);
 
     appStore.updateCurrentUser(appStore.currentUser || mockUser);
+
+    if (appStore.calendarDays.length === 0) appStore.loadDay(moment());
   }
 
   public render() {
     return (
       <CalendarCard
         days={appStore.calendarDays}
+        daysPending={appStore.calendarDaysPending}
         requestCallback={appStore.loadDay}
       />
       // <BioCard

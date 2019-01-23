@@ -1,17 +1,22 @@
-import { action, configure, decorate, observable } from 'mobx';
-import { Moment } from 'moment';
+import { action, configure, observable } from "mobx";
+import { Moment } from "moment";
 
-import fetchDay from '../fetchers/DayFetcher';
-import fetchPerson from '../fetchers/PersonFetcher';
-import ICalendarDay from '../interfaces/ICalendarDay';
-import { IPerson } from '../interfaces/IPerson';
+import fetchDay from "../fetchers/DayFetcher";
+import fetchPerson from "../fetchers/PersonFetcher";
+import ICalendarDay from "../interfaces/ICalendarDay";
+import { IPerson } from "../interfaces/IPerson";
 
 configure({ enforceActions: "observed" });
 
 export class AppStore {
+  @observable
   public currentUser?: IPerson;
-  public persons: { [id: string]: IPerson } = {};
+  @observable
   public calendarDays: ICalendarDay[] = [];
+  @observable
+  public calendarDaysPending: Moment[] = [];
+
+  public persons: { [id: string]: IPerson } = {};
 
   public async loadPerson(id: string) {
     const person = await fetchPerson(id);
@@ -23,8 +28,16 @@ export class AppStore {
     persons.forEach(person => (this.persons[person.id] = person));
   }
 
+  @action.bound
   public async loadDay(date: Moment) {
-    const day = await fetchDay(date);
+    const dayDate = date.startOf("day");
+
+    if (this.calendarDaysPending.find(d => d.diff(dayDate, "days") === 0))
+      return;
+
+    this.calendarDaysPending.push(dayDate);
+
+    const day = await fetchDay(dayDate);
     this.addDay(day);
   }
 
@@ -46,10 +59,6 @@ export class AppStore {
     }
   }
 }
-
-decorate(AppStore, {
-  currentUser: observable
-});
 
 const appStore = new AppStore();
 
