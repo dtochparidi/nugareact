@@ -18,6 +18,7 @@ it("renders without crashing", () => {
       days={dates.map(generateRandomDay)}
       daysPending={daysPending}
       requestCallback={requestDay}
+      positionCount={6}
     />
   );
   expect(component);

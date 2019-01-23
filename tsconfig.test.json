@@ -4,8 +4,9 @@
     "module": "commonjs"
   },
   "jest": {
-    // "globals": {
-    //   "window": true
-    // }
+    "globals": {
+      "window": true,
+      "document": true
+    }
   }
 }

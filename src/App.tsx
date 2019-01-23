@@ -1,12 +1,13 @@
-import './App.css';
-
 import { observer } from 'mobx-react';
 import * as moment from 'moment';
 import * as React from 'react';
 
 import CalendarCard from './components/CalendarCard';
+import ControlWindow from './components/ControlWindow';
 import { IPerson } from './interfaces/IPerson';
 import appStore from './store/AppStore';
+
+import './App.css';
 
 const mockUser: IPerson = {
   address: "Москва",
@@ -34,11 +35,17 @@ class App extends React.Component {
 
   public render() {
     return (
-      <CalendarCard
-        days={appStore.calendarDays}
-        daysPending={appStore.calendarDaysPending}
-        requestCallback={appStore.loadDay}
-      />
+      <div>
+        {typeof window !== "undefined" && window.document ? (
+          <ControlWindow appStore={appStore} />
+        ) : null}
+        <CalendarCard
+          days={appStore.calendarDays}
+          daysPending={appStore.calendarDaysPending}
+          requestCallback={appStore.loadDay}
+          positionCount={appStore.positionCount}
+        />
+      </div>
       // <BioCard
       //   personData={{
       //     target: appStore.currentUser as IPerson,

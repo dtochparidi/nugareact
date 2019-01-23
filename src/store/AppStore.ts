@@ -1,10 +1,10 @@
-import { action, configure, observable } from "mobx";
-import { Moment } from "moment";
+import { action, configure, observable } from 'mobx';
+import { Moment } from 'moment';
 
-import fetchDay from "../fetchers/DayFetcher";
-import fetchPerson from "../fetchers/PersonFetcher";
-import ICalendarDay from "../interfaces/ICalendarDay";
-import { IPerson } from "../interfaces/IPerson";
+import fetchDay from '../fetchers/DayFetcher';
+import fetchPerson from '../fetchers/PersonFetcher';
+import ICalendarDay from '../interfaces/ICalendarDay';
+import { IPerson } from '../interfaces/IPerson';
 
 configure({ enforceActions: "observed" });
 
@@ -16,7 +16,15 @@ export class AppStore {
   @observable
   public calendarDaysPending: Moment[] = [];
 
+  @observable
+  public positionCount: number = 5;
+
   public persons: { [id: string]: IPerson } = {};
+
+  @action
+  public updatePositionCount(count: number) {
+    this.positionCount = count;
+  }
 
   public async loadPerson(id: string) {
     const person = await fetchPerson(id);
