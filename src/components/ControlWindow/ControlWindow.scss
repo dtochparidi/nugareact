@@ -1,2 +1,16 @@
+@import "src/common/variables.scss";
+
 .controlWindow {
+  position: absolute;
+  z-index: 100;
+
+  right: 0;
+  top: 0;
+
+  width: min-content;
+  height: min-content;
+  padding: $padding-large;
+
+  background: rgba(245, 245, 245, 0.652);
+  border: solid rgb(153, 153, 153) 1px;
 }

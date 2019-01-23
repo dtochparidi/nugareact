@@ -1,10 +1,14 @@
 import { action, configure, observable } from 'mobx';
-import { Moment } from 'moment';
+import { Moment as IMoment } from 'moment';
+import * as Moment from 'moment';
+import { DateRange, extendMoment } from 'moment-range';
 
 import fetchDay from '../fetchers/DayFetcher';
 import fetchPerson from '../fetchers/PersonFetcher';
 import ICalendarDay from '../interfaces/ICalendarDay';
 import { IPerson } from '../interfaces/IPerson';
+
+const moment = extendMoment(Moment);
 
 configure({ enforceActions: "observed" });
 
@@ -14,10 +18,18 @@ export class AppStore {
   @observable
   public calendarDays: ICalendarDay[] = [];
   @observable
-  public calendarDaysPending: Moment[] = [];
-
+  public calendarDaysPending: IMoment[] = [];
   @observable
   public positionCount: number = 5;
+  @observable
+  public dayTimeRange: DateRange = moment.range(
+    moment()
+      .startOf("day")
+      .hour(9),
+    moment()
+      .startOf("day")
+      .hour(21)
+  );
 
   public persons: { [id: string]: IPerson } = {};
 
@@ -37,7 +49,7 @@ export class AppStore {
   }
 
   @action.bound
-  public async loadDay(date: Moment) {
+  public async loadDay(date: IMoment) {
     const dayDate = date.startOf("day");
 
     if (this.calendarDaysPending.find(d => d.diff(dayDate, "days") === 0))
@@ -47,6 +59,11 @@ export class AppStore {
 
     const day = await fetchDay(dayDate);
     this.addDay(day);
+  }
+
+  @action
+  public updateDayTimeRange(range: DateRange) {
+    this.dayTimeRange = range;
   }
 
   @action

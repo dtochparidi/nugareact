@@ -1,8 +1,38 @@
+import * as interact from 'interactjs';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import { AppStore } from 'src/store/AppStore';
 
-import WindowPortal from '../WindowPortal';
+import './ControlWindow.scss';
+
+function moveHandler(e: interact.InteractEvent) {
+  const { target }: { target: HTMLElement } = e;
+  const lx = parseFloat(target.dataset.x as string);
+  const ly = parseFloat(target.dataset.y as string);
+  const x = lx + e.dx;
+  const y = ly + e.dy;
+
+  target.style.right = "";
+  target.style.bottom = "";
+  target.style.top = `${y}px`;
+  target.style.left = `${x}px`;
+
+  target.dataset.x = x.toString();
+  target.dataset.y = y.toString();
+}
+
+function startHandler(e: interact.InteractEvent) {
+  const { target }: { target: HTMLElement } = e;
+  const rect = target.getBoundingClientRect();
+  target.dataset.x = rect.left.toString();
+  target.dataset.y = rect.top.toString();
+}
+
+const dragConfig = {
+  onmove: moveHandler,
+  onstart: startHandler
+};
+interact(".controlWindow").draggable(dragConfig);
 
 export interface IProps {
   appStore: AppStore;
@@ -14,14 +44,13 @@ export default class ControlWindow extends React.Component<IProps> {
     const update = (e: React.ChangeEvent<HTMLInputElement>) => {
       this.props.appStore.updatePositionCount(parseInt(e.target.value, 10));
     };
+    const value = this.props.appStore.positionCount;
 
     return (
-      <WindowPortal width={300} height={400} top={0} left={0}>
-        <div className="controlWindow">
-          <label>Positions Count: </label>
-          <input value={this.props.appStore.positionCount} onChange={update} />
-        </div>
-      </WindowPortal>
+      <div className="controlWindow">
+        <label>Positions Count: </label>
+        <input value={value || ""} onChange={update} />
+      </div>
     );
   }
 }

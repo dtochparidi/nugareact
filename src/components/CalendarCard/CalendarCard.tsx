@@ -1,7 +1,7 @@
 import { observer } from "mobx-react";
 import * as Moment from "moment";
 import { Moment as IMoment } from "moment";
-import { extendMoment } from "moment-range";
+import { DateRange, extendMoment } from "moment-range";
 import * as React from "react";
 
 import ICalendarDay from "../../interfaces/ICalendarDay";
@@ -16,6 +16,7 @@ const moment = extendMoment(Moment);
 export interface IProps {
   days: ICalendarDay[];
   daysPending: IMoment[];
+  dayTimeRange: DateRange;
   positionCount: number;
   requestCallback: (date: Moment.Moment) => void;
 }
@@ -125,16 +126,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
   public render() {
     const stamps = Array.from(
-      moment
-        .range(
-          moment()
-            .startOf("day")
-            .hour(9),
-          moment()
-            .startOf("day")
-            .hour(21)
-        )
-        .by("minutes", { step: 60 })
+      this.props.dayTimeRange.by("minutes", { step: 60 })
     );
     const [rows, cols] = [stamps.length, this.props.positionCount];
 

@@ -44,6 +44,7 @@ class App extends React.Component {
           daysPending={appStore.calendarDaysPending}
           requestCallback={appStore.loadDay}
           positionCount={appStore.positionCount}
+          dayTimeRange={appStore.dayTimeRange}
         />
       </div>
       // <BioCard
