@@ -40,6 +40,8 @@
   }
 
   .daysContainer {
+    position: relative;
+
     grid-area: daysContainer;
     overflow: hidden;
 
@@ -52,12 +54,14 @@
       height: 100%;
       width: 100%;
 
+      // outline: solid lightgrey 1px;
+
       .day {
         --columns-count: 6;
 
         display: grid;
         height: 100%;
-        width: calc(100% - 1px);
+        width: 100%;
 
         grid-template-rows: $calendar-cell-height auto;
 

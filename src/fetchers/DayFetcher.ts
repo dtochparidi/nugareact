@@ -23,7 +23,7 @@ const fetchDay: IFetcher<
   moment.Moment,
   ICalendarDay
 > = async function DayFetcher(date) {
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise(resolve => setTimeout(resolve, 300));
 
   return generateRandomDay(date);
 };

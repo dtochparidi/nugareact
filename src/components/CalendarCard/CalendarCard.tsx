@@ -21,22 +21,67 @@ export interface IProps {
 
 export interface IState {
   requiredDays: IMoment[];
+  selectedDay: number;
 }
 
 @observer
 export default class CalendarCard extends React.Component<IProps, IState> {
+  private daysContainerRef: React.RefObject<HTMLDivElement>;
+
   constructor(props: IProps) {
     super(props);
 
+    this.daysContainerRef = React.createRef();
     this.state = {
-      requiredDays: [moment(), moment().add(1, "day")]
+      requiredDays: [
+        moment(),
+        moment().add(1, "day"),
+        moment().add(2, "day"),
+        moment().add(3, "day")
+      ],
+      selectedDay: 0
     };
   }
 
+  public componentDidMount() {
+    window.addEventListener("keydown", e => {
+      switch (e.code) {
+        case "ArrowRight":
+          this.turnPage(1);
+          break;
+        case "ArrowLeft":
+          this.turnPage(-1);
+          break;
+      }
+    });
+  }
+
   public componentDidUpdate() {
+    // OPTIMIZE
     this.state.requiredDays.forEach(day => {
       if (!this.props.daysPending.find(d => d.diff(day, "days") === 0))
         this.props.requestCallback(day);
+    });
+  }
+
+  public turnPage(delta: -1 | 1) {
+    const newIndex = Math.min(
+      Math.max(this.state.selectedDay + delta, 0),
+      this.props.days.length - 1
+    );
+    this.setState({ selectedDay: newIndex });
+
+    const container = this.daysContainerRef.current as HTMLDivElement;
+    const target = container.children[newIndex] as HTMLElement;
+    const left = Math.ceil(
+      target.getBoundingClientRect().left -
+        container.getBoundingClientRect().left +
+        container.scrollLeft
+    );
+
+    container.scrollTo({
+      behavior: "smooth",
+      left
     });
   }
 
@@ -61,7 +106,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         style={{ "--rows-count": rows } as React.CSSProperties}
       >
         <TimeColumn stamps={stamps} />
-        <div className="daysContainer">
+        <div className="daysContainer" ref={this.daysContainerRef}>
           {this.props.days.map(day => (
             <Day
               key={day.date.toString()}

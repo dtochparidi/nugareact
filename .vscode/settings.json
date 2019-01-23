@@ -1,4 +1,51 @@
 {
   "typescriptHero.imports.organizeOnSave": true,
-  "typescriptHero.imports.grouping": ["Modules", "Workspace", "Plains"]
+  "typescriptHero.imports.grouping": ["Modules", "Workspace", "Plains"],
+  "todohighlight.keywords": [
+    {
+      "text": "TODO:",
+      // "border": "1px solid red",
+      "borderRadius": "2px", //NOTE: using borderRadius along with `border` or you will see nothing change
+      "backgroundColor": "transparent"
+      //other styling properties goes here ...
+    },
+    {
+      "text": "FIXIT:",
+      // "border": "1px solid red",
+      "borderRadius": "2px", //NOTE: using borderRadius along with `border` or you will see nothing change
+      "backgroundColor": "transparent"
+      //other styling properties goes here ...
+    },
+    {
+      "text": "DEPRECATED",
+      // "border": "1px solid red",
+      "borderRadius": "2px", //NOTE: using borderRadius along with `border` or you will see nothing change
+      "backgroundColor": "transparent",
+      "color": "darkorange"
+      //other styling properties goes here ...
+    },
+    {
+      "text": "// OPTIMIZE",
+      "backgroundColor": "transparent",
+      "color": "#009900"
+    },
+    {
+      "text": "UNUSABLE",
+      "color": "#9999ff",
+      "borderRadius": "2px",
+      "backgroundColor": "transparent"
+    },
+    {
+      "text": "DEBUG_FUNC",
+      "color": "#990000",
+      "borderRadius": "2px",
+      "backgroundColor": "transparent"
+    },
+    {
+      "text": "DEBUG_VAR",
+      "color": "#990000",
+      "borderRadius": "2px",
+      "backgroundColor": "transparent"
+    }
+  ]
 }
