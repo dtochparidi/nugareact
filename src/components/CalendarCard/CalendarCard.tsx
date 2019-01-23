@@ -44,6 +44,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public componentDidMount() {
+    // that's a comment?
     window.addEventListener("keydown", e => {
       switch (e.code) {
         case "ArrowRight":
