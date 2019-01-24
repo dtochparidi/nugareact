@@ -1,5 +1,6 @@
 import * as moment from 'moment';
 
+import IAppointment from 'src/interfaces/IAppointment';
 import ICalendarDay from '../interfaces/ICalendarDay';
 import IFetcher from '../interfaces/IFetcher';
 
@@ -9,13 +10,19 @@ function random(to: number, from: number = 0) {
 
 export function generateRandomDay(date: moment.Moment): ICalendarDay {
   return {
-    date,
-    personIds: new Array(random(10)).fill(null).map(
-      () =>
-        `#${random(10)
+    appointments: new Array(random(10)).fill(null).map(
+      (): IAppointment => ({
+        date: date
+          .clone()
+          .hour(random(20, 10))
+          .minute(random(59, 1)),
+        personId: `#${random(10)
           .toString()
-          .padStart(3, "0")}`
-    )
+          .padStart(3, '0')}`,
+        position: random(0, 10),
+      }),
+    ),
+    date,
   };
 }
 

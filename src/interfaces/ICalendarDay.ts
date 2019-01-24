@@ -1,6 +1,7 @@
-import * as moment from "moment";
+import * as moment from 'moment';
+import IAppointment from './IAppointment';
 
 export default interface ICalendarDay {
   date: moment.Moment;
-  personIds: string[];
+  appointments: IAppointment[];
 }

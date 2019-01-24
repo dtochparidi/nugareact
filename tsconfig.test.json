@@ -2,11 +2,5 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "module": "commonjs"
-  },
-  "jest": {
-    "globals": {
-      "window": true,
-      "document": true
-    }
   }
 }

@@ -1,4 +1,4 @@
-@import "src/common/variables.scss";
+@import 'src/common/variables.scss';
 
 .calendarCard {
   .borders {
@@ -14,7 +14,7 @@
   width: auto !important;
   padding: 0;
 
-  grid-template-areas: "timeColumn daysContainer";
+  grid-template-areas: 'timeColumn daysContainer';
   grid-template-columns: $time-column-width auto;
   grid-template-rows: auto;
 
@@ -67,6 +67,10 @@
 
         .positionRow {
           @extend .borders;
+
+          display: grid;
+          grid-template-rows: $calendar-cell-height;
+          grid-template-columns: repeat(var(--columns-count), 1fr);
         }
 
         .grid {

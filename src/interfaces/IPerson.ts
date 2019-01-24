@@ -1,4 +1,4 @@
-import * as moment from "moment";
+import * as moment from 'moment';
 
 export interface IPerson {
   id: string;
@@ -12,4 +12,5 @@ export interface IPerson {
   friends: string[];
   averageBill: string;
   invitedBy: string;
+  loaded?: boolean;
 }

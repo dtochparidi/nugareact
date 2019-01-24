@@ -12,8 +12,8 @@ function moveHandler(e: interact.InteractEvent) {
   const x = lx + e.dx;
   const y = ly + e.dy;
 
-  target.style.right = "";
-  target.style.bottom = "";
+  target.style.right = '';
+  target.style.bottom = '';
   target.style.top = `${y}px`;
   target.style.left = `${x}px`;
 
@@ -30,12 +30,18 @@ function startHandler(e: interact.InteractEvent) {
 
 const dragConfig = {
   onmove: moveHandler,
-  onstart: startHandler
+  onstart: startHandler,
 };
-interact(".controlWindow").draggable(dragConfig);
+if (
+  typeof window !== 'undefined' &&
+  window.document &&
+  window.document.createElement
+)
+  interact('.controlWindow').draggable(dragConfig);
 
 export interface IProps {
   appStore: AppStore;
+  children?: React.ReactNode;
 }
 
 @observer
@@ -48,8 +54,9 @@ export default class ControlWindow extends React.Component<IProps> {
 
     return (
       <div className="controlWindow">
+        <div>{this.props.children}</div>
         <label>Positions Count: </label>
-        <input value={value || ""} onChange={update} />
+        <input value={value || ''} onChange={update} />
       </div>
     );
   }
