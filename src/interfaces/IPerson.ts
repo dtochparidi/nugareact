@@ -12,5 +12,5 @@ export interface IPerson {
   friends: string[];
   averageBill: string;
   invitedBy: string;
-  loaded?: boolean;
+  loaded: boolean;
 }

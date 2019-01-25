@@ -37,7 +37,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     this.daysContainerRef = React.createRef();
     this.state = {
-      requiredDays: new Array(10)
+      requiredDays: new Array(2)
         .fill(null)
         .map((v, i) => moment().add(i, 'day')),
     };
@@ -158,7 +158,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
-        console.log('resize handled');
         this.updateScroll();
       }, 250);
     });

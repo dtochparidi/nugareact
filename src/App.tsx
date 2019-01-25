@@ -32,10 +32,15 @@ if (clientSide)
 const mockUser: IPerson = {
   address: 'Москва',
   averageBill: '500 eur',
-  birthdate: moment({ year: 1971, month: 10, day: 21 }),
+  birthdate: moment({
+    day: 21,
+    month: 10,
+    year: 1971,
+  }),
   friends: ['Ален Евсеев', 'Дарья Акодимишена', 'Виктор Дёмин'],
   id: '#001',
   invitedBy: 'Ален Евсеев',
+  loaded: true,
   name: 'Алексей',
   patronymic: '',
   phone: '+37128481181',

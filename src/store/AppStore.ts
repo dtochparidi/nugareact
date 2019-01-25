@@ -17,7 +17,7 @@ configure({ enforceActions: 'observed' });
 export class AppStore {
   @observable
   public currentUser?: IPerson;
-  @observable.deep
+  @observable
   public calendarDays: ICalendarDay[] = [];
   @observable
   public calendarDaysPending: IMoment[] = [];
