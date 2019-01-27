@@ -18,11 +18,11 @@ export default class Day extends React.Component<IProps> {
   public render() {
     const { rows, cols, dayData } = this.props;
     return (
-      <div className="dayWrapper">
-        <div
-          className="day"
-          style={{ '--columns-count': cols } as React.CSSProperties}
-        >
+      <div
+        className="dayWrapper"
+        style={{ '--columns-count': cols } as React.CSSProperties}
+      >
+        <div className="day">
           <PositionRow positionCount={cols} />
           <Grid
             rows={rows}

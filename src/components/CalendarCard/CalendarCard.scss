@@ -2,6 +2,7 @@
 
 $time-column-width: 50px;
 $calendar-cell-height: 60px;
+$calendar-cell-width-min: 180px;
 
 .calendarCard {
   .borders {
@@ -50,15 +51,18 @@ $calendar-cell-height: 60px;
     white-space: nowrap;
 
     .dayWrapper {
+      --columns-count: 6;
+
       display: inline-block;
       height: 100%;
       width: 100%;
+      min-width: calc(
+        #{$time-column-width} + var(--columns-count) * #{$calendar-cell-width-min}
+      );
 
       outline: solid rgb(129, 129, 129) 1px;
 
       .day {
-        --columns-count: 6;
-
         display: grid;
         height: 100%;
         width: 100%;

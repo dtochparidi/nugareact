@@ -20,7 +20,6 @@ export default class AppointmentCell extends React.Component<IProps> {
     if (!personInstance || !personInstance.loaded) return null;
 
     const person = personInstance as IPerson;
-    console.log(person);
     return (
       <div className="appointmentCell">
         <div className="marker" />
