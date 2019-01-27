@@ -31,7 +31,7 @@ function generateRandomPerson(id: string): IPerson {
 const fetchPerson: IFetcher<string, IPerson> = async function PersonFetcher(
   id,
 ) {
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise(resolve => setTimeout(resolve, 300));
 
   return generateRandomPerson(id);
 };

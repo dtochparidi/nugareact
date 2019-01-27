@@ -17,7 +17,7 @@ const clientSide =
 
 if (clientSide)
   configureDevtool({
-    logEnabled: true,
+    logEnabled: false,
     logFilter: change =>
       change.type !== 'add' &&
       change.type !== 'update' &&

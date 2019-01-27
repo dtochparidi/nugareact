@@ -1,29 +1,130 @@
+@import 'src/common/variables.scss';
+@import 'src/common/fonts.scss';
+@import 'src/common/colors.scss';
+@import '../../CalendarCard.scss';
+
 .appointmentCell {
-  width: 100%;
+  $marker-width: 3px;
+  $avatar-left-margin: 8px;
+  $points-right-margin: 10px;
+  $points-size: 25px;
+  $visits-count-margin: 2px;
+
+  position: absolute;
+  left: 0px;
+  top: 0px;
+
   height: 100%;
+  width: 100%;
 
-  position: relative;
+  background: white;
+  touch-action: none;
+
   display: flex;
-  align-content: center;
-  justify-content: space-between;
+  align-items: center;
+  justify-content: center;
 
-  .leftBlock {
+  &.moving {
+    position: fixed;
+    z-index: 100;
+  }
+
+  &.hidden {
+    visibility: hidden;
+  }
+
+  .marker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: $marker-width;
+
+    background: green;
+  }
+
+  $avatar-width: $calendar-cell-height - $avatar-left-margin * 2 - $thin-width;
+  .avatar {
+    position: absolute;
+
+    left: $avatar-left-margin;
+    top: $avatar-left-margin;
+    bottom: $avatar-left-margin;
+
+    width: $avatar-width;
+    border-radius: 50%;
+
+    background: lightgrey;
+  }
+
+  .mainInfoWrapper {
+    position: absolute;
+    left: $avatar-width + $avatar-left-margin * 2;
+    top: 0;
+    bottom: 0;
+    right: $points-right-margin + $points-size + $avatar-left-margin;
+
     display: flex;
-    align-content: center;
     justify-content: left;
+    align-items: center;
 
-    span {
-      height: min-content;
+    .subWrapper {
+      width: 100%;
+    }
+
+    .content {
+      overflow-wrap: break-word;
+
+      .surname,
+      .name,
+      .patronymic,
+      .grade {
+        @extend .font-primary-semibold;
+      }
+
+      .grade {
+        color: green;
+      }
+
+      .visits {
+        @extend .font-secondary-little-semibold;
+        margin-left: $visits-count-margin;
+        margin-right: $visits-count-margin;
+        padding: 0;
+        color: black;
+        vertical-align: top;
+      }
+
+      .number {
+        @extend .font-secondary-middle;
+      }
     }
   }
 
-  .rightBlock {
-    display: flex;
-    align-content: center;
-    justify-content: right;
+  .pointsWrapper {
+    position: absolute;
+    right: $points-right-margin;
+    top: 0;
+    bottom: 0;
 
-    span {
-      height: min-content;
+    width: $points-size;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .content {
+      @extend .font-points-circle;
+
+      background: $color-calendar-points-background;
+      width: $points-size;
+      height: $points-size;
+
+      border-radius: 50%;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
   }
 }
