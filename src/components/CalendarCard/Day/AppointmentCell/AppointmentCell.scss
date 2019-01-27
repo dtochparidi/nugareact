@@ -74,6 +74,11 @@
 
     .content {
       overflow-wrap: break-word;
+      white-space: normal;
+
+      span {
+        white-space: nowrap;
+      }
 
       .surname,
       .name,

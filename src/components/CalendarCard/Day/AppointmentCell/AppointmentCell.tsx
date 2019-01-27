@@ -28,13 +28,12 @@ export default class AppointmentCell extends React.Component<IProps> {
         <div className="mainInfoWrapper">
           <div className="subWrapper">
             <div className="content">
-              <span className="surname">{person.surname}</span>
-              <span className="name">{person.name}</span>
+              <span className="surname">{person.surname}</span>{' '}
+              <span className="name">{person.name}</span>{' '}
               {person.patronymic ? (
-                <span className="patronymic">{person.patronymic}</span>
+                <span className="patronymic">{person.patronymic} </span>
               ) : null}
-              <span className="visits">v</span>
-              <span className="grade">g</span>
+              <span className="visits">v</span> <span className="grade">g</span>
             </div>
             <div className="content">
               <span className="number">{person.phone}</span>
