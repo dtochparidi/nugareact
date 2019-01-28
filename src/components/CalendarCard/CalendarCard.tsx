@@ -83,7 +83,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       columnsPerDay: stamps.length,
       columnsPerPage: 4,
       dayWidth: '100%',
-      requiredDays: new Array(12)
+      requiredDays: new Array(15)
         .fill(null)
         .map((v, i) => moment().add(i, 'day')),
       stamps,

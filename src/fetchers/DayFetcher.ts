@@ -10,7 +10,7 @@ function random(to: number, from: number = 0) {
 
 export function generateRandomDay(date: moment.Moment): ICalendarDay {
   return {
-    appointments: new Array(10).fill(null).map(
+    appointments: new Array(25).fill(null).map(
       (): IAppointment => ({
         date: date
           .clone()

@@ -32,12 +32,17 @@ function generateRandomPerson(id: string): IPerson {
   };
 }
 
+const backendPersons: { [s: string]: IPerson } = {};
+
 const fetchPerson: IFetcher<string, IPerson> = async function PersonFetcher(
   id,
 ) {
+  if (!(id in backendPersons)) backendPersons[id] = generateRandomPerson(id);
+
+  // just delay (simulating network delays)
   await new Promise(resolve => setTimeout(resolve, random(1200, 200)));
 
-  return generateRandomPerson(id);
+  return backendPersons[id];
 };
 
 export default fetchPerson;

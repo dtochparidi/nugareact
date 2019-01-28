@@ -42,17 +42,20 @@ export class AppStore {
 
   @action.bound
   public loadPerson(id: string) {
-    const person = {
-      id,
-      loaded: false,
-    };
-    this.addPersons([person as IPerson]);
+    if (!(id in this.persons)) {
+      const person = {
+        id,
+        loaded: false,
+      };
+      this.addPersons([person as IPerson]);
+    }
 
     setTimeout(async () => {
       const newPerson = await fetchPerson(id);
       this.updatePerson(id, newPerson);
     });
-    return person;
+
+    return this.persons[id];
   }
 
   @action
@@ -93,6 +96,8 @@ export class AppStore {
 
     const appointmentsPromises = day.appointments.map(
       async (app: IAppointment): Promise<IAppointment> => {
+        // if (!(app.personId in this.persons)) this.loadPerson(app.personId);
+        // const person = this.persons[app.personId];
         const person =
           app.personId in this.persons
             ? this.persons[app.personId]
@@ -136,12 +141,5 @@ export class AppStore {
 }
 
 const appStore = new AppStore();
-
-// autorun(r => {
-//   if (appStore.currentUser) {
-//     console.clear();
-//     console.log(toJS(appStore));
-//   }
-// });
 
 export default appStore;

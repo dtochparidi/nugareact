@@ -41,6 +41,10 @@
     width: $marker-width;
 
     background: green;
+
+    &.loading {
+      background: lightgrey;
+    }
   }
 
   $avatar-width: $calendar-cell-height - $avatar-left-margin * 2 - $thin-width;
@@ -55,6 +59,10 @@
     border-radius: 50%;
 
     background: lightgrey;
+
+    &.loading {
+      background: lightgrey;
+    }
   }
 
   .mainInfoWrapper {
@@ -103,6 +111,14 @@
       .number {
         @extend .font-secondary-middle;
       }
+
+      &.loading {
+        background: lightgrey;
+        height: 15px;
+        width: auto;
+
+        margin: 2.5px;
+      }
     }
   }
 
@@ -130,6 +146,10 @@
       display: flex;
       justify-content: center;
       align-items: center;
+
+      &.loading {
+        background: lightgrey;
+      }
     }
   }
 }
