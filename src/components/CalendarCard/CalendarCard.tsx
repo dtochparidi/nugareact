@@ -27,10 +27,22 @@ export interface IState {
   columnsPerDay: number;
   rows: number;
   stamps: IMoment[];
+  dayWidth: string;
 }
 
 @observer
 export default class CalendarCard extends React.Component<IProps, IState> {
+  private static calcDaySize(
+    columnsPerPage: number,
+    columnsPerDay: number,
+    containerWidth: number,
+  ) {
+    // const columnDelta = columnsPerDay - columnsPerPage;
+    const dayWidth = (containerWidth / columnsPerPage) * columnsPerDay;
+    console.log(containerWidth, columnsPerDay, columnsPerPage, '=>', dayWidth);
+    return dayWidth;
+  }
+
   public selectedDay: number = 0;
   public currentLeftColumnIndex: number = 0;
   private daysContainerRef: React.RefObject<HTMLDivElement>;
@@ -49,6 +61,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     this.state = {
       columnsPerDay: this.props.positionCount,
       columnsPerPage: 4,
+      dayWidth: '100%',
       requiredDays: new Array(2)
         .fill(null)
         .map((v, i) => moment().add(i, 'day')),
@@ -70,6 +83,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     });
 
     this.startResizeHandling();
+    this.updateDaysWidth();
   }
 
   public componentDidUpdate() {
@@ -170,6 +184,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public updateVisibility(indexes: number[]) {
+    return;
+
     Array.from(
       (this.daysContainerRef.current as HTMLDivElement).children,
     ).forEach((child, index) => {
@@ -178,8 +194,27 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     });
   }
 
+  public updateDaysWidth() {
+    const dayWidth = this.calcDaysWidth();
+    console.log(dayWidth);
+    this.setState({ dayWidth });
+  }
+
+  public calcDaysWidth() {
+    const { columnsPerDay, columnsPerPage } = this.state;
+    const containerWidth = (this.daysContainerRef.current as HTMLDivElement)
+      .offsetWidth;
+    const dayWidth = CalendarCard.calcDaySize(
+      columnsPerPage,
+      columnsPerDay,
+      containerWidth,
+    );
+
+    return dayWidth <= 0 ? '100%' : `${dayWidth}px`;
+  }
+
   public render() {
-    const { rows, columnsPerDay, stamps } = this.state;
+    const { rows, columnsPerDay, stamps, dayWidth } = this.state;
 
     return (
       <Card
@@ -195,6 +230,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
               cols={columnsPerDay || 0}
               dayData={day}
               stamps={stamps}
+              dayWidth={dayWidth}
             />
           ))}
         </div>
@@ -210,6 +246,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
         this.updateScroll();
+        this.updateDaysWidth();
       }, boundTime);
     });
   }

@@ -11,16 +11,19 @@ export interface IProps {
   cols: number;
   dayData: ICalendarDay;
   stamps: moment.Moment[];
+  dayWidth: string;
 }
 
 @observer
 export default class Day extends React.Component<IProps> {
   public render() {
-    const { rows, cols, dayData } = this.props;
+    const { rows, cols, dayData, dayWidth } = this.props;
     return (
       <div
         className="dayWrapper"
-        style={{ '--columns-count': cols } as React.CSSProperties}
+        style={
+          { '--columns-count': cols, width: dayWidth } as React.CSSProperties
+        }
       >
         <div className="day">
           <PositionRow positionCount={cols} />
