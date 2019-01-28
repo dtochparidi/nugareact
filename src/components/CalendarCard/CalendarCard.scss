@@ -70,8 +70,6 @@ $calendar-cell-width-min: 180px;
         grid-template-rows: $calendar-cell-height auto;
 
         .positionRow {
-          // @extend .borders;
-
           display: grid;
           grid-template-rows: $calendar-cell-height;
           grid-template-columns: repeat(var(--columns-count), 1fr);

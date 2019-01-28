@@ -245,8 +245,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
-        this.updateScroll();
         this.updateDaysWidth();
+        this.updateScroll();
       }, boundTime);
     });
   }
