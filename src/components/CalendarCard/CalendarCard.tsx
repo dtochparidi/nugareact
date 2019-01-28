@@ -30,7 +30,6 @@ export interface IState {
   requiredDays: IMoment[];
   columnsPerPage: number;
   columnsPerDay: number;
-  rows: number;
   stamps: IMoment[];
   dayWidth: string;
 }
@@ -87,7 +86,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       requiredDays: new Array(2)
         .fill(null)
         .map((v, i) => moment().add(i, 'day')),
-      rows: this.props.positionCount,
       stamps,
     };
   }
@@ -246,7 +244,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public render() {
-    const { rows, columnsPerDay, stamps, dayWidth } = this.state;
+    const { columnsPerDay, stamps, dayWidth } = this.state;
+    const rows = this.props.positionCount;
 
     return (
       <Card
