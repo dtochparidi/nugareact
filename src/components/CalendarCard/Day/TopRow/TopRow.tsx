@@ -13,10 +13,15 @@ export default class TopRow extends React.Component<IProps> {
         {/* {new Array(this.props.positionCount).fill(null).map((v, i) => (
           <div className="item" key={i}>{`Position ${i}`}</div>
         ))} */}
-        {this.props.stamps.map(stamp => {
+        {this.props.stamps.map((stamp, i, arr) => {
           const s = stamp.format('HH:mm');
           return (
-            <div className="item" key={s}>
+            <div
+              className={`item ${
+                i === 0 ? 'first' : i === arr.length - 1 ? 'last' : ''
+              }`}
+              key={s}
+            >
               {s}
             </div>
           );

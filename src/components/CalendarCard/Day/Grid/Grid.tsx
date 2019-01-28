@@ -62,7 +62,14 @@ export default class Grid extends React.Component<IProps> {
         // if (app) console.log(app.x, app.y);
 
         gridCells.push(
-          <div key={`${x}:${y}`} className="item" data-x={x} data-y={y}>
+          <div
+            key={`${x}:${y}`}
+            className={`item ${
+              x === 0 ? 'first' : x === cols - 1 ? 'last' : ''
+            }`}
+            data-x={x}
+            data-y={y}
+          >
             {app ? <AppointmentCell appointment={app.appointment} /> : null}
           </div>,
         );

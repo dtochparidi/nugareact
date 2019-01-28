@@ -29,6 +29,14 @@ $calendar-cell-width-min: 190px;
     display: flex;
     align-items: center;
     justify-content: center;
+
+    &.first {
+      border-left-style: dashed;
+    }
+
+    &.last {
+      border-right-style: dashed;
+    }
   }
 
   .leftColumn {
@@ -60,11 +68,6 @@ $calendar-cell-width-min: 190px;
       display: inline-block;
       height: 100%;
       width: 100%;
-      // min-width: calc(
-      //   #{$time-column-width} + var(--columns-count) * #{$calendar-cell-width-min}
-      // );
-
-      outline: dashed lightgrey 1px;
 
       .day {
         display: grid;
