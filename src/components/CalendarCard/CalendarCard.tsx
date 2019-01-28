@@ -83,7 +83,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       columnsPerDay: stamps.length,
       columnsPerPage: 4,
       dayWidth: '100%',
-      requiredDays: new Array(2)
+      requiredDays: new Array(12)
         .fill(null)
         .map((v, i) => moment().add(i, 'day')),
       stamps,
@@ -115,13 +115,25 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     });
 
     if (this.shouldUpdateVisibility) {
-      this.updateVisibility([this.selectedDay]);
+      this.updateVisibility([
+        this.currentLeftColumnIndex,
+        this.currentLeftColumnIndex + this.state.columnsPerPage,
+      ]);
       this.shouldUpdateVisibility = false;
     }
   }
 
   public turnPage(delta: -1 | 1) {
-    this.updateVisibility([this.selectedDay, this.selectedDay + delta]);
+    this.updateVisibility([
+      this.currentLeftColumnIndex,
+      Math.min(
+        Math.max(
+          this.currentLeftColumnIndex + this.state.columnsPerPage * 2 * delta,
+          0,
+        ),
+        this.props.days.length * this.state.columnsPerDay - 1,
+      ),
+    ]);
 
     const newIndex = Math.min(
       Math.max(this.selectedDay + delta, 0),
@@ -163,7 +175,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const callback = () => {
       clearTimeout(this.containerScrollTimeout);
       this.containerScrollTimeout = setTimeout(() => {
-        this.updateVisibility([this.selectedDay]);
+        this.updateVisibility([
+          this.currentLeftColumnIndex,
+          this.currentLeftColumnIndex + this.state.columnsPerPage,
+        ]);
         container.removeEventListener('scroll', callback);
       }, 500);
     };
@@ -196,7 +211,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const callback = () => {
       clearTimeout(this.containerScrollTimeout);
       this.containerScrollTimeout = setTimeout(() => {
-        this.updateVisibility([this.selectedDay]);
+        this.updateVisibility([
+          this.currentLeftColumnIndex,
+          this.currentLeftColumnIndex + this.state.columnsPerPage,
+        ]);
         container.removeEventListener('scroll', callback);
       }, 500);
     };
@@ -205,12 +223,15 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public updateVisibility(indexes: number[]) {
-    return;
+    const minColumn = Math.min(...indexes);
+    const maxColumn = Math.max(...indexes);
+    const minDay = Math.floor(minColumn / this.state.columnsPerDay) - 1;
+    const maxDay = Math.ceil(maxColumn / this.state.columnsPerDay) + 1;
 
     Array.from(
       (this.daysContainerRef.current as HTMLDivElement).children,
     ).forEach((child, index) => {
-      if (indexes.includes(index)) child.classList.remove('hidden');
+      if (index >= minDay && index <= maxDay) child.classList.remove('hidden');
       else child.classList.add('hidden');
     });
   }

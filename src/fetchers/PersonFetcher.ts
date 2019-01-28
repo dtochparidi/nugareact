@@ -7,6 +7,10 @@ function takeRandom(array: any[]) {
   return array[Math.floor(Math.random() * array.length)];
 }
 
+function random(to: number, from: number = 0) {
+  return Math.floor(Math.random() * (to - from)) + from;
+}
+
 function generateRandomPerson(id: string): IPerson {
   return {
     address: 'Москва',
@@ -31,7 +35,7 @@ function generateRandomPerson(id: string): IPerson {
 const fetchPerson: IFetcher<string, IPerson> = async function PersonFetcher(
   id,
 ) {
-  await new Promise(resolve => setTimeout(resolve, 300));
+  await new Promise(resolve => setTimeout(resolve, random(1200, 200)));
 
   return generateRandomPerson(id);
 };

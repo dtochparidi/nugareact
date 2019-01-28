@@ -2,7 +2,7 @@
 
 $time-column-width: 50px;
 $calendar-cell-height: 60px;
-$calendar-cell-width-min: 180px;
+$calendar-cell-width-min: 190px;
 
 :export {
   calendarCellWidthMin: $calendar-cell-width-min;
@@ -64,7 +64,7 @@ $calendar-cell-width-min: 180px;
       //   #{$time-column-width} + var(--columns-count) * #{$calendar-cell-width-min}
       // );
 
-      outline: solid rgb(129, 129, 129) 2px;
+      outline: dashed lightgrey 1px;
 
       .day {
         display: grid;

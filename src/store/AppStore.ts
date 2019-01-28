@@ -26,10 +26,10 @@ export class AppStore {
   public dayTimeRange: DateRange = moment.range(
     moment()
       .startOf('day')
-      .hour(9),
+      .hour(8),
     moment()
       .startOf('day')
-      .hour(21),
+      .hour(11),
   );
 
   @observable
