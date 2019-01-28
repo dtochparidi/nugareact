@@ -4,6 +4,10 @@ $time-column-width: 50px;
 $calendar-cell-height: 60px;
 $calendar-cell-width-min: 180px;
 
+:export {
+  calendarCellWidthMin: $calendar-cell-width-min;
+}
+
 .calendarCard {
   .borders {
     border: solid lightgrey 1px;
@@ -15,7 +19,7 @@ $calendar-cell-width-min: 180px;
   width: auto !important;
   padding: 0;
 
-  grid-template-areas: 'timeColumn daysContainer';
+  grid-template-areas: 'leftColumn daysContainer';
   grid-template-columns: $time-column-width auto;
   grid-template-rows: auto;
 
@@ -27,12 +31,12 @@ $calendar-cell-width-min: 180px;
     justify-content: center;
   }
 
-  .timeColumn {
+  .leftColumn {
     // @extend .borders;
     // border-right: none;
 
     display: grid;
-    grid-area: timeColumn;
+    grid-area: leftColumn;
 
     grid-template-rows: repeat(
       calc(var(--rows-count) + 1),
@@ -56,11 +60,11 @@ $calendar-cell-width-min: 180px;
       display: inline-block;
       height: 100%;
       width: 100%;
-      min-width: calc(
-        #{$time-column-width} + var(--columns-count) * #{$calendar-cell-width-min}
-      );
+      // min-width: calc(
+      //   #{$time-column-width} + var(--columns-count) * #{$calendar-cell-width-min}
+      // );
 
-      outline: solid rgb(129, 129, 129) 1px;
+      outline: solid rgb(129, 129, 129) 2px;
 
       .day {
         display: grid;
@@ -69,7 +73,7 @@ $calendar-cell-width-min: 180px;
 
         grid-template-rows: $calendar-cell-height auto;
 
-        .positionRow {
+        .topRow {
           display: grid;
           grid-template-rows: $calendar-cell-height;
           grid-template-columns: repeat(var(--columns-count), 1fr);

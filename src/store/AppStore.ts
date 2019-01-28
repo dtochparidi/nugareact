@@ -3,7 +3,6 @@ import { Moment as IMoment } from 'moment';
 import * as Moment from 'moment';
 import { DateRange, extendMoment } from 'moment-range';
 import IAppointment from 'src/interfaces/IAppointment';
-import { IPersonLoading } from 'src/interfaces/IPersonLoading';
 
 import fetchDay from '../fetchers/DayFetcher';
 import fetchPerson from '../fetchers/PersonFetcher';
@@ -22,7 +21,7 @@ export class AppStore {
   @observable
   public calendarDaysPending: IMoment[] = [];
   @observable
-  public positionCount: number = 5;
+  public positionCount: number = 11;
   @observable
   public dayTimeRange: DateRange = moment.range(
     moment()
@@ -35,26 +34,30 @@ export class AppStore {
 
   @observable
   public persons: { [id: string]: IPerson } = {};
-  @observable
-  public personsPending: { [id: string]: IPerson | IPersonLoading } = {};
 
   @action
   public updatePositionCount(count: number) {
     this.positionCount = count;
   }
 
-  public async loadPerson(id: string) {
+  @action.bound
+  public loadPerson(id: string) {
     const person = {
       id,
       loaded: false,
     };
-    this.personsPending[id] = person;
-
-    Object.assign(person, await fetchPerson(id));
-
     this.addPersons([person as IPerson]);
 
+    setTimeout(async () => {
+      const newPerson = await fetchPerson(id);
+      this.updatePerson(id, newPerson);
+    });
     return person;
+  }
+
+  @action
+  public updatePerson(id: string, instance: IPerson) {
+    Object.assign(this.persons[id], instance);
   }
 
   public async loadMultiplePerson(ids: string[]) {
@@ -91,9 +94,9 @@ export class AppStore {
     const appointmentsPromises = day.appointments.map(
       async (app: IAppointment): Promise<IAppointment> => {
         const person =
-          app.personId in this.personsPending
-            ? this.personsPending[app.personId]
-            : await this.loadPerson(app.personId);
+          app.personId in this.persons
+            ? this.persons[app.personId]
+            : this.loadPerson(app.personId);
         return {
           date: app.date,
           personId: app.personId,

@@ -4,7 +4,7 @@ import * as React from 'react';
 import ICalendarDay from 'src/interfaces/ICalendarDay';
 
 import Grid from './Grid';
-import PositionRow from './PositionRow';
+import TopRow from './TopRow';
 
 export interface IProps {
   rows: number;
@@ -17,7 +17,7 @@ export interface IProps {
 @observer
 export default class Day extends React.Component<IProps> {
   public render() {
-    const { rows, cols, dayData, dayWidth } = this.props;
+    const { rows, cols, dayData, dayWidth, stamps } = this.props;
     return (
       <div
         className="dayWrapper"
@@ -26,7 +26,8 @@ export default class Day extends React.Component<IProps> {
         }
       >
         <div className="day">
-          <PositionRow positionCount={cols} />
+          {/* <PositionRow positionCount={cols} /> */}
+          <TopRow stamps={stamps} />
           <Grid
             rows={rows}
             cols={cols}

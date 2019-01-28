@@ -17,6 +17,11 @@ export default class AppointmentCell extends React.Component<IProps> {
 
   public render() {
     const { personInstance } = this.props.appointment;
+    // if (!personInstance) console.log('whaaat');
+    // else if (!personInstance.loaded)
+    //   console.log('just unloaded', personInstance.id);
+    // else console.log('loaded!', personInstance.id);
+
     if (!personInstance || !personInstance.loaded) return null;
 
     const person = personInstance as IPerson;

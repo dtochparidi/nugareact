@@ -7,9 +7,14 @@ import * as React from 'react';
 import ICalendarDay from '../../interfaces/ICalendarDay';
 import Card from '../Card';
 import Day from './Day';
-import TimeColumn from './TimeColumn';
+import LeftColumn from './LeftColumn';
 
+import * as StyleVariables from '../../common/variables.scss';
+import * as CardVariables from './CalendarCard.scss';
 import './CalendarCard.scss';
+
+const calendarCellMinWidth = parseFloat(CardVariables.calendarCellWidthMin);
+const thinWidth = parseFloat(StyleVariables.thinWidth);
 
 const moment = extendMoment(Moment);
 
@@ -37,10 +42,17 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     columnsPerDay: number,
     containerWidth: number,
   ) {
-    // const columnDelta = columnsPerDay - columnsPerPage;
-    const dayWidth = (containerWidth / columnsPerPage) * columnsPerDay;
-    console.log(containerWidth, columnsPerDay, columnsPerPage, '=>', dayWidth);
+    const dayWidth =
+      (containerWidth / columnsPerPage) * columnsPerDay - thinWidth;
     return dayWidth;
+  }
+
+  private static calcColumnsCount(
+    containerWidth: number,
+    calendarCellWidthMin: number,
+  ) {
+    const columnsCount = Math.floor(containerWidth / calendarCellWidthMin);
+    return columnsCount;
   }
 
   public selectedDay: number = 0;
@@ -58,14 +70,24 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       this.props.dayTimeRange.by('minutes', { step: 60 }),
     );
 
+    // this.state = {
+    //   columnsPerDay: this.props.positionCount,
+    //   columnsPerPage: 4,
+    //   dayWidth: '100%',
+    //   requiredDays: new Array(5)
+    //     .fill(null)
+    //     .map((v, i) => moment().add(i, 'day')),
+    //   rows: stamps.length,
+    //   stamps,
+    // };
     this.state = {
-      columnsPerDay: this.props.positionCount,
+      columnsPerDay: stamps.length,
       columnsPerPage: 4,
       dayWidth: '100%',
       requiredDays: new Array(2)
         .fill(null)
         .map((v, i) => moment().add(i, 'day')),
-      rows: stamps.length,
+      rows: this.props.positionCount,
       stamps,
     };
   }
@@ -83,7 +105,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     });
 
     this.startResizeHandling();
-    this.updateDaysWidth();
+    this.updateColumnsCount();
+    setTimeout(() => this.updateDaysWidth());
   }
 
   public componentDidUpdate() {
@@ -112,7 +135,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         this.currentLeftColumnIndex + delta * this.state.columnsPerPage,
         0,
       ),
-      this.props.days.length * this.state.columnsPerPage,
+      this.props.days.length * this.state.columnsPerDay - 1,
     );
 
     this.updateScroll();
@@ -196,8 +219,17 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
   public updateDaysWidth() {
     const dayWidth = this.calcDaysWidth();
-    console.log(dayWidth);
     this.setState({ dayWidth });
+  }
+
+  public updateColumnsCount() {
+    const containerWidth = (this.daysContainerRef.current as HTMLDivElement)
+      .offsetWidth;
+    const count = CalendarCard.calcColumnsCount(
+      containerWidth,
+      calendarCellMinWidth,
+    );
+    this.setState({ columnsPerPage: count });
   }
 
   public calcDaysWidth() {
@@ -221,7 +253,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         cardClass="calendarCard"
         style={{ '--rows-count': rows } as React.CSSProperties}
       >
-        <TimeColumn stamps={stamps} />
+        {/* <TimeColumn stamps={stamps} /> */}
+        <LeftColumn positionCount={rows} />
         <div className="daysContainer" ref={this.daysContainerRef}>
           {this.props.days.map(day => (
             <Day
@@ -245,8 +278,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
+        this.updateColumnsCount();
         this.updateDaysWidth();
-        this.updateScroll();
+        this.updateScroll(true);
       }, boundTime);
     });
   }
