@@ -2,7 +2,7 @@
 
 $time-column-width: 50px;
 $calendar-cell-height: 60px;
-$calendar-cell-width-min: 190px;
+$calendar-cell-width-min: 220px;
 
 :export {
   calendarCellWidthMin: $calendar-cell-width-min;
@@ -90,6 +90,18 @@ $calendar-cell-width-min: 190px;
 
           .item {
             position: relative;
+          }
+
+          .dropzone {
+            background: inherit;
+
+            &.active {
+              background: lightsteelblue;
+
+              &.enter {
+                background: khaki;
+              }
+            }
           }
         }
       }

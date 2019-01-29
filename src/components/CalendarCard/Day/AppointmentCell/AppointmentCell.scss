@@ -1,6 +1,7 @@
 @import 'src/common/variables.scss';
 @import 'src/common/fonts.scss';
 @import 'src/common/colors.scss';
+@import 'src/common/decorations.scss';
 @import '../../CalendarCard.scss';
 
 .appointmentCell {
@@ -25,6 +26,8 @@
   justify-content: center;
 
   &.moving {
+    @extend .light-box-shadow;
+
     position: fixed;
     z-index: 100;
   }

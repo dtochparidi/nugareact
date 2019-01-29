@@ -21,7 +21,7 @@ export class AppStore {
   @observable
   public calendarDaysPending: IMoment[] = [];
   @observable
-  public positionCount: number = 11;
+  public positionCount: number = 21;
   @observable
   public dayTimeRange: DateRange = moment.range(
     moment()

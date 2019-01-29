@@ -64,7 +64,7 @@ export default class Grid extends React.Component<IProps> {
         gridCells.push(
           <div
             key={`${x}:${y}`}
-            className={`item ${
+            className={`gridCell item ${
               x === 0 ? 'first' : x === cols - 1 ? 'last' : ''
             }`}
             data-x={x}

@@ -5,12 +5,6 @@ import { IPerson } from 'src/interfaces/IPerson';
 
 import './AppointmentCell.scss';
 
-// import * as interact from 'interactjs';
-
-// interact('.appointmentCell').draggable({
-
-// });
-
 export interface IProps {
   appointment: IAppointment;
 }
@@ -41,7 +35,7 @@ export default class AppointmentCell extends React.Component<IProps> {
             </div>
           </div>
           <div className="pointsWrapper">
-            <div className="content loading">{personInstance.id}</div>
+            <div className="content loading" />
           </div>
         </div>
       );
@@ -59,8 +53,10 @@ export default class AppointmentCell extends React.Component<IProps> {
                 {person.patronymic ? (
                   <span className="patronymic">{person.patronymic} </span>
                 ) : null}
-                <span className="visits">v</span>{' '}
-                <span className="grade">g</span>
+                <span>
+                  <span className="visits">13</span>{' '}
+                  <span className="grade">A</span>
+                </span>
               </div>
               <div className="content">
                 <span className="number">{person.phone}</span>
@@ -68,8 +64,7 @@ export default class AppointmentCell extends React.Component<IProps> {
             </div>
           </div>
           <div className="pointsWrapper">
-            {/* <div className="content">19</div> */}
-            <div className="content">{person.id}</div>
+            <div className="content">19</div>
           </div>
         </div>
       );

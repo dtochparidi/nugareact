@@ -24,6 +24,7 @@ export default class Day extends React.Component<IProps> {
         style={
           { '--columns-count': cols, width: dayWidth } as React.CSSProperties
         }
+        id={`day_${dayData.date.format('DD-MM-YY')}`}
       >
         <div className="day">
           {/* <PositionRow positionCount={cols} /> */}

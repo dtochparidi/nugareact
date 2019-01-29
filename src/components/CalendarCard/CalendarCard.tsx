@@ -13,6 +13,14 @@ import * as StyleVariables from '../../common/variables.scss';
 import * as CardVariables from './CalendarCard.scss';
 import './CalendarCard.scss';
 
+import * as interact from 'interactjs';
+import createDragConfig from './dragConfig';
+
+const clientSide =
+  typeof window !== 'undefined' &&
+  window.document &&
+  window.document.createElement;
+
 const calendarCellMinWidth = parseFloat(CardVariables.calendarCellWidthMin);
 const thinWidth = parseFloat(StyleVariables.thinWidth);
 
@@ -59,6 +67,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   private daysContainerRef: React.RefObject<HTMLDivElement>;
   private containerScrollTimeout: NodeJS.Timeout;
   private shouldUpdateVisibility: boolean = false;
+  private isDragging: boolean = false;
 
   constructor(props: IProps) {
     super(props);
@@ -69,25 +78,86 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       this.props.dayTimeRange.by('minutes', { step: 60 }),
     );
 
-    // this.state = {
-    //   columnsPerDay: this.props.positionCount,
-    //   columnsPerPage: 4,
-    //   dayWidth: '100%',
-    //   requiredDays: new Array(5)
-    //     .fill(null)
-    //     .map((v, i) => moment().add(i, 'day')),
-    //   rows: stamps.length,
-    //   stamps,
-    // };
+    if (clientSide)
+      interact('.appointmentCell').draggable(
+        createDragConfig(
+          this.onAppointmentDraggingStart.bind(this),
+          () => null,
+          this.onAppointmentDraggingEnd.bind(this),
+        ),
+      );
+
     this.state = {
       columnsPerDay: stamps.length,
       columnsPerPage: 4,
       dayWidth: '100%',
-      requiredDays: new Array(15)
+      requiredDays: new Array(3)
         .fill(null)
         .map((v, i) => moment().add(i, 'day')),
       stamps,
     };
+  }
+
+  public onAppointmentDraggingStart(e: interact.InteractEvent) {
+    this.isDragging = true;
+    this.updateDropzones();
+
+    console.log(this.isDragging);
+  }
+
+  public onAppointmentDraggingEnd(e: interact.InteractEvent) {
+    this.isDragging = false;
+
+    console.log(this.isDragging);
+  }
+
+  public updateDropzones() {
+    const minColumn = this.currentLeftColumnIndex;
+    const maxColumn = this.currentLeftColumnIndex + this.state.columnsPerPage;
+    const minDay = Math.floor(minColumn / this.state.columnsPerDay) - 1;
+    const maxDay = Math.ceil(maxColumn / this.state.columnsPerDay) + 1;
+
+    Array.from(
+      (this.daysContainerRef.current as HTMLDivElement).children,
+    ).forEach((child, index) => {
+      const selector = `#${child.id} .gridCell`;
+      if (index >= minDay && index <= maxDay)
+        interact(selector).dropzone({
+          ondragenter: e => {
+            const {
+              target,
+            }: {
+              target: HTMLElement;
+            } = e;
+            target.classList.add('dropzone', 'enter');
+          },
+          ondragleave: e => {
+            const {
+              target,
+            }: {
+              target: HTMLElement;
+            } = e;
+            target.classList.remove('enter');
+          },
+          ondropactivate: e => {
+            const {
+              target,
+            }: {
+              target: HTMLElement;
+            } = e;
+            target.classList.add('dropzone', 'active');
+          },
+          ondropdeactivate: e => {
+            const {
+              target,
+            }: {
+              target: HTMLElement;
+            } = e;
+            target.classList.remove('dropzone', 'active', 'enter');
+          },
+        });
+      else interact(selector).dropzone({});
+    });
   }
 
   public componentDidMount() {
