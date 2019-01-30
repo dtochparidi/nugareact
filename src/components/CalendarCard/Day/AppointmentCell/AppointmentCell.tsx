@@ -16,7 +16,7 @@ export default class AppointmentCell extends React.Component<IProps> {
   }
 
   public render() {
-    const { personInstance } = this.props.appointment;
+    const { personInstance, identifier } = this.props.appointment;
 
     if (!personInstance) {
       console.warn('missing instance');
@@ -25,7 +25,7 @@ export default class AppointmentCell extends React.Component<IProps> {
 
     if (!personInstance.loaded)
       return (
-        <div className="appointmentCell">
+        <div className="appointmentCell" id={identifier}>
           <div className="marker loading" />
           <div className="avatar loading" />
           <div className="mainInfoWrapper">
@@ -42,7 +42,7 @@ export default class AppointmentCell extends React.Component<IProps> {
     else {
       const person = personInstance as IPerson;
       return (
-        <div className="appointmentCell">
+        <div className="appointmentCell" id={identifier}>
           <div className="marker" />
           <div className="avatar" />
           <div className="mainInfoWrapper">

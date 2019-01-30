@@ -11,16 +11,23 @@ function random(to: number, from: number = 0) {
 export function generateRandomDay(date: moment.Moment): ICalendarDay {
   return {
     appointments: new Array(25).fill(null).map(
-      (): IAppointment => ({
-        date: date
-          .clone()
-          .hour(random(17, 8))
-          .minute(random(59, 1)),
-        personId: `#${random(10)
-          .toString()
-          .padStart(3, '0')}`,
-        position: random(0, 10),
-      }),
+      (): IAppointment => {
+        const app = {
+          date: date
+            .clone()
+            .hour(random(17, 8))
+            .minute(random(59, 1)),
+          personId: `#${random(10)
+            .toString()
+            .padStart(3, '0')}`,
+          position: random(0, 10),
+        };
+        return Object.assign(app, {
+          identifier: `${app.date.format('mm-hh-DD-MM-YYYY')}_${app.personId}_${
+            app.position
+          }`,
+        });
+      },
     ),
     date,
   };

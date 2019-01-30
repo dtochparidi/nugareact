@@ -75,6 +75,7 @@ class App extends React.Component {
           requestCallback={appStore.loadDay}
           positionCount={appStore.positionCount}
           dayTimeRange={appStore.dayTimeRange}
+          updateAppointment={appStore.updateAppointment}
         />
       </div>
     );

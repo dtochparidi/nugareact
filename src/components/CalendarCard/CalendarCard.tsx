@@ -32,6 +32,13 @@ export interface IProps {
   dayTimeRange: DateRange;
   positionCount: number;
   requestCallback: (date: Moment.Moment) => void;
+  updateAppointment: (
+    d: IMoment,
+    p: number,
+    i: string,
+    td: IMoment,
+    tp: number,
+  ) => void;
 }
 
 export interface IState {
@@ -67,7 +74,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   private daysContainerRef: React.RefObject<HTMLDivElement>;
   private containerScrollTimeout: NodeJS.Timeout;
   private shouldUpdateVisibility: boolean = false;
-  private isDragging: boolean = false;
+  // private isDragging: boolean = false;
 
   constructor(props: IProps) {
     super(props);
@@ -99,16 +106,12 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public onAppointmentDraggingStart(e: interact.InteractEvent) {
-    this.isDragging = true;
+    // this.isDragging = true;
     this.updateDropzones();
-
-    console.log(this.isDragging);
   }
 
   public onAppointmentDraggingEnd(e: interact.InteractEvent) {
-    this.isDragging = false;
-
-    console.log(this.isDragging);
+    // this.isDragging = false;
   }
 
   public updateDropzones() {
@@ -138,6 +141,34 @@ export default class CalendarCard extends React.Component<IProps, IState> {
               target: HTMLElement;
             } = e;
             target.classList.remove('enter');
+          },
+          ondrop: e => {
+            const {
+              target,
+              relatedTarget,
+            }: { target: HTMLElement; relatedTarget: HTMLElement } = e;
+
+            const appointmentId = relatedTarget.id;
+            const appointmentData = appointmentId.split('_');
+            const appDate = moment(appointmentData[0], 'mm-hh-DD-MM-YYYY');
+            const appId = appointmentData[1];
+            const appPosition = parseInt(appointmentData[2], 10);
+
+            const targetDay = (((target.parentNode as HTMLElement) // Grid
+              .parentNode as HTMLElement) as HTMLElement) // Day
+              .parentNode as HTMLElement; // DayWrapper
+            const dayString = targetDay.id.split('_')[1];
+            const targetDayStamp = moment(dayString, 'DD-MM-YYYY');
+
+            console.log(target);
+
+            this.props.updateAppointment(
+              appDate,
+              appPosition,
+              appId,
+              targetDayStamp,
+              parseInt(target['data-x'], 10),
+            );
           },
           ondropactivate: e => {
             const {

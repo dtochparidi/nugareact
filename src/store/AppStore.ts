@@ -104,6 +104,7 @@ export class AppStore {
             : this.loadPerson(app.personId);
         return {
           date: app.date,
+          identifier: app.identifier,
           personId: app.personId,
           personInstance: person,
           position: app.position,
@@ -114,6 +115,17 @@ export class AppStore {
     day.appointments = await Promise.all(appointmentsPromises);
 
     this.addDay(day);
+  }
+
+  @action
+  public updateAppointment(
+    date: IMoment,
+    position: number,
+    personId: string,
+    targetDate: IMoment,
+    targetPosition: number,
+  ) {
+    console.log(arguments);
   }
 
   @action

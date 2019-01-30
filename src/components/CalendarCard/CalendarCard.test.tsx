@@ -18,14 +18,16 @@ function requestDay(date: IMoment) {
 
 const dayTimeRange: DateRange = moment.range(
   moment()
-    .startOf("day")
+    .startOf('day')
     .hour(9),
   moment()
-    .startOf("day")
-    .hour(21)
+    .startOf('day')
+    .hour(21),
 );
 
-it("renders without crashing", () => {
+const ua = () => null;
+
+it('renders without crashing', () => {
   const component = enzyme.render(
     <CalendarCard
       days={dates.map(generateRandomDay)}
@@ -33,7 +35,8 @@ it("renders without crashing", () => {
       requestCallback={requestDay}
       positionCount={6}
       dayTimeRange={dayTimeRange}
-    />
+      updateAppointment={ua}
+    />,
   );
   expect(component);
 });

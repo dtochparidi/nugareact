@@ -1,4 +1,5 @@
 import * as moment from 'moment';
+
 import { IPerson } from './IPerson';
 import { IPersonLoading } from './IPersonLoading';
 
@@ -7,5 +8,5 @@ export default interface IAppointment {
   position: number;
   personId: string;
   personInstance?: IPerson | IPersonLoading;
-  identifier?: string;
+  identifier: string;
 }
