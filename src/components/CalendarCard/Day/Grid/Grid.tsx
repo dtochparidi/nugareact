@@ -10,12 +10,20 @@ export interface IProps {
   rows: number;
   appointments: IAppointment[];
   stamps: moment.Moment[];
+  shifts: {
+    [x: number]: {
+      [x: number]: {
+        dx: number;
+        dy: number;
+      };
+    };
+  };
 }
 
 @observer
 export default class Grid extends React.Component<IProps> {
   public render() {
-    const { rows, cols, appointments, stamps } = this.props;
+    const { rows, cols, appointments, stamps, shifts } = this.props;
 
     const timeRange = stamps[stamps.length - 1].valueOf() - stamps[0].valueOf();
     const step = timeRange / stamps.length;
@@ -62,6 +70,9 @@ export default class Grid extends React.Component<IProps> {
     for (let y = 0; y < rows; y++)
       for (let x = 0; x < cols; x++) {
         const app = personCells[y * cols + x];
+        const shiftExists = x in shifts && y in shifts[x];
+        const shift = !shiftExists ? { dx: 0, dy: 0 } : shifts[x][y];
+        const { dx, dy } = shift;
 
         gridCells.push(
           <div
@@ -74,7 +85,17 @@ export default class Grid extends React.Component<IProps> {
             data-hour={stamps[x].hour()}
             data-minute={stamps[x].minute()}
           >
-            {app ? <AppointmentCell appointment={app.appointment} /> : null}
+            {app ? (
+              shiftExists ? (
+                <AppointmentCell
+                  appointment={app.appointment}
+                  translateX={dx}
+                  translateY={dy}
+                />
+              ) : (
+                <AppointmentCell appointment={app.appointment} />
+              )
+            ) : null}
           </div>,
         );
       }

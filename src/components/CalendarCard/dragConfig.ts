@@ -12,6 +12,8 @@ function createDragConfig(
   function startHandler(e: InteractEvent) {
     const { target }: { target: HTMLElement } = e;
 
+    // transformBeforeDragging = target.style.transform || '';
+
     clientPos.x = e.clientX;
     clientPos.y = e.clientY;
 
@@ -66,6 +68,7 @@ function createDragConfig(
       speed: 800,
     } as any,
     onend: endHandler,
+
     onmove: moveHandler,
     onstart: startHandler,
   };

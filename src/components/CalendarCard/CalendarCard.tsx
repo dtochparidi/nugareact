@@ -23,7 +23,7 @@ const thinWidth = parseFloat(StyleVariables.thinWidth);
 
 const moment = extendMoment(Moment);
 
-if (clientSide) (interact as any).dynamicDrop(true);
+// if (clientSide) (interact as any).dynamicDrop(true);
 
 export interface IProps {
   days: ICalendarDay[];
@@ -46,6 +46,15 @@ export interface IState {
   columnsPerDay: number;
   stamps: IMoment[];
   dayWidth: string;
+  cellWidth: number;
+  shifts: {
+    [x: number]: {
+      [x: number]: {
+        dx: number;
+        dy: number;
+      };
+    };
+  };
 }
 
 @observer
@@ -94,12 +103,15 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       );
 
     this.state = {
+      cellWidth: 0,
       columnsPerDay: stamps.length,
       columnsPerPage: 4,
       dayWidth: '100%',
       requiredDays: new Array(3)
         .fill(null)
         .map((v, i) => moment().add(i, 'day')),
+      // shifts: { 0: { 0: { dx: 150, dy: 50 } } },
+      shifts: {},
       stamps,
     };
   }
@@ -345,7 +357,16 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
   public updateDaysWidth() {
     const dayWidth = this.calcDaysWidth();
-    this.setState({ dayWidth });
+    const state = { dayWidth };
+
+    const justACell = (this.daysContainerRef
+      .current as HTMLElement).querySelector('.appointmentCell') as HTMLElement;
+    if (justACell)
+      Object.assign(state, {
+        cellWidth: justACell.getBoundingClientRect().width,
+      });
+
+    this.setState(state);
   }
 
   public updateColumnsCount() {
@@ -372,7 +393,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public render() {
-    const { columnsPerDay, stamps, dayWidth } = this.state;
+    const { columnsPerDay, stamps, dayWidth, shifts } = this.state;
     const rows = this.props.positionCount;
 
     return (
@@ -391,6 +412,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
               dayData={day}
               stamps={stamps}
               dayWidth={dayWidth}
+              shifts={shifts}
             />
           ))}
         </div>

@@ -7,6 +7,8 @@ import './AppointmentCell.scss';
 
 export interface IProps {
   appointment: IAppointment;
+  translateX?: number;
+  translateY?: number;
 }
 
 @observer
@@ -17,6 +19,9 @@ export default class AppointmentCell extends React.Component<IProps> {
 
   public render() {
     const { personInstance, identifier } = this.props.appointment;
+    let { translateX, translateY } = this.props;
+    translateX = translateX || 0;
+    translateY = translateY || 0;
 
     if (!personInstance) {
       console.warn('missing instance');
@@ -25,7 +30,17 @@ export default class AppointmentCell extends React.Component<IProps> {
 
     if (!personInstance.loaded)
       return (
-        <div className="appointmentCell" id={identifier}>
+        <div
+          className="appointmentCell"
+          id={identifier}
+          style={
+            translateX || translateY
+              ? {
+                  transform: `translate(${translateX}px,${translateY}px)`,
+                }
+              : {}
+          }
+        >
           <div className="marker loading" />
           <div className="avatar loading" />
           <div className="mainInfoWrapper">
@@ -42,7 +57,17 @@ export default class AppointmentCell extends React.Component<IProps> {
     else {
       const person = personInstance as IPerson;
       return (
-        <div className="appointmentCell" id={identifier}>
+        <div
+          className="appointmentCell"
+          id={identifier}
+          style={
+            translateX || translateY
+              ? {
+                  transform: `translate(${translateX}px,${translateY}px)`,
+                }
+              : {}
+          }
+        >
           <div className="marker" />
           <div className="avatar" />
           <div className="mainInfoWrapper">

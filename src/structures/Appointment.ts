@@ -7,11 +7,12 @@ import { IPersonLoading } from 'src/interfaces/IPersonLoading';
 export default class Appointment implements IAppointment {
   public static fromIdentifier(id: string) {
     const arr = id.split('_');
-    return new Appointment({
+    return {
       date: moment(arr[0], 'mm-HH-DD-MM-YYYY'),
+      identifier: id,
       personId: arr[2],
       position: parseInt(arr[1], 10),
-    });
+    };
   }
 
   private static calcId(
@@ -55,10 +56,10 @@ export default class Appointment implements IAppointment {
     personId?: string;
     personInstance?: IPerson | IPersonLoading;
   }) {
-    if (date !== undefined) this.date = date;
-    if (position !== undefined) this.position = position;
-    if (personId !== undefined) this.personId = personId;
-    if (personInstance !== undefined) this.personInstance = personInstance;
+    if (date) this.date = date;
+    if (position || position === 0) this.position = position;
+    if (personId) this.personId = personId;
+    if (personInstance) this.personInstance = personInstance;
 
     this.identifier = Appointment.calcId(
       this.date,

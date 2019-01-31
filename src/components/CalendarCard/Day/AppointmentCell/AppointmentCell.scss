@@ -25,11 +25,15 @@
   align-items: center;
   justify-content: center;
 
+  // transition: all 2s;
+  z-index: 100;
+
   &.moving {
     @extend .light-box-shadow;
+    transition: none;
 
     position: fixed;
-    z-index: 100;
+    z-index: 101;
   }
 
   &.hidden {

@@ -93,15 +93,13 @@ export class AppStore {
 
     const day = await fetchDay(dayDate);
 
-    const personsToLoad = day.appointments
-      .filter(app => app.personId in this.persons)
-      .map(app => app.personId);
-    this.loadMultiplePerson(personsToLoad);
+    // const personsToLoad = day.appointments
+    //   .filter(app => app.personId in this.persons)
+    //   .map(app => app.personId);
+    // this.loadMultiplePerson(personsToLoad);
 
     const appointmentsPromises = day.appointments.map(
       async (app: IAppointment): Promise<Appointment> => {
-        // if (!(app.personId in this.persons)) this.loadPerson(app.personId);
-        // const person = this.persons[app.personId];
         const person =
           app.personId in this.persons
             ? this.persons[app.personId]

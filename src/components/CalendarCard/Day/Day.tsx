@@ -12,6 +12,14 @@ export interface IProps {
   dayData: ICalendarDay;
   stamps: moment.Moment[];
   dayWidth: string;
+  shifts: {
+    [x: number]: {
+      [x: number]: {
+        dx: number;
+        dy: number;
+      };
+    };
+  };
 }
 
 @observer
@@ -34,6 +42,7 @@ export default class Day extends React.Component<IProps> {
             cols={cols}
             appointments={dayData.appointments}
             stamps={this.props.stamps}
+            shifts={this.props.shifts}
           />
         </div>
       </div>
