@@ -1,4 +1,4 @@
-import { action, configure, observable, toJS } from 'mobx';
+import { action, configure, observable } from 'mobx';
 import { Moment as IMoment } from 'moment';
 import * as Moment from 'moment';
 import { DateRange, extendMoment } from 'moment-range';
@@ -44,7 +44,6 @@ export class AppStore {
 
   @action.bound
   public loadPerson(id: string) {
-    console.log('load', id);
     if (!(id in this.persons)) {
       const person = {
         id,
@@ -67,8 +66,6 @@ export class AppStore {
   }
 
   public async loadMultiplePerson(ids: string[]) {
-    console.log('load persons', ids);
-
     const persons = ids.map(id => ({ id, loaded: false }));
 
     persons.forEach(p => (persons[p.id] = p));
@@ -88,7 +85,7 @@ export class AppStore {
 
   @action.bound
   public async loadDay(date: IMoment) {
-    const dayDate = date.startOf('day');
+    const dayDate = date.clone().startOf('day');
 
     if (this.calendarDaysPending.find(d => d.diff(dayDate, 'days') === 0))
       return;
@@ -127,10 +124,6 @@ export class AppStore {
     targetDate: IMoment,
     targetPosition: number,
   ) {
-    console.log(toJS(this.calendarDays[0]));
-    console.log(date.hour(), '=>', targetDate.hour());
-    console.log(position, '=>', targetPosition);
-
     const currentDay = this.calendarDays.find(
       day =>
         day.date
@@ -148,18 +141,20 @@ export class AppStore {
 
     const appointment = currentDay.appointments.find(
       app =>
-        app.date.startOf('day').diff(date, 'day') === 0 &&
+        app.date
+          .clone()
+          .startOf('day')
+          .diff(date, 'day') === 0 &&
         position === app.position &&
         personId === app.personId,
     ) as Appointment;
 
     // change the appointment
-    console.log(position, targetPosition);
     appointment.update({
-      // date: targetDate,
+      date: targetDate,
       position: targetPosition,
     });
-    console.log(toJS(this.calendarDays[0]));
+
     // if day wasn't changed
     if (currentDay.date.diff(newDay.date, 'day') === 0) return;
     console.log('change day');

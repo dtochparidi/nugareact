@@ -23,14 +23,17 @@ export default class Grid extends React.Component<IProps> {
     const personCells = appointments
       .map(app => ({
         appointment: app,
-        x: Math.floor(
-          (stamps[0]
-            .clone()
-            .hour(app.date.hour())
-            .minute(app.date.minute())
-            .valueOf() -
-            stamps[0].valueOf()) /
-            step,
+        x: Math.min(
+          Math.floor(
+            (stamps[0]
+              .clone()
+              .hour(app.date.hour())
+              .minute(app.date.minute())
+              .valueOf() -
+              stamps[0].valueOf()) /
+              step,
+          ),
+          stamps.length - 1,
         ),
         y: app.position,
         // x: app.position,
@@ -59,8 +62,6 @@ export default class Grid extends React.Component<IProps> {
     for (let y = 0; y < rows; y++)
       for (let x = 0; x < cols; x++) {
         const app = personCells[y * cols + x];
-        if (app)
-          console.log(x + 8, stamps[x].hour(), app.appointment.identifier);
 
         gridCells.push(
           <div

@@ -19,7 +19,8 @@ export default class Appointment implements IAppointment {
     position: number,
     personId: string,
   ) {
-    return `${date.format('mm-HH-DD-MM-YYYY')}_${position}_${personId}`;
+    const id = `${date.format('mm-HH-DD-MM-YYYY')}_${position}_${personId}`;
+    return id;
   }
 
   @observable
@@ -54,10 +55,10 @@ export default class Appointment implements IAppointment {
     personId?: string;
     personInstance?: IPerson | IPersonLoading;
   }) {
-    if (date) this.date = date;
-    if (position) this.position = position;
-    if (personId) this.personId = personId;
-    this.personInstance = personInstance;
+    if (date !== undefined) this.date = date;
+    if (position !== undefined) this.position = position;
+    if (personId !== undefined) this.personId = personId;
+    if (personInstance !== undefined) this.personInstance = personInstance;
 
     this.identifier = Appointment.calcId(
       this.date,

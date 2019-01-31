@@ -16,16 +16,14 @@ import './CalendarCard.scss';
 import * as interact from 'interactjs';
 import Appointment from '../../structures/Appointment';
 import createDragConfig from './dragConfig';
-
-const clientSide =
-  typeof window !== 'undefined' &&
-  window.document &&
-  window.document.createElement;
+import { clientSide } from '../../dev/clientSide';
 
 const calendarCellMinWidth = parseFloat(CardVariables.calendarCellWidthMin);
 const thinWidth = parseFloat(StyleVariables.thinWidth);
 
 const moment = extendMoment(Moment);
+
+if (clientSide) (interact as any).dynamicDrop(true);
 
 export interface IProps {
   days: ICalendarDay[];
@@ -99,7 +97,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       columnsPerDay: stamps.length,
       columnsPerPage: 4,
       dayWidth: '100%',
-      requiredDays: new Array(1)
+      requiredDays: new Array(3)
         .fill(null)
         .map((v, i) => moment().add(i, 'day')),
       stamps,

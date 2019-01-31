@@ -9,11 +9,7 @@ import { IPerson } from './interfaces/IPerson';
 import appStore from './store/AppStore';
 
 import './App.css';
-
-const clientSide =
-  typeof window !== 'undefined' &&
-  window.document &&
-  window.document.createElement;
+import { clientSide } from './dev/clientSide';
 
 if (clientSide)
   configureDevtool({
