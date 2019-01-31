@@ -9,10 +9,12 @@
   },
   "rules": {
     "no-console": false,
-    "curly": [true, "as-needed"]
+    "curly": [true, "as-needed"],
+    "no-debugger": false
   },
   "jsRules": {
     "no-console": false,
-    "curly": [true, "as-needed"]
+    "curly": [true, "as-needed"],
+    "no-debugger": false
   }
 }

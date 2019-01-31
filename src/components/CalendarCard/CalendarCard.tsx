@@ -14,6 +14,7 @@ import * as CardVariables from './CalendarCard.scss';
 import './CalendarCard.scss';
 
 import * as interact from 'interactjs';
+import Appointment from '../../structures/Appointment';
 import createDragConfig from './dragConfig';
 
 const clientSide =
@@ -98,7 +99,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       columnsPerDay: stamps.length,
       columnsPerPage: 4,
       dayWidth: '100%',
-      requiredDays: new Array(3)
+      requiredDays: new Array(1)
         .fill(null)
         .map((v, i) => moment().add(i, 'day')),
       stamps,
@@ -149,25 +150,32 @@ export default class CalendarCard extends React.Component<IProps, IState> {
             }: { target: HTMLElement; relatedTarget: HTMLElement } = e;
 
             const appointmentId = relatedTarget.id;
-            const appointmentData = appointmentId.split('_');
-            const appDate = moment(appointmentData[0], 'mm-hh-DD-MM-YYYY');
-            const appId = appointmentData[1];
-            const appPosition = parseInt(appointmentData[2], 10);
+            const app = Appointment.fromIdentifier(appointmentId);
 
             const targetDay = (((target.parentNode as HTMLElement) // Grid
               .parentNode as HTMLElement) as HTMLElement) // Day
               .parentNode as HTMLElement; // DayWrapper
             const dayString = targetDay.id.split('_')[1];
             const targetDayStamp = moment(dayString, 'DD-MM-YYYY');
+            const hour = parseInt(target.getAttribute('data-hour') || '-1', 10);
+            const minute = parseInt(
+              target.getAttribute('data-minute') || '-1',
+              10,
+            );
+            const position = parseInt(
+              target.getAttribute('data-y') || '-1',
+              10,
+            );
 
-            console.log(target);
+            targetDayStamp.hour(hour);
+            targetDayStamp.minute(minute);
 
             this.props.updateAppointment(
-              appDate,
-              appPosition,
-              appId,
+              app.date,
+              app.position,
+              app.personId,
               targetDayStamp,
-              parseInt(target['data-x'], 10),
+              position,
             );
           },
           ondropactivate: e => {

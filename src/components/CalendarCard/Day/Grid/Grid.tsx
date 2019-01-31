@@ -59,7 +59,8 @@ export default class Grid extends React.Component<IProps> {
     for (let y = 0; y < rows; y++)
       for (let x = 0; x < cols; x++) {
         const app = personCells[y * cols + x];
-        // if (app) console.log(app.x, app.y);
+        if (app)
+          console.log(x + 8, stamps[x].hour(), app.appointment.identifier);
 
         gridCells.push(
           <div
@@ -69,6 +70,8 @@ export default class Grid extends React.Component<IProps> {
             }`}
             data-x={x}
             data-y={y}
+            data-hour={stamps[x].hour()}
+            data-minute={stamps[x].minute()}
           >
             {app ? <AppointmentCell appointment={app.appointment} /> : null}
           </div>,

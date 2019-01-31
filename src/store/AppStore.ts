@@ -1,4 +1,4 @@
-import { action, configure, observable } from 'mobx';
+import { action, configure, observable, toJS } from 'mobx';
 import { Moment as IMoment } from 'moment';
 import * as Moment from 'moment';
 import { DateRange, extendMoment } from 'moment-range';
@@ -8,6 +8,7 @@ import fetchDay from '../fetchers/DayFetcher';
 import fetchPerson from '../fetchers/PersonFetcher';
 import ICalendarDay from '../interfaces/ICalendarDay';
 import { IPerson } from '../interfaces/IPerson';
+import Appointment from '../structures/Appointment';
 
 const moment = extendMoment(Moment);
 
@@ -21,7 +22,7 @@ export class AppStore {
   @observable
   public calendarDaysPending: IMoment[] = [];
   @observable
-  public positionCount: number = 21;
+  public positionCount: number = 5;
   @observable
   public dayTimeRange: DateRange = moment.range(
     moment()
@@ -29,7 +30,8 @@ export class AppStore {
       .hour(8),
     moment()
       .startOf('day')
-      .hour(17),
+      // .hour(17),
+      .hour(11),
   );
 
   @observable
@@ -42,6 +44,7 @@ export class AppStore {
 
   @action.bound
   public loadPerson(id: string) {
+    console.log('load', id);
     if (!(id in this.persons)) {
       const person = {
         id,
@@ -95,20 +98,19 @@ export class AppStore {
     const day = await fetchDay(dayDate);
 
     const appointmentsPromises = day.appointments.map(
-      async (app: IAppointment): Promise<IAppointment> => {
+      async (app: IAppointment): Promise<Appointment> => {
         // if (!(app.personId in this.persons)) this.loadPerson(app.personId);
         // const person = this.persons[app.personId];
         const person =
           app.personId in this.persons
             ? this.persons[app.personId]
             : this.loadPerson(app.personId);
-        return {
+        return new Appointment({
           date: app.date,
-          identifier: app.identifier,
           personId: app.personId,
           personInstance: person,
           position: app.position,
-        };
+        });
       },
     );
 
@@ -117,7 +119,7 @@ export class AppStore {
     this.addDay(day);
   }
 
-  @action
+  @action.bound
   public updateAppointment(
     date: IMoment,
     position: number,
@@ -125,7 +127,51 @@ export class AppStore {
     targetDate: IMoment,
     targetPosition: number,
   ) {
-    console.log(arguments);
+    console.log(toJS(this.calendarDays[0]));
+    console.log(date.hour(), '=>', targetDate.hour());
+    console.log(position, '=>', targetPosition);
+
+    const currentDay = this.calendarDays.find(
+      day =>
+        day.date
+          .clone()
+          .startOf('day')
+          .diff(date, 'day') === 0,
+    ) as ICalendarDay;
+    const newDay = this.calendarDays.find(
+      day =>
+        day.date
+          .clone()
+          .startOf('day')
+          .diff(targetDate, 'day') === 0,
+    ) as ICalendarDay;
+
+    const appointment = currentDay.appointments.find(
+      app =>
+        app.date.startOf('day').diff(date, 'day') === 0 &&
+        position === app.position &&
+        personId === app.personId,
+    ) as Appointment;
+
+    // change the appointment
+    console.log(position, targetPosition);
+    appointment.update({
+      // date: targetDate,
+      position: targetPosition,
+    });
+    console.log(toJS(this.calendarDays[0]));
+    // if day wasn't changed
+    if (currentDay.date.diff(newDay.date, 'day') === 0) return;
+    console.log('change day');
+
+    // remove from current day
+    currentDay.appointments.splice(
+      currentDay.appointments.indexOf(appointment),
+      1,
+    );
+
+    // append to new day
+    newDay.appointments.push(appointment);
   }
 
   @action
