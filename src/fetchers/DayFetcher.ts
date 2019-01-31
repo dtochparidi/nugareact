@@ -10,19 +10,19 @@ function random(to: number, from: number = 0) {
 
 export function generateRandomDay(date: moment.Moment): ICalendarDay {
   return {
-    appointments: new Array(3).fill(null).map(
+    appointments: new Array(25).fill(null).map(
       (): Appointment => {
         const app = {
           date: date
             .clone()
-            // .hour(random(17, 8))
-            .hour(random(11, 8))
+            .hour(random(17, 8))
+            // .hour(random(11, 8))
             .minute(random(59, 1)),
           personId: `#${random(10)
             .toString()
             .padStart(3, '0')}`,
-          // position: random(0, 10),
-          position: random(0, 4),
+          position: random(0, 10),
+          // position: random(0, 4),
         };
         return new Appointment(app);
       },

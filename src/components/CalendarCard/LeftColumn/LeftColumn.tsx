@@ -11,9 +11,11 @@ export default class LeftColumn extends React.Component<IProps> {
     return (
       <div className="leftColumn">
         <div className="item" key="zero" />
-        {new Array(this.props.positionCount).fill(null).map((v, i) => (
-          <div className="item" key={i}>{`${i}`}</div>
-        ))}
+        {this.props.positionCount
+          ? new Array(this.props.positionCount)
+              .fill(null)
+              .map((v, i) => <div className="item" key={i}>{`${i}`}</div>)
+          : null}
         {/* {this.props.stamps.map(stamp => {
           const s = stamp.format("HH:mm");
           return (

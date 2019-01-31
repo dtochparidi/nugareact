@@ -22,7 +22,7 @@ export class AppStore {
   @observable
   public calendarDaysPending: IMoment[] = [];
   @observable
-  public positionCount: number = 5;
+  public positionCount: number = 15;
   @observable
   public dayTimeRange: DateRange = moment.range(
     moment()
@@ -30,8 +30,8 @@ export class AppStore {
       .hour(8),
     moment()
       .startOf('day')
-      // .hour(17),
-      .hour(11),
+      .hour(17),
+    // .hour(11),
   );
 
   @observable
@@ -42,7 +42,6 @@ export class AppStore {
     this.positionCount = count;
   }
 
-  @action.bound
   public loadPerson(id: string) {
     if (!(id in this.persons)) {
       const person = {
@@ -93,6 +92,11 @@ export class AppStore {
     this.calendarDaysPending.push(dayDate);
 
     const day = await fetchDay(dayDate);
+
+    const personsToLoad = day.appointments
+      .filter(app => app.personId in this.persons)
+      .map(app => app.personId);
+    this.loadMultiplePerson(personsToLoad);
 
     const appointmentsPromises = day.appointments.map(
       async (app: IAppointment): Promise<Appointment> => {
