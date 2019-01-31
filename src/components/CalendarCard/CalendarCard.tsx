@@ -14,9 +14,9 @@ import * as CardVariables from './CalendarCard.scss';
 import './CalendarCard.scss';
 
 import * as interact from 'interactjs';
+import { clientSide } from '../../dev/clientSide';
 import Appointment from '../../structures/Appointment';
 import createDragConfig from './dragConfig';
-import { clientSide } from '../../dev/clientSide';
 
 const calendarCellMinWidth = parseFloat(CardVariables.calendarCellWidthMin);
 const thinWidth = parseFloat(StyleVariables.thinWidth);
