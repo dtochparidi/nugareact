@@ -10,7 +10,8 @@
   "rules": {
     "no-console": false,
     "curly": [true, "as-needed"],
-    "no-debugger": false
+    "no-debugger": false,
+    "no-unused-variable": true
   },
   "jsRules": {
     "no-console": false,

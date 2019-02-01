@@ -1,14 +1,14 @@
 import { observer } from 'mobx-react';
 import * as moment from 'moment';
+import { Moment as IMoment } from 'moment';
 import * as React from 'react';
-import IAppointment from 'src/interfaces/IAppointment';
-
+import Appointment from '../../../../structures/Appointment';
 import AppointmentCell from '../AppointmentCell';
 
 export interface IProps {
   cols: number;
   rows: number;
-  appointments: IAppointment[];
+  appointments: Appointment[];
   stamps: moment.Moment[];
   shifts: {
     [x: number]: {
@@ -18,49 +18,84 @@ export interface IProps {
       };
     };
   };
+  subGridStep: moment.Duration;
+  updateAppointment: (
+    {
+      date,
+      position,
+      personId,
+      targetDate,
+      targetPosition,
+      appointment,
+    }:
+      | {
+          date: IMoment;
+          position: number;
+          personId: string;
+          targetDate: IMoment;
+          appointment: undefined;
+          targetPosition: number;
+        }
+      | {
+          date: undefined;
+          position: undefined;
+          personId: undefined;
+          appointment: Appointment;
+          targetDate: IMoment;
+          targetPosition: number;
+        },
+  ) => void;
 }
 
 @observer
 export default class Grid extends React.Component<IProps> {
   public render() {
-    const { rows, cols, appointments, stamps, shifts } = this.props;
+    const { rows, cols, appointments, stamps, subGridStep } = this.props;
 
-    const timeRange = stamps[stamps.length - 1].valueOf() - stamps[0].valueOf();
-    const step = timeRange / stamps.length;
+    // const timeRange = stamps[stamps.length - 1].valueOf() - stamps[0].valueOf();
+    // const step = timeRange / stamps.length;
 
     const personCells = appointments
       .map(app => ({
         appointment: app,
-        x: Math.min(
-          Math.floor(
-            (stamps[0]
-              .clone()
-              .hour(app.date.hour())
-              .minute(app.date.minute())
-              .valueOf() -
-              stamps[0].valueOf()) /
-              step,
-          ),
-          stamps.length - 1,
-        ),
-        y: app.position,
-        // x: app.position,
-        // y: Math.floor(
-        //   (stamps[0]
-        //     .clone()
-        //     .hour(app.date.hour())
-        //     .minute(app.date.minute())
-        //     .valueOf() -
-        //     stamps[0].valueOf()) /
-        //     step,
+        // x: Math.min(
+        //   Math.round(
+        //     (stamps[0]
+        //       .clone()
+        //       .hour(app.date.hour())
+        //       .minute(app.date.minute())
+        //       .valueOf() -
+        //       stamps[0].valueOf()) /
+        //       step,
+        //   ),
+        //   stamps.length - 1,
         // ),
+
+        // OPTIMIZE
+        x: stamps.findIndex(stamp => {
+          const diff = app.date
+            .clone()
+            .hour(stamp.hour())
+            .minute(stamp.minute())
+            .diff(app.date, 'hour');
+
+          return diff >= 0 && diff < 1;
+        }),
+        y: app.position,
       }))
       .reduce(
         (
-          acc: Array<{ x: number; y: number; appointment: IAppointment }>,
+          acc: Array<{ x: number; y: number; appointment: Appointment }>,
           app,
         ) => {
-          acc[app.y * cols + app.x] = app;
+          const { x, y } = app;
+          // const shiftExists = x in shifts && y in shifts[x];
+          // const shift = !shiftExists ? { dx: 0, dy: 0 } : shifts[x][y];
+          // const { dx, dy } = shift;
+
+          // acc[(y + dy) * cols + (x + dx)] = app;
+          acc[y * cols + x] = app;
+
           return acc;
         },
         [],
@@ -70,9 +105,18 @@ export default class Grid extends React.Component<IProps> {
     for (let y = 0; y < rows; y++)
       for (let x = 0; x < cols; x++) {
         const app = personCells[y * cols + x];
-        const shiftExists = x in shifts && y in shifts[x];
-        const shift = !shiftExists ? { dx: 0, dy: 0 } : shifts[x][y];
-        const { dx, dy } = shift;
+        const stamp = stamps[x];
+        let coeff = 0;
+
+        if (app) {
+          const d = app.appointment.date;
+          const s = d
+            .clone()
+            .hour(stamp.hour())
+            .minute(stamp.minute());
+
+          coeff = (d.diff(s, 'minutes') / 60) * 100;
+        }
 
         gridCells.push(
           <div
@@ -82,18 +126,23 @@ export default class Grid extends React.Component<IProps> {
             }`}
             data-x={x}
             data-y={y}
-            data-hour={stamps[x].hour()}
-            data-minute={stamps[x].minute()}
+            data-hour={stamp.hour()}
+            data-minute={stamp.minute()}
           >
             {app ? (
-              shiftExists ? (
+              coeff !== 0 ? (
                 <AppointmentCell
                   appointment={app.appointment}
-                  translateX={dx}
-                  translateY={dy}
+                  translateX={coeff}
+                  updateAppointment={this.props.updateAppointment}
+                  subGridStep={subGridStep}
                 />
               ) : (
-                <AppointmentCell appointment={app.appointment} />
+                <AppointmentCell
+                  appointment={app.appointment}
+                  updateAppointment={this.props.updateAppointment}
+                  subGridStep={subGridStep}
+                />
               )
             ) : null}
           </div>,

@@ -30,7 +30,7 @@ export class AppStore {
       .hour(8),
     moment()
       .startOf('day')
-      .hour(17),
+      .hour(12),
     // .hour(11),
   );
 
@@ -119,13 +119,60 @@ export class AppStore {
   }
 
   @action.bound
-  public updateAppointment(
-    date: IMoment,
-    position: number,
-    personId: string,
-    targetDate: IMoment,
-    targetPosition: number,
-  ) {
+  public updateAppointment({
+    date,
+    position,
+    personId,
+    targetDate,
+    targetPosition,
+    appointment,
+  }:
+    | {
+        date: IMoment;
+        position: number;
+        personId: string;
+        targetDate: IMoment;
+        appointment?: undefined;
+        targetPosition: number;
+      }
+    | {
+        date?: undefined;
+        position?: undefined;
+        personId?: undefined;
+        appointment: Appointment;
+        targetDate: IMoment;
+        targetPosition: number;
+      }) {
+    date = date || (appointment as Appointment).date;
+    personId = personId || (appointment as Appointment).personId;
+    if (appointment) position = (appointment as Appointment).position;
+
+    // check if date is in borders
+    const { start, end } = this.dayTimeRange;
+    const startDiff = start
+      .clone()
+      .hour(date.hour())
+      .minute(date.minute())
+      .diff(this.dayTimeRange.start, 'hour');
+    const endDiff = start
+      .clone()
+      .hour(date.hour())
+      .minute(date.minute())
+      .diff(this.dayTimeRange.end, 'hour');
+    console.log(startDiff, endDiff);
+
+    if (startDiff > 0)
+      date
+        .subtract(1, 'day')
+        .hour(end.hour())
+        .minute(end.minute());
+    else if (endDiff < 0)
+      date
+        .add(1, 'day')
+        .hour(start.hour())
+        .minute(start.minute());
+
+    // update day
     const currentDay = this.calendarDays.find(
       day =>
         day.date
@@ -141,15 +188,19 @@ export class AppStore {
           .diff(targetDate, 'day') === 0,
     ) as ICalendarDay;
 
-    const appointment = currentDay.appointments.find(
-      app =>
-        app.date
-          .clone()
-          .startOf('day')
-          .diff(date, 'day') === 0 &&
-        position === app.position &&
-        personId === app.personId,
-    ) as Appointment;
+    appointment =
+      appointment ||
+      currentDay.appointments.find(
+        app =>
+          app.date
+            .clone()
+            .startOf('day')
+            .diff(date, 'day') === 0 &&
+          position === app.position &&
+          personId === app.personId,
+      );
+
+    if (!appointment) throw Error('no such appointment');
 
     // change the appointment
     appointment.update({

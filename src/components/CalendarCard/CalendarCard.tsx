@@ -32,11 +32,30 @@ export interface IProps {
   positionCount: number;
   requestCallback: (date: Moment.Moment) => void;
   updateAppointment: (
-    d: IMoment,
-    p: number,
-    i: string,
-    td: IMoment,
-    tp: number,
+    {
+      date,
+      position,
+      personId,
+      targetDate,
+      targetPosition,
+      appointment,
+    }:
+      | {
+          date: IMoment;
+          position: number;
+          personId: string;
+          targetDate: IMoment;
+          appointment: undefined;
+          targetPosition: number;
+        }
+      | {
+          date: undefined;
+          position: undefined;
+          personId: undefined;
+          appointment: Appointment;
+          targetDate: IMoment;
+          targetPosition: number;
+        },
   ) => void;
 }
 
@@ -47,6 +66,7 @@ export interface IState {
   stamps: IMoment[];
   dayWidth: string;
   cellWidth: number;
+  subGridStep: Moment.Duration;
   shifts: {
     [x: number]: {
       [x: number]: {
@@ -75,6 +95,20 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   ) {
     const columnsCount = Math.floor(containerWidth / calendarCellWidthMin);
     return columnsCount;
+  }
+
+  private static getCellInfo(target: HTMLElement) {
+    const targetDay = (((target.parentNode as HTMLElement) // Grid
+      .parentNode as HTMLElement) as HTMLElement).parentNode as HTMLElement; // Day // DayWrapper
+    const dayString = targetDay.id.split('_')[1];
+    const stamp = moment(dayString, 'DD-MM-YYYY');
+    const hour = parseInt(target.getAttribute('data-hour') || '-1', 10);
+    const minute = parseInt(target.getAttribute('data-minute') || '-1', 10);
+    const position = parseInt(target.getAttribute('data-y') || '-1', 10);
+
+    stamp.hour(hour);
+    stamp.minute(minute);
+    return { stamp, position };
   }
 
   public selectedDay: number = 0;
@@ -107,12 +141,13 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       columnsPerDay: stamps.length,
       columnsPerPage: 4,
       dayWidth: '100%',
-      requiredDays: new Array(3)
+      requiredDays: new Array(2)
         .fill(null)
         .map((v, i) => moment().add(i, 'day')),
-      // shifts: { 0: { 0: { dx: 150, dy: 50 } } },
-      shifts: {},
+      shifts: { 0: { 0: { dx: 1, dy: 2 } } },
+      // shifts: {},
       stamps,
+      subGridStep: Moment.duration({ minute: 10 }),
     };
   }
 
@@ -124,6 +159,54 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   public onAppointmentDraggingEnd(e: interact.InteractEvent) {
     // this.isDragging = false;
   }
+
+  public freeCell(target: HTMLElement) {
+    const { stamp, position } = CalendarCard.getCellInfo(target);
+    const day = this.getDayByStamp(stamp);
+    const column = this.getColumnByStamp(stamp, day);
+
+    // console.log('---');
+    // column.forEach(app => console.log(app.date.hour(), app.position));
+
+    const isFree = column.every(app => app.position !== position);
+    if (isFree) return true;
+
+    return false;
+
+    // const appointment = day.appointments.find(
+    //   (app) => app.date.clone().startOf('minute').diff(stamp.clone().startOf('minute'), 'minute') === 0
+    // ) as Appointment;
+  }
+
+  public getDayByStamp(stamp: IMoment) {
+    const day = this.props.days.find(
+      d =>
+        d.date
+          .clone()
+          .startOf('day')
+          .diff(stamp, 'day') === 0,
+    ) as ICalendarDay;
+
+    return day;
+  }
+
+  public getColumnByStamp(stamp: IMoment, calendarDay?: ICalendarDay) {
+    const day = calendarDay || this.getDayByStamp(stamp);
+    const targetStamp = stamp.clone().startOf('hour');
+    const appointments = day.appointments.filter(
+      app =>
+        app.date
+          .clone()
+          .startOf('hour')
+          .diff(targetStamp, 'hour') === 0,
+    );
+
+    return appointments;
+  }
+
+  // public shiftColumn() {
+
+  // }
 
   public updateDropzones() {
     const minColumn = this.currentLeftColumnIndex;
@@ -144,6 +227,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
               target: HTMLElement;
             } = e;
             target.classList.add('dropzone', 'enter');
+
+            const isFree = this.freeCell(target);
+            if (isFree) target.classList.remove('locked');
+            else target.classList.add('locked');
           },
           ondragleave: e => {
             const {
@@ -151,7 +238,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
             }: {
               target: HTMLElement;
             } = e;
-            target.classList.remove('enter');
+
+            target.classList.remove('enter', 'locked');
           },
           ondrop: e => {
             const {
@@ -159,34 +247,24 @@ export default class CalendarCard extends React.Component<IProps, IState> {
               relatedTarget,
             }: { target: HTMLElement; relatedTarget: HTMLElement } = e;
 
+            if (target.classList.contains('locked')) return;
+
             const appointmentId = relatedTarget.id;
             const app = Appointment.fromIdentifier(appointmentId);
 
-            const targetDay = (((target.parentNode as HTMLElement) // Grid
-              .parentNode as HTMLElement) as HTMLElement) // Day
-              .parentNode as HTMLElement; // DayWrapper
-            const dayString = targetDay.id.split('_')[1];
-            const targetDayStamp = moment(dayString, 'DD-MM-YYYY');
-            const hour = parseInt(target.getAttribute('data-hour') || '-1', 10);
-            const minute = parseInt(
-              target.getAttribute('data-minute') || '-1',
-              10,
+            const { stamp: targetStamp, position } = CalendarCard.getCellInfo(
+              target,
             );
-            const position = parseInt(
-              target.getAttribute('data-y') || '-1',
-              10,
-            );
+            targetStamp.minute(app.date.minute());
 
-            targetDayStamp.hour(hour);
-            targetDayStamp.minute(minute);
-
-            this.props.updateAppointment(
-              app.date,
-              app.position,
-              app.personId,
-              targetDayStamp,
-              position,
-            );
+            this.props.updateAppointment({
+              appointment: undefined,
+              date: app.date,
+              personId: app.personId,
+              position: app.position,
+              targetDate: targetStamp,
+              targetPosition: position,
+            });
           },
           ondropactivate: e => {
             const {
@@ -195,6 +273,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
               target: HTMLElement;
             } = e;
             target.classList.add('dropzone', 'active');
+            target.classList.remove('locked');
           },
           ondropdeactivate: e => {
             const {
@@ -393,7 +472,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public render() {
-    const { columnsPerDay, stamps, dayWidth, shifts } = this.state;
+    const { columnsPerDay, stamps, dayWidth, shifts, subGridStep } = this.state;
     const rows = this.props.positionCount;
 
     return (
@@ -413,6 +492,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
               stamps={stamps}
               dayWidth={dayWidth}
               shifts={shifts}
+              updateAppointment={this.props.updateAppointment}
+              subGridStep={subGridStep}
             />
           ))}
         </div>

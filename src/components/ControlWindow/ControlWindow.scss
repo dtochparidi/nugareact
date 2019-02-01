@@ -1,8 +1,8 @@
-@import "src/common/variables.scss";
+@import 'src/common/variables.scss';
 
 .controlWindow {
   position: absolute;
-  z-index: 100;
+  z-index: 1000;
 
   right: 0;
   top: 0;

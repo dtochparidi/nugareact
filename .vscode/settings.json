@@ -1,6 +1,7 @@
 {
   "typescriptHero.imports.organizeOnSave": true,
   "typescriptHero.imports.grouping": ["Modules", "Workspace", "Plains"],
+  "tslint.autoFixOnSave": true,
   "todohighlight.keywords": [
     {
       "text": "TODO:",
