@@ -86,8 +86,10 @@ export class AppStore {
   public async loadDay(date: IMoment) {
     const dayDate = date.clone().startOf('day');
 
-    if (this.calendarDaysPending.find(d => d.diff(dayDate, 'days') === 0))
-      return;
+    const existingDay = this.calendarDaysPending.find(
+      d => d.diff(dayDate, 'days') === 0,
+    );
+    if (existingDay) return existingDay;
 
     this.calendarDaysPending.push(dayDate);
 
@@ -100,6 +102,8 @@ export class AppStore {
 
     const appointmentsPromises = day.appointments.map(
       async (app: IAppointment): Promise<Appointment> => {
+        if (!app) throw Error('app is undefined');
+
         const person =
           app.personId in this.persons
             ? this.persons[app.personId]
@@ -116,6 +120,7 @@ export class AppStore {
     day.appointments = await Promise.all(appointmentsPromises);
 
     this.addDay(day);
+    return day;
   }
 
   @action.bound
@@ -151,26 +156,28 @@ export class AppStore {
     const { start, end } = this.dayTimeRange;
     const startDiff = start
       .clone()
-      .hour(date.hour())
-      .minute(date.minute())
+      .hour(targetDate.hour())
+      .minute(targetDate.minute())
       .diff(this.dayTimeRange.start, 'hour');
     const endDiff = start
       .clone()
-      .hour(date.hour())
-      .minute(date.minute())
+      .hour(targetDate.hour())
+      .minute(targetDate.minute())
       .diff(this.dayTimeRange.end, 'hour');
-    console.log(startDiff, endDiff);
 
-    if (startDiff > 0)
-      date
+    if (startDiff < 0) {
+      console.log('move left');
+      targetDate
         .subtract(1, 'day')
         .hour(end.hour())
         .minute(end.minute());
-    else if (endDiff < 0)
-      date
+    } else if (endDiff > 0) {
+      console.log('move right');
+      targetDate
         .add(1, 'day')
         .hour(start.hour())
         .minute(start.minute());
+    }
 
     // update day
     const currentDay = this.calendarDays.find(
@@ -178,15 +185,15 @@ export class AppStore {
         day.date
           .clone()
           .startOf('day')
-          .diff(date, 'day') === 0,
+          .diff((date as IMoment).clone().startOf('day'), 'day') === 0,
     ) as ICalendarDay;
     const newDay = this.calendarDays.find(
       day =>
         day.date
           .clone()
           .startOf('day')
-          .diff(targetDate, 'day') === 0,
-    ) as ICalendarDay;
+          .diff(targetDate.clone().startOf('day'), 'day') === 0,
+    );
 
     appointment =
       appointment ||
@@ -195,12 +202,18 @@ export class AppStore {
           app.date
             .clone()
             .startOf('day')
-            .diff(date, 'day') === 0 &&
+            .diff((date as IMoment).clone().startOf('day'), 'day') === 0 &&
           position === app.position &&
           personId === app.personId,
       );
 
     if (!appointment) throw Error('no such appointment');
+
+    // check if we need to load day
+    if (!newDay) {
+      this.loadDay(targetDate.clone().startOf('day'));
+      return;
+    }
 
     // change the appointment
     appointment.update({
@@ -229,7 +242,17 @@ export class AppStore {
 
   @action
   public addDay(day: ICalendarDay) {
-    this.calendarDays.push(day);
+    if (!day) throw Error('day is undefined');
+
+    if (
+      this.calendarDays.length === 0 ||
+      day.date.diff(
+        this.calendarDays[this.calendarDays.length - 1].date,
+        'hour',
+      ) > 0
+    )
+      this.calendarDays.push(day);
+    else this.calendarDays.unshift(day);
   }
 
   @action

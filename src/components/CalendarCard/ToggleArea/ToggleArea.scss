@@ -1,0 +1,8 @@
+.toggleArea {
+  position: fixed;
+  z-index: 1000;
+  transition: all 1s;
+  &.enter {
+    background: rgba(240, 230, 140, 0.438); // khaki with opacity
+  }
+}

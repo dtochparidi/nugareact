@@ -17,13 +17,14 @@ import * as interact from 'interactjs';
 import { clientSide } from '../../dev/clientSide';
 import Appointment from '../../structures/Appointment';
 import createDragConfig from './dragConfig';
+import ToggleArea from './ToggleArea';
 
 const calendarCellMinWidth = parseFloat(CardVariables.calendarCellWidthMin);
 const thinWidth = parseFloat(StyleVariables.thinWidth);
 
 const moment = extendMoment(Moment);
 
-// if (clientSide) (interact as any).dynamicDrop(true);
+if (clientSide) (interact as any).dynamicDrop(true);
 
 export interface IProps {
   days: ICalendarDay[];
@@ -31,32 +32,30 @@ export interface IProps {
   dayTimeRange: DateRange;
   positionCount: number;
   requestCallback: (date: Moment.Moment) => void;
-  updateAppointment: (
-    {
-      date,
-      position,
-      personId,
-      targetDate,
-      targetPosition,
-      appointment,
-    }:
-      | {
-          date: IMoment;
-          position: number;
-          personId: string;
-          targetDate: IMoment;
-          appointment: undefined;
-          targetPosition: number;
-        }
-      | {
-          date: undefined;
-          position: undefined;
-          personId: undefined;
-          appointment: Appointment;
-          targetDate: IMoment;
-          targetPosition: number;
-        },
-  ) => void;
+  updateAppointment: ({
+    date,
+    position,
+    personId,
+    targetDate,
+    targetPosition,
+    appointment,
+  }:
+    | {
+        date: IMoment;
+        position: number;
+        personId: string;
+        targetDate: IMoment;
+        appointment: undefined;
+        targetPosition: number;
+      }
+    | {
+        date: undefined;
+        position: undefined;
+        personId: undefined;
+        appointment: Appointment;
+        targetDate: IMoment;
+        targetPosition: number;
+      }) => void;
 }
 
 export interface IState {
@@ -116,6 +115,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   private daysContainerRef: React.RefObject<HTMLDivElement>;
   private containerScrollTimeout: NodeJS.Timeout;
   private shouldUpdateVisibility: boolean = false;
+  private currentFirstDay: ICalendarDay;
+  private currentDaysCount: number = 0;
   // private isDragging: boolean = false;
 
   constructor(props: IProps) {
@@ -141,15 +142,31 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       columnsPerDay: stamps.length,
       columnsPerPage: 4,
       dayWidth: '100%',
-      requiredDays: new Array(2)
-        .fill(null)
-        .map((v, i) => moment().add(i, 'day')),
+      requiredDays: [
+        moment()
+          .add(1, 'day')
+          .startOf('day'),
+        moment().startOf('day'),
+        moment()
+          .subtract(1, 'day')
+          .startOf('day'),
+        moment()
+          .subtract(2, 'day')
+          .startOf('day'),
+      ],
       shifts: { 0: { 0: { dx: 1, dy: 2 } } },
       // shifts: {},
       stamps,
       subGridStep: Moment.duration({ minute: 10 }),
     };
   }
+  public turnPageRight = () => {
+    this.turnPage(1);
+  };
+
+  public turnPageLeft = () => {
+    this.turnPage(-1);
+  };
 
   public onAppointmentDraggingStart(e: interact.InteractEvent) {
     // this.isDragging = true;
@@ -231,6 +248,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
             const isFree = this.freeCell(target);
             if (isFree) target.classList.remove('locked');
             else target.classList.add('locked');
+
+            target.style.background = 'rgb(241, 236, 189)';
           },
           ondragleave: e => {
             const {
@@ -240,12 +259,15 @@ export default class CalendarCard extends React.Component<IProps, IState> {
             } = e;
 
             target.classList.remove('enter', 'locked');
+            target.style.background = '';
           },
           ondrop: e => {
             const {
               target,
               relatedTarget,
             }: { target: HTMLElement; relatedTarget: HTMLElement } = e;
+
+            console.log('drop');
 
             if (target.classList.contains('locked')) return;
 
@@ -255,7 +277,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
             const { stamp: targetStamp, position } = CalendarCard.getCellInfo(
               target,
             );
-            targetStamp.minute(app.date.minute());
+
+            // IMPORTANT: enable to remember minutes shifts
+            // targetStamp.minute(app.date.minute());
 
             this.props.updateAppointment({
               appointment: undefined,
@@ -274,6 +298,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
             } = e;
             target.classList.add('dropzone', 'active');
             target.classList.remove('locked');
+            target.style.background = '';
           },
           ondropdeactivate: e => {
             const {
@@ -282,6 +307,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
               target: HTMLElement;
             } = e;
             target.classList.remove('dropzone', 'active', 'enter');
+            target.style.background = '';
           },
         });
       else interact(selector).dropzone({});
@@ -305,12 +331,39 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     setTimeout(() => this.updateDaysWidth());
   }
 
-  public componentDidUpdate() {
+  public componentDidUpdate(prevProps: IProps) {
+    if (this.props.days.length !== this.currentDaysCount) {
+      this.updateDropzones();
+      this.currentDaysCount = this.props.days.length;
+    }
+
+    if (this.props.days.length)
+      if (!this.currentFirstDay) this.currentFirstDay = this.props.days[0];
+      else {
+        const lastDayNowIndex = this.props.days.findIndex(
+          d =>
+            d.date
+              .clone()
+              .startOf('day')
+              .diff(this.currentFirstDay.date.clone().startOf('day'), 'day') ===
+            0,
+        );
+        this.currentFirstDay = this.props.days[0];
+
+        if (lastDayNowIndex !== 0) {
+          this.currentLeftColumnIndex += this.state.columnsPerDay;
+          this.updateScroll(true);
+        }
+        // if (lastDayNowIndex !== 0) this.updateScroll(false);
+      }
+
     // OPTIMIZE
     this.state.requiredDays.forEach(day => {
       if (!this.props.daysPending.find(d => d.diff(day, 'days') === 0))
         this.props.requestCallback(day);
     });
+
+    // if (prevProps.days.length !== this.props.days.length) this.updateScroll();
 
     if (this.shouldUpdateVisibility) {
       this.updateVisibility([
@@ -322,13 +375,30 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public turnPage(delta: -1 | 1) {
+    const index =
+      this.currentLeftColumnIndex + this.state.columnsPerPage * 2 * delta;
+    if (index - this.state.columnsPerPage < 0) {
+      this.props.requestCallback(
+        this.props.days[0].date.clone().subtract(1, 'day'),
+      );
+      setTimeout(() => this.turnPage(delta));
+      return;
+    } else if (
+      index + this.state.columnsPerPage * 2 >
+      this.props.days.length * this.state.columnsPerDay - 1
+    )
+      this.props.requestCallback(
+        this.props.days[
+          this.props.days.length === 0 ? 0 : this.props.days.length - 1
+        ].date
+          .clone()
+          .add(1, 'day'),
+      );
+
     this.updateVisibility([
       this.currentLeftColumnIndex,
       Math.min(
-        Math.max(
-          this.currentLeftColumnIndex + this.state.columnsPerPage * 2 * delta,
-          0,
-        ),
+        Math.max(index, 0),
         this.props.days.length * this.state.columnsPerDay - 1,
       ),
     ]);
@@ -427,7 +497,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const maxDay = Math.ceil(maxColumn / this.state.columnsPerDay) + 1;
 
     Array.from(
-      (this.daysContainerRef.current as HTMLDivElement).children,
+      (this.daysContainerRef.current as HTMLDivElement).querySelectorAll(
+        '.dayWrapper',
+      ),
     ).forEach((child, index) => {
       if (index >= minDay && index <= maxDay) child.classList.remove('hidden');
       else child.classList.add('hidden');
@@ -474,6 +546,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   public render() {
     const { columnsPerDay, stamps, dayWidth, shifts, subGridStep } = this.state;
     const rows = this.props.positionCount;
+    const rect = this.daysContainerRef.current
+      ? (this.daysContainerRef.current as HTMLElement).getBoundingClientRect()
+      : { top: 0, right: 0, left: 0, bottom: 0, width: 0, height: 0 };
 
     return (
       <Card
@@ -496,6 +571,31 @@ export default class CalendarCard extends React.Component<IProps, IState> {
               subGridStep={subGridStep}
             />
           ))}
+          <ToggleArea
+            id="leftToggleArea"
+            style={{
+              height: `${rect.height}px`,
+              left: `${rect.left}px`,
+              top: `${rect.top}px`,
+              width: `${calendarCellMinWidth / 2}px`,
+            }}
+            action={this.turnPageLeft}
+            firstDelay={200}
+            repeatDelay={2000}
+          />
+          <ToggleArea
+            id="rightToggleArea"
+            style={{
+              height: `${rect.height}px`,
+              left: `calc(${rect.left + rect.width}px - ${calendarCellMinWidth /
+                2}px)`,
+              top: `${rect.top}px`,
+              width: `${calendarCellMinWidth / 2}px`,
+            }}
+            action={this.turnPageRight}
+            firstDelay={200}
+            repeatDelay={2000}
+          />
         </div>
       </Card>
     );

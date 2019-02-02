@@ -96,10 +96,11 @@ $calendar-cell-width-min: 220px;
             background: inherit;
 
             &.active {
-              background: lightsteelblue;
+              // background: lightsteelblue;
+              background: inherit;
 
               &.enter {
-                background: khaki;
+                background: rgb(241, 236, 189);
                 &.locked {
                   background: inherit;
                 }

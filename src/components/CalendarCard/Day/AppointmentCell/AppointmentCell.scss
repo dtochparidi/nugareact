@@ -28,6 +28,7 @@
   z-index: 100;
 
   &.moving {
+    visibility: visible;
     background: rgba(255, 255, 255, 0.397);
     transition: none;
 

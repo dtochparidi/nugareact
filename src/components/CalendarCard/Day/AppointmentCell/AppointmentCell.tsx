@@ -13,32 +13,30 @@ export interface IProps {
   translateX?: number;
   translateY?: number;
   subGridStep: moment.Duration;
-  updateAppointment: (
-    {
-      date,
-      position,
-      personId,
-      targetDate,
-      targetPosition,
-      appointment,
-    }:
-      | {
-          date: IMoment;
-          position: number;
-          personId: string;
-          targetDate: IMoment;
-          appointment: undefined;
-          targetPosition: number;
-        }
-      | {
-          date: undefined;
-          position: undefined;
-          personId: undefined;
-          appointment: Appointment;
-          targetDate: IMoment;
-          targetPosition: number;
-        },
-  ) => void;
+  updateAppointment: ({
+    date,
+    position,
+    personId,
+    targetDate,
+    targetPosition,
+    appointment,
+  }:
+    | {
+        date: IMoment;
+        position: number;
+        personId: string;
+        targetDate: IMoment;
+        appointment: undefined;
+        targetPosition: number;
+      }
+    | {
+        date: undefined;
+        position: undefined;
+        personId: undefined;
+        appointment: Appointment;
+        targetDate: IMoment;
+        targetPosition: number;
+      }) => void;
 }
 
 @observer
@@ -67,7 +65,7 @@ export default class AppointmentCell extends React.Component<IProps> {
     if (Math.abs(this.mouseDeltaBuffer) < this.mouseWheelStep) return;
 
     const s = this.mouseDeltaBuffer / this.mouseWheelStep;
-    const steps = Math.floor(Math.abs(s)) * Math.sign(s);
+    const steps = Math.floor(Math.min(Math.abs(s), 1) * Math.sign(s));
     const amount = steps * this.mouseWheelStep;
 
     const lastSign = Math.sign(this.mouseDeltaBuffer);
@@ -108,16 +106,23 @@ export default class AppointmentCell extends React.Component<IProps> {
         className={`appointmentCell ${translated ? 'translated' : ''}`}
         id={identifier}
         onWheel={this.onMouseWheelHandler}
+        style={
+          translated
+            ? {
+                transform: `translate(${translateX}%,${translateY}%)`,
+              }
+            : {}
+        }
       >
         <div
           className="container"
-          style={
-            translated
-              ? {
-                  transform: `translate(${translateX}%,${translateY}%)`,
-                }
-              : {}
-          }
+          // style={
+          //   translated
+          //     ? {
+          //         transform: `translate(${translateX}%,${translateY}%)`,
+          //       }
+          //     : {}
+          // }
         >
           {!personInstance.loaded
             ? [
