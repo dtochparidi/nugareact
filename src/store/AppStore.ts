@@ -165,19 +165,16 @@ export class AppStore {
       .minute(targetDate.minute())
       .diff(this.dayTimeRange.end, 'hour');
 
-    if (startDiff < 0) {
-      console.log('move left');
+    if (startDiff < 0)
       targetDate
         .subtract(1, 'day')
         .hour(end.hour())
         .minute(end.minute());
-    } else if (endDiff > 0) {
-      console.log('move right');
+    else if (endDiff > 0)
       targetDate
         .add(1, 'day')
         .hour(start.hour())
         .minute(start.minute());
-    }
 
     // update day
     const currentDay = this.calendarDays.find(

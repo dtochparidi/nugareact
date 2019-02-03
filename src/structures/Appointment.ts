@@ -8,10 +8,10 @@ export default class Appointment implements IAppointment {
   public static fromIdentifier(id: string) {
     const arr = id.split('_');
     return {
-      date: moment(arr[0], 'mm-HH-DD-MM-YYYY'),
+      date: moment(arr[1], 'mm-HH-DD-MM-YYYY'),
       identifier: id,
-      personId: arr[2],
-      position: parseInt(arr[1], 10),
+      personId: arr[3],
+      position: parseInt(arr[2], 10),
     };
   }
 
@@ -20,7 +20,7 @@ export default class Appointment implements IAppointment {
     position: number,
     personId: string,
   ) {
-    const id = `${date.format('mm-HH-DD-MM-YYYY')}_${position}_${personId}`;
+    const id = `app_${date.format('mm-HH-DD-MM-YYYY')}_${position}_${personId}`;
     return id;
   }
 

@@ -13,7 +13,7 @@ export interface IProps {
   dayData: ICalendarDay;
   stamps: moment.Moment[];
   dayWidth: string;
-  subGridStep: moment.Duration;
+  subGridColumns: number;
   shifts: {
     [x: number]: {
       [x: number]: {
@@ -22,38 +22,43 @@ export interface IProps {
       };
     };
   };
-  updateAppointment: (
-    {
-      date,
-      position,
-      personId,
-      targetDate,
-      targetPosition,
-      appointment,
-    }:
-      | {
-          date: IMoment;
-          position: number;
-          personId: string;
-          targetDate: IMoment;
-          appointment: undefined;
-          targetPosition: number;
-        }
-      | {
-          date: undefined;
-          position: undefined;
-          personId: undefined;
-          appointment: Appointment;
-          targetDate: IMoment;
-          targetPosition: number;
-        },
-  ) => void;
+  updateAppointment: ({
+    date,
+    position,
+    personId,
+    targetDate,
+    targetPosition,
+    appointment,
+  }:
+    | {
+        date: IMoment;
+        position: number;
+        personId: string;
+        targetDate: IMoment;
+        appointment: undefined;
+        targetPosition: number;
+      }
+    | {
+        date: undefined;
+        position: undefined;
+        personId: undefined;
+        appointment: Appointment;
+        targetDate: IMoment;
+        targetPosition: number;
+      }) => void;
 }
 
 @observer
 export default class Day extends React.Component<IProps> {
   public render() {
-    const { subGridStep, rows, cols, dayData, dayWidth, stamps } = this.props;
+    const {
+      subGridColumns: subGridStep,
+      rows,
+      cols,
+      dayData,
+      dayWidth,
+      stamps,
+    } = this.props;
     return (
       <div
         className="dayWrapper"
@@ -72,7 +77,7 @@ export default class Day extends React.Component<IProps> {
             stamps={this.props.stamps}
             shifts={this.props.shifts}
             updateAppointment={this.props.updateAppointment}
-            subGridStep={subGridStep}
+            subGridColumns={subGridStep}
           />
         </div>
       </div>

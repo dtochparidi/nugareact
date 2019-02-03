@@ -18,39 +18,43 @@ export interface IProps {
       };
     };
   };
-  subGridStep: moment.Duration;
-  updateAppointment: (
-    {
-      date,
-      position,
-      personId,
-      targetDate,
-      targetPosition,
-      appointment,
-    }:
-      | {
-          date: IMoment;
-          position: number;
-          personId: string;
-          targetDate: IMoment;
-          appointment: undefined;
-          targetPosition: number;
-        }
-      | {
-          date: undefined;
-          position: undefined;
-          personId: undefined;
-          appointment: Appointment;
-          targetDate: IMoment;
-          targetPosition: number;
-        },
-  ) => void;
+  subGridColumns: number;
+  updateAppointment: ({
+    date,
+    position,
+    personId,
+    targetDate,
+    targetPosition,
+    appointment,
+  }:
+    | {
+        date: IMoment;
+        position: number;
+        personId: string;
+        targetDate: IMoment;
+        appointment: undefined;
+        targetPosition: number;
+      }
+    | {
+        date: undefined;
+        position: undefined;
+        personId: undefined;
+        appointment: Appointment;
+        targetDate: IMoment;
+        targetPosition: number;
+      }) => void;
 }
 
 @observer
 export default class Grid extends React.Component<IProps> {
   public render() {
-    const { rows, cols, appointments, stamps, subGridStep } = this.props;
+    const {
+      rows,
+      cols,
+      appointments,
+      stamps,
+      subGridColumns: subGridStep,
+    } = this.props;
 
     // const timeRange = stamps[stamps.length - 1].valueOf() - stamps[0].valueOf();
     // const step = timeRange / stamps.length;
@@ -101,6 +105,11 @@ export default class Grid extends React.Component<IProps> {
         [],
       );
 
+    const gridColumnDuration = moment.duration(
+      stamps[1].diff(stamps[0]).valueOf(),
+      'millisecond',
+    );
+
     const gridCells: React.ReactNode[] = [];
     for (let y = 0; y < rows; y++)
       for (let x = 0; x < cols; x++) {
@@ -129,19 +138,26 @@ export default class Grid extends React.Component<IProps> {
             data-hour={stamp.hour()}
             data-minute={stamp.minute()}
           >
+            <div className="subGrid">
+              {new Array(subGridStep).fill(null).map((v, i) => (
+                <div className="subGridElem" key={i} />
+              ))}
+            </div>
             {app ? (
               coeff !== 0 ? (
                 <AppointmentCell
                   appointment={app.appointment}
                   translateX={coeff}
                   updateAppointment={this.props.updateAppointment}
-                  subGridStep={subGridStep}
+                  subGridColumns={subGridStep}
+                  gridColumnDuration={gridColumnDuration}
                 />
               ) : (
                 <AppointmentCell
                   appointment={app.appointment}
                   updateAppointment={this.props.updateAppointment}
-                  subGridStep={subGridStep}
+                  subGridColumns={subGridStep}
+                  gridColumnDuration={gridColumnDuration}
                 />
               )
             ) : null}

@@ -14,6 +14,7 @@ $calendar-cell-width-min: 220px;
   }
 
   --rows-count: 5;
+  --sub-columns-count: 5;
 
   display: grid;
   width: auto !important;
@@ -90,19 +91,40 @@ $calendar-cell-width-min: 220px;
 
           .item {
             position: relative;
-          }
 
-          .dropzone {
-            background: inherit;
+            .subGrid {
+              display: none;
+            }
 
-            &.active {
-              // background: lightsteelblue;
+            &.dropzone {
               background: inherit;
 
-              &.enter {
-                background: rgb(241, 236, 189);
-                &.locked {
-                  background: inherit;
+              .subGrid {
+                position: absolute;
+
+                display: grid;
+                grid-auto-columns: 1fr;
+                grid-template-rows: 1fr;
+                grid-auto-flow: column;
+
+                left: 0;
+                top: 0;
+                right: 0;
+                bottom: 0;
+
+                .subGridElem {
+                  border: dotted lightgrey 1px;
+                }
+              }
+
+              &.active {
+                background: inherit;
+
+                &.enter {
+                  background: rgb(241, 236, 189);
+                  &.locked {
+                    background: inherit;
+                  }
                 }
               }
             }

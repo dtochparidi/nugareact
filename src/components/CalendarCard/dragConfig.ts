@@ -8,11 +8,12 @@ function createDragConfig(
   const pos = { x: 0, y: 0 };
   const clientPos = { x: 0, y: 0 };
   const size = { width: 0, height: 0 };
+  let transformBeforeDragging = '';
 
   function startHandler(e: InteractEvent) {
     const { target }: { target: HTMLElement } = e;
 
-    // transformBeforeDragging = target.style.transform || '';
+    transformBeforeDragging = target.style.transform || '';
 
     clientPos.x = e.clientX;
     clientPos.y = e.clientY;
@@ -58,7 +59,8 @@ function createDragConfig(
     target.style.top = '';
     target.style.width = '';
     target.style.height = '';
-    target.style.transform = '';
+    // target.style.transform = '';
+    target.style.transform = transformBeforeDragging;
 
     onend(e);
   }

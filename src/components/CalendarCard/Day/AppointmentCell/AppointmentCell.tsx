@@ -12,7 +12,8 @@ export interface IProps {
   appointment: Appointment;
   translateX?: number;
   translateY?: number;
-  subGridStep: moment.Duration;
+  subGridColumns: number;
+  gridColumnDuration: moment.Duration;
   updateAppointment: ({
     date,
     position,
@@ -42,7 +43,7 @@ export interface IProps {
 @observer
 export default class AppointmentCell extends React.Component<IProps> {
   public onMouseWheelHandler: (e: React.WheelEvent<any> | WheelEvent) => void;
-  public mouseWheelStep: number = 30;
+  public mouseWheelStep: number = 150;
   private mouseDeltaBuffer: number = 0;
 
   constructor(props: IProps) {
@@ -75,8 +76,15 @@ export default class AppointmentCell extends React.Component<IProps> {
       Math.sign(this.mouseDeltaBuffer) === lastSign ? this.mouseDeltaBuffer : 0;
 
     // update appointment
-    const { updateAppointment, appointment, subGridStep } = this.props;
-    const duration = moment.duration(subGridStep.asMilliseconds() * steps);
+    const {
+      updateAppointment,
+      appointment,
+      gridColumnDuration,
+      subGridColumns,
+    } = this.props;
+    const duration = moment.duration(
+      (gridColumnDuration.asMilliseconds() / subGridColumns) * steps,
+    );
     updateAppointment({
       appointment,
       date: undefined,

@@ -65,7 +65,7 @@ export interface IState {
   stamps: IMoment[];
   dayWidth: string;
   cellWidth: number;
-  subGridStep: Moment.Duration;
+  subGridColumns: number;
   shifts: {
     [x: number]: {
       [x: number]: {
@@ -157,7 +157,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       shifts: { 0: { 0: { dx: 1, dy: 2 } } },
       // shifts: {},
       stamps,
-      subGridStep: Moment.duration({ minute: 10 }),
+      subGridColumns: 5,
     };
   }
   public turnPageRight = () => {
@@ -236,80 +236,106 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     ).forEach((child, index) => {
       const selector = `#${child.id} .gridCell`;
       if (index >= minDay && index <= maxDay)
-        interact(selector).dropzone({
-          ondragenter: e => {
-            const {
-              target,
-            }: {
-              target: HTMLElement;
-            } = e;
-            target.classList.add('dropzone', 'enter');
+        interact(selector).dropzone(
+          ((): interact.DropZoneOptions => {
+            const lastPosition = { x: 0, y: 0 };
+            return {
+              ondragenter: e => {
+                const {
+                  target,
+                  relatedTarget,
+                }: {
+                  target: HTMLElement;
+                  relatedTarget: HTMLElement;
+                } = e;
+                target.classList.add('dropzone', 'enter');
 
-            const isFree = this.freeCell(target);
-            if (isFree) target.classList.remove('locked');
-            else target.classList.add('locked');
+                const isFree = this.freeCell(target);
+                if (isFree || target.querySelector(`#${relatedTarget.id}`))
+                  target.classList.remove('locked');
+                else target.classList.add('locked');
 
-            target.style.background = 'rgb(241, 236, 189)';
-          },
-          ondragleave: e => {
-            const {
-              target,
-            }: {
-              target: HTMLElement;
-            } = e;
+                target.style.background = 'rgb(241, 236, 189)';
+              },
+              ondragleave: e => {
+                const {
+                  target,
+                }: {
+                  target: HTMLElement;
+                } = e;
+                target.classList.remove('enter', 'locked');
+                target.style.background = '';
+              },
+              ondrop: e => {
+                const {
+                  target,
+                  relatedTarget,
+                }: {
+                  target: HTMLElement;
+                  relatedTarget: HTMLElement;
+                } = e;
+                if (target.classList.contains('locked')) {
+                  console.log('locked');
+                  return;
+                }
+                console.log('drop');
 
-            target.classList.remove('enter', 'locked');
-            target.style.background = '';
-          },
-          ondrop: e => {
-            const {
-              target,
-              relatedTarget,
-            }: { target: HTMLElement; relatedTarget: HTMLElement } = e;
+                const appointmentId = relatedTarget.id;
+                const app = Appointment.fromIdentifier(appointmentId);
+                const {
+                  stamp: targetStamp,
+                  position,
+                } = CalendarCard.getCellInfo(target);
+                const cellRect = target.getBoundingClientRect();
+                const leftOffset = lastPosition.x - cellRect.left;
+                const step = cellRect.width / this.state.subGridColumns;
+                const subGridScale = Math.floor(leftOffset / step);
+                const subGridDuration = Moment.duration(
+                  ((this.state.stamps[1].valueOf() -
+                    this.state.stamps[0].valueOf()) /
+                    this.state.subGridColumns) *
+                    subGridScale,
+                  'millisecond',
+                );
 
-            console.log('drop');
+                targetStamp.add(subGridDuration);
 
-            if (target.classList.contains('locked')) return;
-
-            const appointmentId = relatedTarget.id;
-            const app = Appointment.fromIdentifier(appointmentId);
-
-            const { stamp: targetStamp, position } = CalendarCard.getCellInfo(
-              target,
-            );
-
-            // IMPORTANT: enable to remember minutes shifts
-            // targetStamp.minute(app.date.minute());
-
-            this.props.updateAppointment({
-              appointment: undefined,
-              date: app.date,
-              personId: app.personId,
-              position: app.position,
-              targetDate: targetStamp,
-              targetPosition: position,
-            });
-          },
-          ondropactivate: e => {
-            const {
-              target,
-            }: {
-              target: HTMLElement;
-            } = e;
-            target.classList.add('dropzone', 'active');
-            target.classList.remove('locked');
-            target.style.background = '';
-          },
-          ondropdeactivate: e => {
-            const {
-              target,
-            }: {
-              target: HTMLElement;
-            } = e;
-            target.classList.remove('dropzone', 'active', 'enter');
-            target.style.background = '';
-          },
-        });
+                this.props.updateAppointment({
+                  appointment: undefined,
+                  date: app.date,
+                  personId: app.personId,
+                  position: app.position,
+                  targetDate: targetStamp,
+                  targetPosition: position,
+                });
+              },
+              ondropactivate: e => {
+                const {
+                  target,
+                }: {
+                  target: HTMLElement;
+                } = e;
+                target.classList.add('dropzone', 'active');
+                target.classList.remove('locked');
+                target.style.background = '';
+              },
+              ondropdeactivate: e => {
+                const {
+                  target,
+                }: {
+                  target: HTMLElement;
+                } = e;
+                target.classList.remove('dropzone', 'active', 'enter');
+                target.style.background = '';
+              },
+              ondropmove: e => {
+                const rect = (e.relatedTarget as HTMLElement).getBoundingClientRect();
+                lastPosition.x = rect.left;
+                lastPosition.y = rect.top;
+              },
+            };
+          })(),
+        );
       else interact(selector).dropzone({});
     });
   }
@@ -544,7 +570,13 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public render() {
-    const { columnsPerDay, stamps, dayWidth, shifts, subGridStep } = this.state;
+    const {
+      columnsPerDay,
+      stamps,
+      dayWidth,
+      shifts,
+      subGridColumns,
+    } = this.state;
     const rows = this.props.positionCount;
     const rect = this.daysContainerRef.current
       ? (this.daysContainerRef.current as HTMLElement).getBoundingClientRect()
@@ -553,7 +585,12 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     return (
       <Card
         cardClass="calendarCard"
-        style={{ '--rows-count': rows } as React.CSSProperties}
+        style={
+          {
+            '--rows-count': rows,
+            '--sub-columns-count:': subGridColumns,
+          } as React.CSSProperties
+        }
       >
         {/* <TimeColumn stamps={stamps} /> */}
         <LeftColumn positionCount={rows} />
@@ -568,7 +605,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
               dayWidth={dayWidth}
               shifts={shifts}
               updateAppointment={this.props.updateAppointment}
-              subGridStep={subGridStep}
+              subGridColumns={subGridColumns}
             />
           ))}
           <ToggleArea
