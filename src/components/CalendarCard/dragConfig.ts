@@ -70,7 +70,6 @@ function createDragConfig(
       speed: 800,
     } as any,
     onend: endHandler,
-
     onmove: moveHandler,
     onstart: startHandler,
   };

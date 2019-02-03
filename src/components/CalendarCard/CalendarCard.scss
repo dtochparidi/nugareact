@@ -93,35 +93,38 @@ $calendar-cell-width-min: 220px;
             position: relative;
 
             .subGrid {
-              display: none;
+              position: absolute;
+
+              display: grid;
+              grid-auto-columns: 1fr;
+              grid-template-rows: 1fr;
+              grid-auto-flow: column;
+
+              left: 0;
+              top: 0;
+              right: 0;
+              bottom: 0;
+
+              opacity: 0;
+              transition: opacity 0.5s;
+
+              .subGridElem {
+                border: dotted lightgrey 1px;
+              }
             }
 
             &.dropzone {
               background: inherit;
 
               .subGrid {
-                position: absolute;
-
-                display: grid;
-                grid-auto-columns: 1fr;
-                grid-template-rows: 1fr;
-                grid-auto-flow: column;
-
-                left: 0;
-                top: 0;
-                right: 0;
-                bottom: 0;
-
-                .subGridElem {
-                  border: dotted lightgrey 1px;
-                }
+                opacity: 1;
               }
 
               &.active {
                 background: inherit;
 
                 &.enter {
-                  background: rgb(241, 236, 189);
+                  // background: rgb(241, 236, 189);
                   &.locked {
                     background: inherit;
                   }
