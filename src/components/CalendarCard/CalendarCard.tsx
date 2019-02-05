@@ -108,6 +108,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   private shouldUpdateVisibility: boolean = false;
   private currentFirstDay: ICalendarDay;
   private currentDaysCount: number = 0;
+  private isScrolling: boolean = false;
   // private isDragging: boolean = false;
 
   constructor(props: IProps) {
@@ -133,18 +134,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       columnsPerDay: stamps.length,
       columnsPerPage: 4,
       dayWidth: '100%',
-      requiredDays: [
-        moment()
-          .add(1, 'day')
-          .startOf('day'),
-        moment().startOf('day'),
-        moment()
-          .subtract(1, 'day')
-          .startOf('day'),
-        moment()
-          .subtract(2, 'day')
-          .startOf('day'),
-      ],
+      requiredDays: [moment().startOf('day')],
       shifts: { 0: { 0: { dx: 1, dy: 2 } } },
       // shifts: {},
       stamps,
@@ -219,7 +209,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   public updateDropzones() {
     const minColumn = this.currentLeftColumnIndex;
     const maxColumn = this.currentLeftColumnIndex + this.state.columnsPerPage;
-    const minDay = Math.floor(minColumn / this.state.columnsPerDay) - 1;
+    const minDay = Math.floor(minColumn / this.state.columnsPerDay);
     const maxDay = Math.ceil(maxColumn / this.state.columnsPerDay) + 1;
 
     Array.from(
@@ -353,7 +343,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
   public componentDidUpdate(prevProps: IProps) {
     if (this.props.days.length !== this.currentDaysCount) {
-      console.log('update dropzones');
       this.updateDropzones();
       this.currentDaysCount = this.props.days.length;
     }
@@ -396,9 +385,12 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public turnPage(delta: -1 | 1) {
+    if (this.isScrolling) return;
+
     const index =
       this.currentLeftColumnIndex + this.state.columnsPerPage * 2 * delta;
-    if (index - this.state.columnsPerPage < 0) {
+    if (index < 0) {
+      this.shouldUpdateVisibility = true;
       this.props.requestCallback(
         this.props.days[0].date.clone().subtract(1, 'day'),
       );
@@ -460,6 +452,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       behavior: force ? 'auto' : 'smooth',
       left,
     });
+    this.isScrolling = true;
 
     const callback = () => {
       clearTimeout(this.containerScrollTimeout);
@@ -469,7 +462,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           this.currentLeftColumnIndex + this.state.columnsPerPage,
         ]);
         container.removeEventListener('scroll', callback);
-      }, 500);
+
+        this.isScrolling = false;
+      }, 200);
     };
 
     container.addEventListener('scroll', callback);
@@ -496,6 +491,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       behavior: force ? 'auto' : 'smooth',
       left,
     });
+    this.isScrolling = true;
 
     const callback = () => {
       clearTimeout(this.containerScrollTimeout);
@@ -505,7 +501,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           this.currentLeftColumnIndex + this.state.columnsPerPage,
         ]);
         container.removeEventListener('scroll', callback);
-      }, 500);
+
+        this.isScrolling = false;
+      }, 200);
     };
 
     container.addEventListener('scroll', callback);
@@ -613,7 +611,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
             }}
             action={this.turnPageLeft}
             firstDelay={200}
-            repeatDelay={2000}
+            repeatDelay={200}
           />
           <ToggleArea
             id="rightToggleArea"
@@ -626,7 +624,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
             }}
             action={this.turnPageRight}
             firstDelay={200}
-            repeatDelay={2000}
+            repeatDelay={200}
           />
         </div>
       </Card>
