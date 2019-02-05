@@ -14,6 +14,7 @@ import * as CardVariables from './CalendarCard.scss';
 import './CalendarCard.scss';
 
 import * as interact from 'interactjs';
+import CalendarDay from 'src/structures/CalendarDay';
 import { clientSide } from '../../dev/clientSide';
 import Appointment from '../../structures/Appointment';
 import createDragConfig from './dragConfig';
@@ -27,8 +28,7 @@ const moment = extendMoment(Moment);
 if (clientSide) (interact as any).dynamicDrop(true);
 
 export interface IProps {
-  days: ICalendarDay[];
-  daysPending: IMoment[];
+  days: CalendarDay[];
   dayTimeRange: DateRange;
   positionCount: number;
   requestCallback: (date: Moment.Moment) => void;
@@ -39,23 +39,14 @@ export interface IProps {
     targetDate,
     targetPosition,
     appointment,
-  }:
-    | {
-        date: IMoment;
-        position: number;
-        personId: string;
-        targetDate: IMoment;
-        appointment: undefined;
-        targetPosition: number;
-      }
-    | {
-        date: undefined;
-        position: undefined;
-        personId: undefined;
-        appointment: Appointment;
-        targetDate: IMoment;
-        targetPosition: number;
-      }) => void;
+  }: {
+    date?: IMoment;
+    position?: number;
+    personId?: string;
+    targetDate: IMoment;
+    appointment?: Appointment;
+    targetPosition: number;
+  }) => void;
 }
 
 export interface IState {
@@ -389,7 +380,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     // OPTIMIZE
     this.state.requiredDays.forEach(day => {
-      if (!this.props.daysPending.find(d => d.diff(day, 'days') === 0))
+      if (!this.props.days.find(d => d.date.diff(day, 'days') === 0))
         this.props.requestCallback(day);
     });
 

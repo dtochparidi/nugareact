@@ -1,9 +1,10 @@
 import * as interact from 'interactjs';
 import { observer } from 'mobx-react';
 import * as React from 'react';
-import { AppStore } from 'src/store/AppStore';
 
 import './ControlWindow.scss';
+
+// import { AppStore } from 'src/store/AppStore';
 
 function moveHandler(e: interact.InteractEvent) {
   const { target }: { target: HTMLElement } = e;
@@ -40,24 +41,25 @@ if (
   interact('.controlWindow').draggable(dragConfig);
 
 export interface IProps {
-  appStore: AppStore;
+  // appStore: AppStore;
   children?: React.ReactNode;
 }
 
 @observer
 export default class ControlWindow extends React.Component<IProps> {
   public render() {
-    const update = (e: React.ChangeEvent<HTMLInputElement>) => {
-      this.props.appStore.updatePositionCount(parseInt(e.target.value, 10));
-    };
-    const value = this.props.appStore.positionCount;
+    // const update = (e: React.ChangeEvent<HTMLInputElement>) => {
+    //   this.props.appStore.updatePositionCount(parseInt(e.target.value, 10));
+    // };
+    // const value = this.props.appStore.positionCount;
 
-    return (
-      <div className="controlWindow">
-        <div>{this.props.children}</div>
-        <label>Positions Count: </label>
-        <input value={value || ''} onChange={update} />
-      </div>
-    );
+    // return (
+    //   <div className="controlWindow">
+    //     <div>{this.props.children}</div>
+    //     <label>Positions Count: </label>
+    //     <input value={value || ''} onChange={update} />
+    //   </div>
+    // );
+    return <div />;
   }
 }
