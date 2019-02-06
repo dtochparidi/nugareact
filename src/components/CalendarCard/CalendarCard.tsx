@@ -193,7 +193,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     // console.log('---');
     // column.forEach(app => console.log(app.date.hour(), app.position));
 
-    const isFree = column.every(app => app.position !== position);
+    const isFree =
+      !target.querySelector('.appointmentCell') ||
+      column.every(app => app.position !== position);
     if (isFree) return true;
 
     return false;
@@ -256,6 +258,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 target.classList.add('dropzone', 'enter');
 
                 const isFree = this.freeCell(target);
+                console.log(
+                  isFree,
+                  relatedTarget.id,
+                  target.querySelector(`#${relatedTarget.id}`),
+                );
                 if (isFree || target.querySelector(`#${relatedTarget.id}`))
                   target.classList.remove('locked');
                 else target.classList.add('locked');
@@ -331,13 +338,29 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 }: {
                   target: HTMLElement;
                 } = e;
-                target.classList.remove('dropzone', 'active', 'enter');
+                target.classList.remove(
+                  'dropzone',
+                  'active',
+                  'enter',
+                  'locked',
+                );
                 target.style.background = '';
               },
               ondropmove: e => {
-                const rect = (e.relatedTarget as HTMLElement).getBoundingClientRect();
+                const {
+                  target,
+                  relatedTarget,
+                }: {
+                  target: HTMLElement;
+                  relatedTarget: HTMLElement;
+                } = e;
+
+                const rect = relatedTarget.getBoundingClientRect();
                 lastPosition.x = rect.left;
                 lastPosition.y = rect.top;
+
+                const app = target.querySelector(`#${relatedTarget.id}`);
+                if (app) target.classList.remove('locked');
               },
             };
           })(),
