@@ -1,12 +1,14 @@
+import ControlWindow from 'components/ControlWindow';
+import VersionChangelog from 'components/VersionChangelog';
 import * as Cookies from 'js-cookie';
 import { observer } from 'mobx-react';
 import DevTools, { configureDevtool } from 'mobx-react-devtools';
 import * as React from 'react';
-import versions from './versions';
 
 import CalendarCard from './components/CalendarCard';
 import { clientSide } from './dev/clientSide';
 import rootStore from './stores/RootStore';
+import versions from './versions';
 
 import './App.css';
 
@@ -14,14 +16,18 @@ import './App.css';
 const { personStore, calendarDayStore } = rootStore.domainStore;
 const { uiStore } = rootStore;
 
+let versionName: string | undefined;
+let lastVersion: [string, string];
+let needToShow: boolean = false;
+
 // do not do it while testing in jest
 if (clientSide) {
   // checking for updates
-  const versionName = Cookies.get('version');
-  const lastVersion = versions[versions.length - 1];
-  if (lastVersion[0] !== versionName) {
-    alert(`${lastVersion[0]}\n\n${lastVersion[1]}`);
+  versionName = Cookies.get('version');
+  lastVersion = versions[versions.length - 1];
+  if (versionName && lastVersion[0] !== versionName) {
     Cookies.set('version', lastVersion[0]);
+    needToShow = true;
   }
 
   // configuring mobX dev console
@@ -56,13 +62,21 @@ class App extends React.Component {
               process.env.NODE_ENV === 'development' ? (
                 <DevTools key="devTools" />
               ) : null,
-              // <ControlWindow key="controlWindow" appStore={appStore} />,
+              <ControlWindow key="controlWindow" rootStore={rootStore} />,
+              needToShow ? (
+                <VersionChangelog
+                  key="versionChangelog"
+                  show={needToShow}
+                  versions={versions}
+                />
+              ) : null,
             ]
           : null}
         <CalendarCard
+          subGridColumns={uiStore.subGridColumns || 0}
           days={calendarDayStore.days}
           requestCallback={calendarDayStore.loadDay}
-          positionCount={uiStore.positionCount}
+          positionCount={uiStore.positionCount || 0}
           dayTimeRange={uiStore.dayTimeRange}
           updateAppointment={calendarDayStore.updateAppointment}
         />

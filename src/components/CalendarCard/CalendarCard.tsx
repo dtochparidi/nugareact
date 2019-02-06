@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react';
 import * as Moment from 'moment';
-import { Moment as IMoment } from 'moment';
+import { Duration as IDuration, Moment as IMoment } from 'moment';
 import { DateRange, extendMoment } from 'moment-range';
 import * as React from 'react';
 
@@ -33,6 +33,7 @@ export interface IProps {
   days: CalendarDay[];
   dayTimeRange: DateRange;
   positionCount: number;
+  subGridColumns: number;
   requestCallback: (date: Moment.Moment) => void;
   updateAppointment: ({
     date,
@@ -55,11 +56,11 @@ export interface IState {
   requiredDays: IMoment[];
   columnsPerPage: number;
   columnsPerDay: number;
-  stamps: IMoment[];
+  mainColumnStep: IDuration;
   dayWidth: string;
   cellWidth: number;
-  subGridColumns: number;
   loading: boolean;
+  stamps: IMoment[];
   shifts: {
     [x: number]: {
       [x: number]: {
@@ -121,8 +122,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     this.daysContainerRef = React.createRef();
     this.pageTurnEmitter = new Emitter();
 
+    const mainColumnStep = Moment.duration(45, 'minutes');
     const stamps = Array.from(
-      this.props.dayTimeRange.by('minutes', { step: 60 }),
+      this.props.dayTimeRange.by('seconds', {
+        step: mainColumnStep.asSeconds(),
+      }),
     );
 
     if (clientSide)
@@ -140,6 +144,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       columnsPerPage: 4,
       dayWidth: '100%',
       loading: true,
+      mainColumnStep,
       requiredDays: [
         moment()
           .startOf('day')
@@ -158,7 +163,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         },
       },
       stamps,
-      subGridColumns: 5,
     };
   }
   public turnPageRight = () => {
@@ -289,14 +293,13 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 } = CalendarCard.getCellInfo(target);
                 const cellRect = target.getBoundingClientRect();
                 const leftOffset = lastPosition.x - cellRect.left;
-                const step = cellRect.width / this.state.subGridColumns;
+                const step = cellRect.width / this.props.subGridColumns;
                 const subGridScale = Math.floor(leftOffset / step);
                 const subGridDuration = Moment.duration(
-                  ((this.state.stamps[1].valueOf() -
-                    this.state.stamps[0].valueOf()) /
-                    this.state.subGridColumns) *
+                  (this.state.mainColumnStep.asSeconds() /
+                    this.props.subGridColumns) *
                     subGridScale,
-                  'millisecond',
+                  'second',
                 );
 
                 targetStamp.add(subGridDuration);
@@ -608,9 +611,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       stamps,
       dayWidth,
       shifts,
-      subGridColumns,
+      mainColumnStep,
     } = this.state;
-    const rows = this.props.positionCount;
+    const { subGridColumns, positionCount } = this.props;
     const rect = this.daysContainerRef.current
       ? (this.daysContainerRef.current as HTMLElement).getBoundingClientRect()
       : { top: 0, right: 0, left: 0, bottom: 0, width: 0, height: 0 };
@@ -620,13 +623,13 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         cardClass="calendarCard"
         style={
           {
-            '--rows-count': rows,
+            '--rows-count': positionCount,
             '--sub-columns-count:': subGridColumns,
           } as React.CSSProperties
         }
       >
         {/* <TimeColumn stamps={stamps} /> */}
-        <LeftColumn positionCount={rows} />
+        <LeftColumn positionCount={positionCount} />
         <div
           className={`daysContainer ${this.state.loading ? 'loading' : ''}`}
           ref={this.daysContainerRef}
@@ -634,7 +637,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           {this.props.days.map(day => (
             <Day
               key={day.date.toString()}
-              rows={rows}
+              rows={positionCount}
               cols={columnsPerDay || 0}
               dayData={day}
               stamps={stamps}
@@ -642,6 +645,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
               shifts={shifts}
               updateAppointment={this.props.updateAppointment}
               subGridColumns={subGridColumns}
+              mainColumnStep={mainColumnStep}
             />
           ))}
           <ToggleArea

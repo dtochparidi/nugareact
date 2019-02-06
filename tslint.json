@@ -7,11 +7,11 @@
       "coverage/lcov-report/*.js"
     ]
   },
+  "defaultSeverity": "error",
   "rules": {
     "no-console": false,
     "curly": [true, "as-needed"],
-    "no-debugger": false,
-    "no-unused-variable": true
+    "no-debugger": false
   },
   "jsRules": {
     "no-console": false,

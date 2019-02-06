@@ -2,10 +2,6 @@
   "typescriptHero.imports.organizeOnSave": true,
   "typescriptHero.imports.grouping": ["Modules", "Workspace", "Plains"],
   "tslint.autoFixOnSave": true,
-  "importCost.bundleSizeDecoration": "both",
-  "importCost.typescriptExtensions": ["\\.tsx?$"],
-  "importCost.showCalculatingDecoration": true,
-  "importCost.debug": true,
   "todohighlight.keywords": [
     {
       "text": "TODO:",

@@ -3,6 +3,7 @@ import './ControlWindow.scss';
 import * as interact from 'interactjs';
 import { observer } from 'mobx-react';
 import * as React from 'react';
+import { RootStore } from 'stores/RootStore';
 
 // import { AppStore } from 'store/AppStore';
 
@@ -41,25 +42,44 @@ if (
   interact('.controlWindow').draggable(dragConfig);
 
 export interface IProps {
-  // appStore: AppStore;
+  rootStore: RootStore;
   children?: React.ReactNode;
 }
 
 @observer
 export default class ControlWindow extends React.Component<IProps> {
   public render() {
-    // const update = (e: React.ChangeEvent<HTMLInputElement>) => {
-    //   this.props.appStore.updatePositionCount(parseInt(e.target.value, 10));
-    // };
-    // const value = this.props.appStore.positionCount;
+    const { uiStore } = this.props.rootStore;
 
-    // return (
-    //   <div className="controlWindow">
-    //     <div>{this.props.children}</div>
-    //     <label>Positions Count: </label>
-    //     <input value={value || ''} onChange={update} />
-    //   </div>
-    // );
+    const updatePositionCount = (e: React.ChangeEvent<HTMLInputElement>) => {
+      uiStore.updatePositionCount(parseInt(e.target.value, 10));
+    };
+
+    const updateSubGridColumnCount = (
+      e: React.ChangeEvent<HTMLInputElement>,
+    ) => {
+      uiStore.updateSubGridColumnCount(parseInt(e.target.value, 10));
+    };
+
+    const stopPropogation = (e: React.KeyboardEvent<HTMLDivElement>) => {
+      e.stopPropagation();
+    };
+
+    return (
+      <div className="controlWindow" onKeyDown={stopPropogation}>
+        <div>{this.props.children}</div>
+        <label>Positions Count: </label>
+        <input
+          value={uiStore.positionCount || 0}
+          onChange={updatePositionCount}
+        />
+        <label>Sub Grid Columns Count: </label>
+        <input
+          value={uiStore.subGridColumns || 0}
+          onChange={updateSubGridColumnCount}
+        />
+      </div>
+    );
     return <div />;
   }
 }

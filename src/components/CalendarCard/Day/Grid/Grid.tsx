@@ -10,6 +10,7 @@ export interface IProps {
   rows: number;
   appointments: Appointment[];
   stamps: moment.Moment[];
+  mainColumnStep: moment.Duration;
   shifts: {
     [x: number]: {
       [x: number]: {
@@ -124,7 +125,8 @@ export default class Grid extends React.Component<IProps> {
             .hour(stamp.hour())
             .minute(stamp.minute());
 
-          coeff = (d.diff(s, 'minutes') / 60) * 100;
+          coeff =
+            (d.diff(s, 'second') / this.props.mainColumnStep.asSeconds()) * 100;
         }
 
         gridCells.push(

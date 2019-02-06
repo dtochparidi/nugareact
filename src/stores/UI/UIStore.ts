@@ -6,6 +6,8 @@ const moment = extendMoment(Moment);
 
 export default class UIStore {
   @observable
+  public subGridColumns: number = 5;
+  @observable
   public positionCount: number = 15;
   @observable
   public dayTimeRange: DateRange = moment.range(
@@ -20,5 +22,10 @@ export default class UIStore {
   @action
   public updatePositionCount(count: number) {
     this.positionCount = count;
+  }
+
+  @action
+  public updateSubGridColumnCount(count: number) {
+    this.subGridColumns = count;
   }
 }

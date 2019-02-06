@@ -28,6 +28,7 @@ const ua = () => null;
 it('renders without crashing', () => {
   const component = enzyme.render(
     <CalendarCard
+      subGridColumns={4}
       days={[]}
       requestCallback={requestDay}
       positionCount={6}
