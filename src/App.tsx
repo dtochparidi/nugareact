@@ -25,10 +25,8 @@ if (clientSide) {
   // checking for updates
   versionName = Cookies.get('version');
   lastVersion = versions[versions.length - 1];
-  if (versionName && lastVersion[0] !== versionName) {
-    Cookies.set('version', lastVersion[0]);
-    needToShow = true;
-  }
+  if (versionName && lastVersion[0] !== versionName) needToShow = true;
+  Cookies.set('version', lastVersion[0]);
 
   // configuring mobX dev console
   configureDevtool({
