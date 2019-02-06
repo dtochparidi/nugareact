@@ -1,8 +1,8 @@
+import IAppointment from 'interfaces/IAppointment';
+import { IPerson } from 'interfaces/IPerson';
+import { IPersonLoading } from 'interfaces/IPersonLoading';
 import { action, observable } from 'mobx';
 import * as moment from 'moment';
-import IAppointment from 'src/interfaces/IAppointment';
-import { IPerson } from 'src/interfaces/IPerson';
-import { IPersonLoading } from 'src/interfaces/IPersonLoading';
 
 export default class Appointment implements IAppointment {
   public static fromIdentifier(id: string) {

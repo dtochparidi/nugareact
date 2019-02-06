@@ -63,12 +63,24 @@ $calendar-cell-width-min: 220px;
     width: auto;
     white-space: nowrap;
 
+    &.loading {
+      visibility: hidden;
+    }
+
     .dayWrapper {
       --columns-count: 6;
 
       display: inline-block;
       height: 100%;
       width: 100%;
+
+      &.hidden > .day > .grid {
+        display: none;
+      }
+
+      &.dragOrigin > .day > .grid {
+        display: grid;
+      }
 
       .day {
         display: grid;

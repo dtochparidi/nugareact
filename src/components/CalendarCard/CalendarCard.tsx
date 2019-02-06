@@ -14,11 +14,13 @@ import * as CardVariables from './CalendarCard.scss';
 import './CalendarCard.scss';
 
 import * as interact from 'interactjs';
-import CalendarDay from 'src/structures/CalendarDay';
+import CalendarDay from 'structures/CalendarDay';
 import { clientSide } from '../../dev/clientSide';
 import Appointment from '../../structures/Appointment';
 import createDragConfig from './dragConfig';
 import ToggleArea from './ToggleArea';
+
+import * as Emitter from 'events';
 
 const calendarCellMinWidth = parseFloat(CardVariables.calendarCellWidthMin);
 const thinWidth = parseFloat(StyleVariables.thinWidth);
@@ -57,6 +59,7 @@ export interface IState {
   dayWidth: string;
   cellWidth: number;
   subGridColumns: number;
+  loading: boolean;
   shifts: {
     [x: number]: {
       [x: number]: {
@@ -109,12 +112,14 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   private currentFirstDay: ICalendarDay;
   private currentDaysCount: number = 0;
   private isScrolling: boolean = false;
+  private pageTurnEmitter: Emitter;
   // private isDragging: boolean = false;
 
   constructor(props: IProps) {
     super(props);
 
     this.daysContainerRef = React.createRef();
+    this.pageTurnEmitter = new Emitter();
 
     const stamps = Array.from(
       this.props.dayTimeRange.by('minutes', { step: 60 }),
@@ -134,9 +139,24 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       columnsPerDay: stamps.length,
       columnsPerPage: 4,
       dayWidth: '100%',
-      requiredDays: [moment().startOf('day')],
-      shifts: { 0: { 0: { dx: 1, dy: 2 } } },
-      // shifts: {},
+      loading: true,
+      requiredDays: [
+        moment()
+          .startOf('day')
+          .add(1, 'day'),
+        moment().startOf('day'),
+        moment()
+          .startOf('day')
+          .subtract(1, 'day'),
+      ],
+      shifts: {
+        0: {
+          0: {
+            dx: 1,
+            dy: 2,
+          },
+        },
+      },
       stamps,
       subGridColumns: 5,
     };
@@ -150,12 +170,15 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   };
 
   public onAppointmentDraggingStart(e: interact.InteractEvent) {
-    // this.isDragging = true;
-    this.updateDropzones();
+    (((((e.target as Element).parentNode as Element).parentNode as Element) // .appointmentCell // .gridCell // .grid
+      .parentNode as Element).parentNode as Element).classList // .topRow // .day // .dayWrapper
+      .add('dragOrigin');
   }
 
   public onAppointmentDraggingEnd(e: interact.InteractEvent) {
-    // this.isDragging = false;
+    (((((e.target as Element).parentNode as Element).parentNode as Element) // .appointmentCell // .gridCell // .grid
+      .parentNode as Element).parentNode as Element).classList // .topRow // .day // .dayWrapper
+      .remove('dragOrigin');
   }
 
   public freeCell(target: HTMLElement) {
@@ -201,10 +224,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     return appointments;
   }
-
-  // public shiftColumn() {
-
-  // }
 
   public updateDropzones() {
     const minColumn = this.currentLeftColumnIndex;
@@ -338,7 +357,20 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     this.startResizeHandling();
     this.updateColumnsCount();
-    setTimeout(() => this.updateDaysWidth());
+
+    setTimeout(() => {
+      this.updateDaysWidth();
+
+      this.selectedDay = Math.floor(this.props.days.length / 2);
+      this.currentLeftColumnIndex =
+        this.selectedDay * this.state.columnsPerPage + 1;
+
+      console.log(this.selectedDay, this.currentLeftColumnIndex);
+
+      this.updateScroll(true);
+
+      this.setState({ loading: false });
+    });
   }
 
   public componentDidUpdate(prevProps: IProps) {
@@ -394,7 +426,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       this.props.requestCallback(
         this.props.days[0].date.clone().subtract(1, 'day'),
       );
-      setTimeout(() => this.turnPage(delta));
+
+      this.turnPage(delta);
       return;
     } else if (
       index + this.state.columnsPerPage * 2 >
@@ -439,6 +472,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     return true;
   }
 
+  // DEPRECATED
   public updateScrollByDay(force = false) {
     const container = this.daysContainerRef.current as HTMLDivElement;
     const target = container.children[this.selectedDay] as HTMLElement;
@@ -491,10 +525,15 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       behavior: force ? 'auto' : 'smooth',
       left,
     });
+
+    if (force || Math.abs(left - container.scrollLeft) < 5) return;
+
+    this.pageTurnEmitter.emit('freeze');
     this.isScrolling = true;
 
     const callback = () => {
       clearTimeout(this.containerScrollTimeout);
+
       this.containerScrollTimeout = setTimeout(() => {
         this.updateVisibility([
           this.currentLeftColumnIndex,
@@ -503,7 +542,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         container.removeEventListener('scroll', callback);
 
         this.isScrolling = false;
-      }, 200);
+        this.pageTurnEmitter.emit('resume');
+      }, 50);
     };
 
     container.addEventListener('scroll', callback);
@@ -587,7 +627,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       >
         {/* <TimeColumn stamps={stamps} /> */}
         <LeftColumn positionCount={rows} />
-        <div className="daysContainer" ref={this.daysContainerRef}>
+        <div
+          className={`daysContainer ${this.state.loading ? 'loading' : ''}`}
+          ref={this.daysContainerRef}
+        >
           {this.props.days.map(day => (
             <Day
               key={day.date.toString()}
@@ -610,8 +653,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
               width: `${calendarCellMinWidth / 2}px`,
             }}
             action={this.turnPageLeft}
-            firstDelay={200}
-            repeatDelay={200}
+            delay={200}
+            controller={this.pageTurnEmitter}
           />
           <ToggleArea
             id="rightToggleArea"
@@ -623,8 +666,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
               width: `${calendarCellMinWidth / 2}px`,
             }}
             action={this.turnPageRight}
-            firstDelay={200}
-            repeatDelay={200}
+            delay={200}
+            controller={this.pageTurnEmitter}
           />
         </div>
       </Card>

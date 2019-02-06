@@ -1,10 +1,10 @@
+import fetchDay from 'fetchers/DayFetcher';
+import IAppointment from 'interfaces/IAppointment';
+import ICalendarDay from 'interfaces/ICalendarDay';
 import { action, observable } from 'mobx';
 import { Moment as IMoment } from 'moment';
-import fetchDay from 'src/fetchers/DayFetcher';
-import IAppointment from 'src/interfaces/IAppointment';
-import ICalendarDay from 'src/interfaces/ICalendarDay';
-import Appointment from 'src/structures/Appointment';
-import CalendarDay from 'src/structures/CalendarDay';
+import Appointment from 'structures/Appointment';
+import CalendarDay from 'structures/CalendarDay';
 
 import { RootStore } from '../RootStore';
 

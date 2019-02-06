@@ -1,8 +1,8 @@
+import IAppointment from 'interfaces/IAppointment';
 import { action, configure, observable } from 'mobx';
 import { Moment as IMoment } from 'moment';
 import * as Moment from 'moment';
 import { DateRange, extendMoment } from 'moment-range';
-import IAppointment from 'src/interfaces/IAppointment';
 
 import fetchDay from '../fetchers/DayFetcher';
 import fetchPerson from '../fetchers/PersonFetcher';

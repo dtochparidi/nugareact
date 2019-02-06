@@ -1,6 +1,6 @@
-import CalendarDayStore from './Domain/CalendarDayStore';
-import PersonStore from './Domain/PersonStore';
-import { RootStore } from './RootStore';
+import CalendarDayStore from 'stores/Domain/CalendarDayStore';
+import PersonStore from 'stores/Domain/PersonStore';
+import { RootStore } from 'stores/RootStore';
 
 export default class DomainStore {
   public calendarDayStore: CalendarDayStore;

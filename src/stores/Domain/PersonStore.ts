@@ -1,6 +1,6 @@
+import fetchPerson from 'fetchers/PersonFetcher';
 import { action, observable } from 'mobx';
-import fetchPerson from 'src/fetchers/PersonFetcher';
-import Person from 'src/structures/Person';
+import Person from 'structures/Person';
 
 export default class PersonStore {
   @observable

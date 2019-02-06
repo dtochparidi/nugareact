@@ -1,10 +1,10 @@
+import './ControlWindow.scss';
+
 import * as interact from 'interactjs';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 
-import './ControlWindow.scss';
-
-// import { AppStore } from 'src/store/AppStore';
+// import { AppStore } from 'store/AppStore';
 
 function moveHandler(e: interact.InteractEvent) {
   const { target }: { target: HTMLElement } = e;

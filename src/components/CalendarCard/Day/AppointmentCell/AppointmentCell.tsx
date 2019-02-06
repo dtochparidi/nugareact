@@ -1,12 +1,12 @@
+import './AppointmentCell.scss';
+
+import { IPerson } from 'interfaces/IPerson';
 import { observer } from 'mobx-react';
 import { Moment as IMoment } from 'moment';
 import * as moment from 'moment';
 import * as React from 'react';
-import { IPerson } from 'src/interfaces/IPerson';
 
 import Appointment from '../../../../structures/Appointment';
-
-import './AppointmentCell.scss';
 
 export interface IProps {
   appointment: Appointment;

@@ -1,8 +1,8 @@
+import ICalendarDay from 'interfaces/ICalendarDay';
 import { observer } from 'mobx-react';
 import * as moment from 'moment';
 import { Moment as IMoment } from 'moment';
 import * as React from 'react';
-import ICalendarDay from 'src/interfaces/ICalendarDay';
 import Appointment from '../../../structures/Appointment';
 import Grid from './Grid';
 import TopRow from './TopRow';

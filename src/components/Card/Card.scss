@@ -1,6 +1,6 @@
-@import "src/common/variables.scss";
-@import "src/common/decorations.scss";
-@import "src/common/fonts.scss";
+@import 'src/common/variables.scss';
+@import 'src/common/decorations.scss';
+@import 'src/common/fonts.scss';
 
 .card {
   @extend .light-box-shadow;

@@ -29,6 +29,8 @@
 
   &.moving {
     visibility: visible;
+    display: inline;
+
     background: rgba(255, 255, 255, 0.397);
     transition: none;
 

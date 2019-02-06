@@ -1,6 +1,6 @@
+import { IPerson } from 'interfaces/IPerson';
 import { action, observable } from 'mobx';
 import { Moment as IMoment } from 'moment';
-import { IPerson } from 'src/interfaces/IPerson';
 
 export default class Person implements IPerson {
   @observable
