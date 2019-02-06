@@ -47,6 +47,8 @@ $calendar-cell-width-min: 220px;
     display: grid;
     grid-area: leftColumn;
 
+    // z-index: 102;
+
     grid-template-rows: repeat(
       calc(var(--rows-count) + 1),
       $calendar-cell-height
@@ -91,8 +93,16 @@ $calendar-cell-width-min: 220px;
 
         .topRow {
           display: grid;
+          z-index: 101;
+
+          overflow: hidden;
+
           grid-template-rows: $calendar-cell-height;
           grid-template-columns: repeat(var(--columns-count), 1fr);
+
+          .item {
+            background: white;
+          }
         }
 
         .grid {

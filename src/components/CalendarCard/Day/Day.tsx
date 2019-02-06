@@ -3,6 +3,7 @@ import { observer } from 'mobx-react';
 import * as moment from 'moment';
 import { Moment as IMoment } from 'moment';
 import * as React from 'react';
+import { Sticky } from 'react-sticky';
 import Appointment from '../../../structures/Appointment';
 import Grid from './Grid';
 import TopRow from './TopRow';
@@ -70,7 +71,11 @@ export default class Day extends React.Component<IProps> {
       >
         <div className="day">
           {/* <PositionRow positionCount={cols} /> */}
-          <TopRow stamps={stamps} />
+          <Sticky>
+            {({ style }: { style: React.CSSProperties }) => (
+              <TopRow style={style} stamps={stamps} />
+            )}
+          </Sticky>
           <Grid
             rows={rows}
             cols={cols}

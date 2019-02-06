@@ -21,6 +21,7 @@ import createDragConfig from './dragConfig';
 import ToggleArea from './ToggleArea';
 
 import * as Emitter from 'events';
+import { StickyContainer } from 'react-sticky';
 
 const calendarCellMinWidth = parseFloat(CardVariables.calendarCellWidthMin);
 const thinWidth = parseFloat(StyleVariables.thinWidth);
@@ -258,11 +259,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 target.classList.add('dropzone', 'enter');
 
                 const isFree = this.freeCell(target);
-                console.log(
-                  isFree,
-                  relatedTarget.id,
-                  target.querySelector(`#${relatedTarget.id}`),
-                );
                 if (isFree || target.querySelector(`#${relatedTarget.id}`))
                   target.classList.remove('locked');
                 else target.classList.add('locked');
@@ -390,8 +386,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       this.selectedDay = Math.floor(this.props.days.length / 2);
       this.currentLeftColumnIndex =
         this.selectedDay * this.state.columnsPerPage + 1;
-
-      console.log(this.selectedDay, this.currentLeftColumnIndex);
 
       this.updateScroll(true);
 
@@ -535,7 +529,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const dayIndex = Math.floor(
       this.currentLeftColumnIndex / this.state.columnsPerDay,
     );
-    const day = container.children[dayIndex] as HTMLElement;
+    const day = container.querySelectorAll('.dayWrapper')[
+      dayIndex
+    ] as HTMLElement;
     const grid = day.querySelector('.grid') as HTMLElement;
     const dayColumnIndex =
       this.currentLeftColumnIndex - dayIndex * this.state.columnsPerDay;
@@ -569,7 +565,13 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
         this.isScrolling = false;
         this.pageTurnEmitter.emit('resume');
+
+        window.dispatchEvent(new Event('scroll'));
+        setTimeout(() => window.dispatchEvent(new Event('scroll')));
       }, 50);
+
+      // too perfomance-heavy
+      // window.dispatchEvent(new Event('scroll'));
     };
 
     container.addEventListener('scroll', callback);
@@ -657,20 +659,22 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           className={`daysContainer ${this.state.loading ? 'loading' : ''}`}
           ref={this.daysContainerRef}
         >
-          {this.props.days.map(day => (
-            <Day
-              key={day.date.toString()}
-              rows={positionCount}
-              cols={columnsPerDay || 0}
-              dayData={day}
-              stamps={stamps}
-              dayWidth={dayWidth}
-              shifts={shifts}
-              updateAppointment={this.props.updateAppointment}
-              subGridColumns={subGridColumns}
-              mainColumnStep={mainColumnStep}
-            />
-          ))}
+          <StickyContainer id="stickyContainer">
+            {this.props.days.map(day => (
+              <Day
+                key={day.date.toString()}
+                rows={positionCount}
+                cols={columnsPerDay || 0}
+                dayData={day}
+                stamps={stamps}
+                dayWidth={dayWidth}
+                shifts={shifts}
+                updateAppointment={this.props.updateAppointment}
+                subGridColumns={subGridColumns}
+                mainColumnStep={mainColumnStep}
+              />
+            ))}
+          </StickyContainer>
           <ToggleArea
             id="leftToggleArea"
             style={{
@@ -711,6 +715,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         this.updateColumnsCount();
         this.updateDaysWidth();
         this.updateScroll(true);
+
+        window.dispatchEvent(new Event('scroll'));
       }, boundTime);
     });
   }

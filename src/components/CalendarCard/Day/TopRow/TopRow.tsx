@@ -2,17 +2,14 @@ import { Moment } from 'moment';
 import * as React from 'react';
 
 export interface IProps {
-  // positionCount: number;
   stamps: Moment[];
+  style: React.CSSProperties;
 }
 
 export default class TopRow extends React.Component<IProps> {
   public render() {
     return (
-      <div className="topRow">
-        {/* {new Array(this.props.positionCount).fill(null).map((v, i) => (
-          <div className="item" key={i}>{`Position ${i}`}</div>
-        ))} */}
+      <div className="topRow" style={this.props.style}>
         {this.props.stamps.map((stamp, i, arr) => {
           const s = stamp.format('HH:mm');
           return (
