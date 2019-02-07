@@ -54,12 +54,15 @@ export default class Grid extends React.Component<IProps> {
       cols,
       appointments,
       stamps,
+      mainColumnStep,
+      shifts,
       subGridColumns: subGridStep,
     } = this.props;
 
     // const timeRange = stamps[stamps.length - 1].valueOf() - stamps[0].valueOf();
     // const step = timeRange / stamps.length;
 
+    const minutesStep = mainColumnStep.asMinutes();
     const personCells = appointments
       .map(app => ({
         appointment: app,
@@ -78,13 +81,15 @@ export default class Grid extends React.Component<IProps> {
 
         // OPTIMIZE
         x: stamps.findIndex(stamp => {
-          const diff = app.date
-            .clone()
-            .hour(stamp.hour())
-            .minute(stamp.minute())
-            .diff(app.date, 'hour');
+          const diff =
+            -1 *
+            app.date
+              .clone()
+              .hour(stamp.hour())
+              .minute(stamp.minute())
+              .diff(app.date, 'minute');
 
-          return diff >= 0 && diff <= 1;
+          return diff >= 0 && diff <= minutesStep;
         }),
         y: app.position,
       }))
@@ -94,12 +99,12 @@ export default class Grid extends React.Component<IProps> {
           app,
         ) => {
           const { x, y } = app;
-          // const shiftExists = x in shifts && y in shifts[x];
-          // const shift = !shiftExists ? { dx: 0, dy: 0 } : shifts[x][y];
-          // const { dx, dy } = shift;
+          const shiftExists = x in shifts && y in shifts[x];
+          const shift = !shiftExists ? { dx: 0, dy: 0 } : shifts[x][y];
+          const { dx, dy } = shift;
 
-          // acc[(y + dy) * cols + (x + dx)] = app;
-          acc[y * cols + x] = app;
+          acc[(y + dy) * cols + (x + dx)] = app;
+          // acc[y * cols + x] = app;
 
           return acc;
         },

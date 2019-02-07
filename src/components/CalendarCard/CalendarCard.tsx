@@ -258,7 +258,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                   target: HTMLElement;
                   relatedTarget: HTMLElement;
                 } = e;
-                target.classList.add('dropzone', 'enter');
+                target.classList.add('enter');
 
                 const isFree = this.freeCell(target);
                 if (isFree || target.querySelector(`#${relatedTarget.id}`))
@@ -299,7 +299,13 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 const cellRect = target.getBoundingClientRect();
                 const leftOffset = lastPosition.x - cellRect.left;
                 const step = cellRect.width / this.props.subGridColumns;
-                const subGridScale = Math.floor(leftOffset / step);
+                let subGridScale = Math.floor(leftOffset / step);
+
+                if (subGridScale < 0) {
+                  subGridScale += this.props.subGridColumns;
+                  targetStamp.subtract(this.state.mainColumnStep);
+                }
+
                 const subGridDuration = Moment.duration(
                   (this.state.mainColumnStep.asSeconds() /
                     this.props.subGridColumns) *
@@ -324,9 +330,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 }: {
                   target: HTMLElement;
                 } = e;
-                target.classList.add('dropzone', 'active');
+                // target.classList.add('dropzone', 'active');
                 target.classList.remove('locked');
-                target.style.background = '';
+                // target.style.background = '';
 
                 // console.warn('activate');
               },
@@ -360,6 +366,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 const app = target.querySelector(`#${relatedTarget.id}`);
                 if (app) target.classList.remove('locked');
               },
+              overlap: 'center',
             };
           })(),
         );

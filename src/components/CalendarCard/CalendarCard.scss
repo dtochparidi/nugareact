@@ -175,18 +175,10 @@ $calendar-cell-width-min: 220px;
                 }
               }
 
-              &.dropzone {
-                background: inherit;
-
-                &.active {
+              &.enter {
+                background: rgb(255, 252, 236);
+                &.locked {
                   background: inherit;
-
-                  &.enter {
-                    background: rgb(255, 252, 236);
-                    &.locked {
-                      background: inherit;
-                    }
-                  }
                 }
               }
             }
