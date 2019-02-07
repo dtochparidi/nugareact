@@ -21,7 +21,7 @@ import createDragConfig from './dragConfig';
 import ToggleArea from './ToggleArea';
 
 import * as Emitter from 'events';
-import { StickyContainer } from 'react-sticky';
+import TopRow from './Day/TopRow';
 
 const calendarCellMinWidth = parseFloat(CardVariables.calendarCellWidthMin);
 const thinWidth = parseFloat(StyleVariables.thinWidth);
@@ -239,7 +239,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const maxDay = Math.ceil(maxColumn / this.state.columnsPerDay) + 1;
 
     Array.from(
-      (this.daysContainerRef.current as HTMLDivElement).children,
+      (this.daysContainerRef.current as HTMLDivElement).querySelectorAll(
+        '.dayWrapper',
+      ),
     ).forEach((child, index) => {
       const selector = `#${child.id} .gridCell`;
 
@@ -378,6 +380,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     });
 
     this.startResizeHandling();
+    this.startScrollHandling();
     this.updateColumnsCount();
 
     setTimeout(() => {
@@ -524,6 +527,67 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     container.addEventListener('scroll', callback);
   }
 
+  public updateStickyElements(force = false) {
+    enum StringBoolean {
+      false = '',
+      true = 'true',
+    }
+
+    interface IStickyProps {
+      initialized?: StringBoolean;
+      isSticky?: StringBoolean;
+    }
+
+    interface IStickyHTMLElement extends HTMLElement {
+      dataset: DOMStringMap & IStickyProps;
+    }
+
+    function init(elem: IStickyHTMLElement) {
+      elem.dataset.isSticky = StringBoolean.false;
+      elem.dataset.initialized = StringBoolean.true;
+    }
+
+    function makeSticky(
+      elem: IStickyHTMLElement,
+      parentR: ClientRect,
+      f: boolean,
+    ) {
+      if (elem.dataset.isSticky && !f) return;
+
+      elem.style.position = 'fixed';
+      elem.style.top = '0px';
+      elem.style.zIndex = '1000';
+      elem.style.width = `${parentR.width}px`;
+
+      elem.dataset.isSticky = StringBoolean.true;
+    }
+
+    function makeUnSticky(elem: IStickyHTMLElement) {
+      if (!elem.dataset.isSticky) return;
+
+      elem.style.position = '';
+      elem.style.top = '';
+
+      elem.dataset.isSticky = StringBoolean.false;
+    }
+
+    const stickyElement = document.querySelector(
+      '.viewPortContainer',
+    ) as IStickyHTMLElement;
+    const { dataset }: { dataset: IStickyProps } = stickyElement;
+    const { initialized } = dataset;
+
+    if (!initialized) init(stickyElement);
+
+    const rect = stickyElement.getBoundingClientRect();
+    const parentRect = (stickyElement.parentElement as HTMLElement).getBoundingClientRect();
+
+    const overflowTop = parentRect.top <= 0 && rect.top >= parentRect.top;
+
+    if (overflowTop || force) makeSticky(stickyElement, parentRect, force);
+    else makeUnSticky(stickyElement);
+  }
+
   public updateScroll(force = false) {
     const container = this.daysContainerRef.current as HTMLDivElement;
     const dayIndex = Math.floor(
@@ -532,6 +596,14 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const day = container.querySelectorAll('.dayWrapper')[
       dayIndex
     ] as HTMLElement;
+
+    const gridsContainer = container.querySelector(
+      '.gridsContainer',
+    ) as HTMLElement;
+    const topRowsContainer = container.querySelector(
+      '.topRowsContainer .scrollingContainer',
+    ) as HTMLElement;
+
     const grid = day.querySelector('.grid') as HTMLElement;
     const dayColumnIndex =
       this.currentLeftColumnIndex - dayIndex * this.state.columnsPerDay;
@@ -539,16 +611,26 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     const left = Math.round(
       appointmentCell.getBoundingClientRect().left -
-        container.getBoundingClientRect().left +
-        container.scrollLeft,
+        gridsContainer.getBoundingClientRect().left +
+        gridsContainer.scrollLeft,
     );
 
-    container.scrollTo({
+    // container.scrollTo({
+    //   behavior: force ? 'auto' : 'smooth',
+    //   left,
+    // });
+
+    gridsContainer.scrollTo({
       behavior: force ? 'auto' : 'smooth',
       left,
     });
 
-    if (force || Math.abs(left - container.scrollLeft) < 5) return;
+    topRowsContainer.scrollTo({
+      behavior: force ? 'auto' : 'smooth',
+      left,
+    });
+
+    if (force || Math.abs(left - gridsContainer.scrollLeft) < 5) return;
 
     this.pageTurnEmitter.emit('freeze');
     this.isScrolling = true;
@@ -561,20 +643,20 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           this.currentLeftColumnIndex,
           this.currentLeftColumnIndex + this.state.columnsPerPage,
         ]);
-        container.removeEventListener('scroll', callback);
+        gridsContainer.removeEventListener('scroll', callback);
 
         this.isScrolling = false;
         this.pageTurnEmitter.emit('resume');
 
-        window.dispatchEvent(new Event('scroll'));
-        setTimeout(() => window.dispatchEvent(new Event('scroll')));
+        // window.dispatchEvent(new Event('scroll'));
+        // setTimeout(() => window.dispatchEvent(new Event('scroll')));
       }, 50);
 
       // too perfomance-heavy
       // window.dispatchEvent(new Event('scroll'));
     };
 
-    container.addEventListener('scroll', callback);
+    gridsContainer.addEventListener('scroll', callback);
   }
 
   public updateVisibility(indexes: number[]) {
@@ -653,13 +735,27 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           } as React.CSSProperties
         }
       >
-        {/* <TimeColumn stamps={stamps} /> */}
         <LeftColumn positionCount={positionCount} />
         <div
           className={`daysContainer ${this.state.loading ? 'loading' : ''}`}
           ref={this.daysContainerRef}
         >
-          <StickyContainer id="stickyContainer">
+          <div className="topRowsContainer">
+            <div className="viewPortContainer">
+              <div className="scrollingContainer">
+                <div className="stickyContainer">
+                  {this.props.days.map(day => (
+                    <TopRow
+                      stamps={stamps}
+                      key={day.date.toString()}
+                      style={{ width: dayWidth }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="gridsContainer">
             {this.props.days.map(day => (
               <Day
                 key={day.date.toString()}
@@ -674,7 +770,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 mainColumnStep={mainColumnStep}
               />
             ))}
-          </StickyContainer>
+          </div>
           <ToggleArea
             id="leftToggleArea"
             style={{
@@ -716,8 +812,21 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         this.updateDaysWidth();
         this.updateScroll(true);
 
-        window.dispatchEvent(new Event('scroll'));
+        setTimeout(() => this.updateStickyElements(true));
       }, boundTime);
+    });
+  }
+
+  private startScrollHandling(
+    { boundTime }: { boundTime: number } = { boundTime: 250 },
+  ) {
+    // let scrollTimeout: NodeJS.Timeout;
+    window.addEventListener('scroll', () => {
+      this.updateStickyElements();
+      // clearTimeout(scrollTimeout);
+      // scrollTimeout = setTimeout(() => {
+
+      // }, boundTime);
     });
   }
 }

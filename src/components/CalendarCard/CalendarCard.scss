@@ -58,6 +58,10 @@ $calendar-cell-width-min: 220px;
   .daysContainer {
     position: relative;
 
+    display: grid;
+    grid-template-rows: $calendar-cell-height auto;
+    grid-template-columns: 100%;
+
     grid-area: daysContainer;
     overflow: hidden;
 
@@ -71,86 +75,117 @@ $calendar-cell-width-min: 220px;
       visibility: hidden;
     }
 
-    .dayWrapper {
-      --columns-count: 6;
-
-      display: inline-block;
-      height: 100%;
+    .topRowsContainer {
       width: 100%;
+      overflow: hidden;
 
-      &.hidden > .day > .grid {
-        display: none;
+      .viewPortContainer {
+        width: 100%;
+        overflow: hidden;
+
+        .scrollingContainer {
+          width: 100%;
+          overflow: hidden;
+
+          .stickyContainer {
+            display: grid;
+            grid-auto-flow: column;
+
+            .topRow {
+              display: grid;
+              z-index: 101;
+
+              height: $calendar-cell-height;
+
+              overflow: hidden;
+
+              grid-template-rows: $calendar-cell-height;
+              grid-template-columns: repeat(var(--columns-count), 1fr);
+              grid-auto-flow: column;
+
+              will-change: left, width;
+
+              .item {
+                background: white;
+              }
+            }
+          }
+        }
       }
+    }
 
-      &.dragOrigin > .day > .grid {
-        display: grid;
-      }
+    .gridsContainer {
+      width: 100%;
+      overflow: hidden;
 
-      .day {
-        display: grid;
+      .dayWrapper {
+        --columns-count: 6;
+
+        display: inline-block;
         height: 100%;
         width: 100%;
 
-        grid-template-rows: $calendar-cell-height auto;
-
-        .topRow {
-          display: grid;
-          z-index: 101;
-
-          overflow: hidden;
-
-          grid-template-rows: $calendar-cell-height;
-          grid-template-columns: repeat(var(--columns-count), 1fr);
-
-          will-change: left, width;
-
-          .item {
-            background: white;
-          }
+        &.hidden > .day > .grid {
+          display: none;
         }
 
-        .grid {
+        &.dragOrigin > .day > .grid {
           display: grid;
+        }
 
-          grid-template-columns: repeat(var(--columns-count), 1fr);
-          grid-template-rows: repeat(var(--rows-count), $calendar-cell-height);
+        .day {
+          display: grid;
+          height: 100%;
+          width: 100%;
 
-          .item {
-            position: relative;
-            transition: background 0.5s ease-in-out;
+          grid-template-rows: auto;
 
-            .subGrid {
-              position: absolute;
+          .grid {
+            display: grid;
 
-              display: grid;
-              grid-auto-columns: 1fr;
-              grid-template-rows: 1fr;
-              grid-auto-flow: column;
+            grid-template-columns: repeat(var(--columns-count), 1fr);
+            grid-template-rows: repeat(
+              var(--rows-count),
+              $calendar-cell-height
+            );
 
-              left: 0;
-              top: 0;
-              right: 0;
-              bottom: 0;
+            .item {
+              position: relative;
+              transition: background 0.5s ease-in-out;
 
-              opacity: 1;
-              // opacity: 0;
-              transition: opacity 0.5s;
+              .subGrid {
+                position: absolute;
 
-              .subGridElem {
-                border: dotted lightgrey 1px;
+                display: grid;
+                grid-auto-columns: 1fr;
+                grid-template-rows: 1fr;
+                grid-auto-flow: column;
+
+                left: 0;
+                top: 0;
+                right: 0;
+                bottom: 0;
+
+                opacity: 1;
+                // opacity: 0;
+                transition: opacity 0.5s;
+
+                .subGridElem {
+                  border: dotted lightgrey 1px;
+                }
               }
-            }
 
-            &.dropzone {
-              background: inherit;
-
-              &.active {
+              &.dropzone {
                 background: inherit;
 
-                &.enter {
-                  background: rgb(255, 252, 236);
-                  &.locked {
-                    background: inherit;
+                &.active {
+                  background: inherit;
+
+                  &.enter {
+                    background: rgb(255, 252, 236);
+                    &.locked {
+                      background: inherit;
+                    }
                   }
                 }
               }
