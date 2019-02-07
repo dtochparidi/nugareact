@@ -65,6 +65,8 @@ $calendar-cell-width-min: 220px;
     width: auto;
     white-space: nowrap;
 
+    will-change: scroll-position;
+
     &.loading {
       visibility: hidden;
     }
@@ -99,6 +101,8 @@ $calendar-cell-width-min: 220px;
 
           grid-template-rows: $calendar-cell-height;
           grid-template-columns: repeat(var(--columns-count), 1fr);
+
+          will-change: left, width;
 
           .item {
             background: white;
