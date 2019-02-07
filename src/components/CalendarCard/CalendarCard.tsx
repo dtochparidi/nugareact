@@ -155,14 +155,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           .startOf('day')
           .subtract(1, 'day'),
       ],
-      shifts: {
-        0: {
-          0: {
-            dx: 1,
-            dy: 2,
-          },
-        },
-      },
+      shifts: {},
       stamps,
     };
   }
@@ -232,6 +225,30 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     return appointments;
   }
 
+  public shiftCell(x: number, y: number) {
+    const { shifts } = this.state;
+
+    if (!(x in shifts)) shifts[x] = {};
+
+    shifts[x][y] = { dx: 1, dy: 0 };
+
+    console.log('shift', JSON.stringify(shifts));
+
+    this.setState({ shifts });
+    this.forceUpdate();
+  }
+
+  public unShiftCell(x: number, y: number) {
+    const { shifts } = this.state;
+
+    if (x in shifts) delete shifts[x][y];
+
+    console.log('unshift', JSON.stringify(shifts));
+
+    this.setState({ shifts });
+    this.forceUpdate();
+  }
+
   public updateDropzones() {
     const minColumn = this.currentLeftColumnIndex;
     const maxColumn = this.currentLeftColumnIndex + this.state.columnsPerPage;
@@ -266,7 +283,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                   target.classList.remove('locked');
                 else target.classList.add('locked');
 
-                // target.style.background = 'rgb(241, 236, 189)';
+                const x = parseInt(target.dataset.x || '0', 10);
+                const y = parseInt(target.dataset.y || '0', 10);
+                this.shiftCell(x, y);
               },
               ondragleave: e => {
                 const {
@@ -276,6 +295,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 } = e;
                 target.classList.remove('enter', 'locked');
                 target.style.background = '';
+
+                const x = parseInt(target.dataset.x || '0', 10);
+                const y = parseInt(target.dataset.y || '0', 10);
+                this.unShiftCell(x, y);
               },
               ondrop: e => {
                 const {
@@ -324,6 +347,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                   targetDate: targetStamp,
                   targetPosition: position,
                 });
+
+                const x = parseInt(target.dataset.x || '0', 10);
+                const y = parseInt(target.dataset.y || '0', 10);
+                this.unShiftCell(x, y);
               },
               ondropactivate: e => {
                 const {

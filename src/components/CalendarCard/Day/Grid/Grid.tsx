@@ -59,26 +59,10 @@ export default class Grid extends React.Component<IProps> {
       subGridColumns: subGridStep,
     } = this.props;
 
-    // const timeRange = stamps[stamps.length - 1].valueOf() - stamps[0].valueOf();
-    // const step = timeRange / stamps.length;
-
     const minutesStep = mainColumnStep.asMinutes();
     const personCells = appointments
       .map(app => ({
         appointment: app,
-        // x: Math.min(
-        //   Math.round(
-        //     (stamps[0]
-        //       .clone()
-        //       .hour(app.date.hour())
-        //       .minute(app.date.minute())
-        //       .valueOf() -
-        //       stamps[0].valueOf()) /
-        //       step,
-        //   ),
-        //   stamps.length - 1,
-        // ),
-
         // OPTIMIZE
         x: stamps.findIndex(stamp => {
           const diff =

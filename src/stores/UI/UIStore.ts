@@ -18,6 +18,17 @@ export default class UIStore {
       .startOf('day')
       .hour(12),
   );
+  @observable
+  public calendarShifts: {
+    [x: number]: {
+      [x: number]: {
+        dx: number;
+        dy: number;
+      };
+    };
+  } = {};
+
+  // TODO: realize calendar shifts through binding grid on calendarShifts variable
 
   @action
   public updatePositionCount(count: number) {

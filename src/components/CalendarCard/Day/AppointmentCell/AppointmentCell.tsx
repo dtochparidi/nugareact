@@ -109,6 +109,8 @@ export default class AppointmentCell extends React.Component<IProps> {
 
     const translated = translateX || translateY;
 
+    console.log('update', translateX, translateY, offsetX, offsetY);
+
     if (!personInstance) {
       console.warn('missing instance');
       return null;
