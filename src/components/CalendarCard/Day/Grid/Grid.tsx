@@ -84,7 +84,7 @@ export default class Grid extends React.Component<IProps> {
             .minute(stamp.minute())
             .diff(app.date, 'hour');
 
-          return diff >= 0 && diff < 1;
+          return diff >= 0 && diff <= 1;
         }),
         y: app.position,
       }))
