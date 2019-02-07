@@ -1,3 +1,4 @@
+import * as StyleVariables from '../../../../common/variables.scss';
 import './AppointmentCell.scss';
 
 import { IPerson } from 'interfaces/IPerson';
@@ -98,8 +99,13 @@ export default class AppointmentCell extends React.Component<IProps> {
   public render() {
     const { personInstance, identifier } = this.props.appointment;
     let { translateX, translateY } = this.props;
+    const borderWidth = parseFloat(StyleVariables.thinWidth);
+
     translateX = translateX || 0;
     translateY = translateY || 0;
+
+    const offsetX = Math.floor((translateX / 100) * 2) * borderWidth;
+    const offsetY = Math.floor((translateY / 100) * 2) * borderWidth;
 
     const translated = translateX || translateY;
 
@@ -117,7 +123,7 @@ export default class AppointmentCell extends React.Component<IProps> {
         style={
           translated
             ? {
-                transform: `translate(${translateX}%,${translateY}%)`,
+                transform: `translate(calc(${translateX}% + ${offsetX}px), calc(${translateY}% + ${offsetY}px))`,
               }
             : {}
         }

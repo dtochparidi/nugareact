@@ -99,12 +99,8 @@ export default class Grid extends React.Component<IProps> {
           app,
         ) => {
           const { x, y } = app;
-          const shiftExists = x in shifts && y in shifts[x];
-          const shift = !shiftExists ? { dx: 0, dy: 0 } : shifts[x][y];
-          const { dx, dy } = shift;
 
-          acc[(y + dy) * cols + (x + dx)] = app;
-          // acc[y * cols + x] = app;
+          acc[y * cols + x] = app;
 
           return acc;
         },
@@ -121,17 +117,25 @@ export default class Grid extends React.Component<IProps> {
       for (let x = 0; x < cols; x++) {
         const app = personCells[y * cols + x];
         const stamp = stamps[x];
-        let coeff = 0;
+        let coeffX = 0;
+        let coeffY = 0;
 
         if (app) {
+          const shiftExists = x in shifts && y in shifts[x];
+          const shift = !shiftExists ? { dx: 0, dy: 0 } : shifts[x][y];
+          const { dx, dy } = shift;
+
           const d = app.appointment.date;
           const s = d
             .clone()
             .hour(stamp.hour())
             .minute(stamp.minute());
 
-          coeff =
-            (d.diff(s, 'second') / this.props.mainColumnStep.asSeconds()) * 100;
+          coeffX =
+            (d.diff(s, 'second') / this.props.mainColumnStep.asSeconds() + dx) *
+            100;
+
+          coeffY = dy * 100;
         }
 
         gridCells.push(
@@ -151,10 +155,11 @@ export default class Grid extends React.Component<IProps> {
               ))}
             </div>
             {app ? (
-              coeff !== 0 ? (
+              coeffX !== 0 || coeffY !== 0 ? (
                 <AppointmentCell
                   appointment={app.appointment}
-                  translateX={coeff}
+                  translateX={coeffX}
+                  translateY={coeffY}
                   updateAppointment={this.props.updateAppointment}
                   subGridColumns={subGridStep}
                   gridColumnDuration={gridColumnDuration}

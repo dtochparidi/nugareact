@@ -250,6 +250,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           ((): interact.DropZoneOptions => {
             const lastPosition = { x: 0, y: 0 };
             return {
+              accept: '.appointmentCell',
               ondragenter: e => {
                 const {
                   target,
