@@ -69,27 +69,28 @@ export default class CalendarDayStore {
     personId = personId || (appointment as Appointment).personId;
     if (appointment) position = (appointment as Appointment).position;
 
-    const { dayTimeRange } = this.rootStore.uiStore;
+    const { dayTimeRangeActual } = this.rootStore.uiStore;
 
     // check if date is in borders
-    const { start, end } = dayTimeRange;
+    const { start, end } = dayTimeRangeActual;
     const startDiff = start
       .clone()
       .hour(targetDate.hour())
       .minute(targetDate.minute())
-      .diff(dayTimeRange.start, 'hour');
+      .diff(dayTimeRangeActual.start, 'minute');
     const endDiff = start
       .clone()
       .hour(targetDate.hour())
       .minute(targetDate.minute())
-      .diff(dayTimeRange.end, 'hour');
+      .diff(dayTimeRangeActual.end, 'minute');
 
-    if (startDiff < 0)
+    if (startDiff < 0) {
+      const actualEnd = end.clone().subtract(startDiff, 'minute');
       targetDate
         .subtract(1, 'day')
-        .hour(end.hour())
-        .minute(end.minute());
-    else if (endDiff > 0)
+        .hour(actualEnd.hour())
+        .minute(actualEnd.minute());
+    } else if (endDiff > 0)
       targetDate
         .add(1, 'day')
         .hour(start.hour())

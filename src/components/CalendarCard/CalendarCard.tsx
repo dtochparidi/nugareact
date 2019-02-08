@@ -21,6 +21,7 @@ import createDragConfig from './dragConfig';
 import ToggleArea from './ToggleArea';
 
 import * as Emitter from 'events';
+import { action, observable } from 'mobx';
 import TopRow from './Day/TopRow';
 
 const calendarCellMinWidth = parseFloat(CardVariables.calendarCellWidthMin);
@@ -36,6 +37,7 @@ export interface IProps {
   positionCount: number;
   subGridColumns: number;
   requestCallback: (date: Moment.Moment) => void;
+  mainColumnStep: IDuration;
   updateAppointment: ({
     date,
     position,
@@ -57,19 +59,10 @@ export interface IState {
   requiredDays: IMoment[];
   columnsPerPage: number;
   columnsPerDay: number;
-  mainColumnStep: IDuration;
   dayWidth: string;
   cellWidth: number;
   loading: boolean;
   stamps: IMoment[];
-  shifts: {
-    [x: number]: {
-      [x: number]: {
-        dx: number;
-        dy: number;
-      };
-    };
-  };
 }
 
 @observer
@@ -106,6 +99,15 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     return { stamp, position };
   }
 
+  @observable
+  public shifts: {
+    [x: number]: {
+      [x: number]: {
+        dx: number;
+        dy: number;
+      };
+    };
+  } = {};
   public selectedDay: number = 0;
   public currentLeftColumnIndex: number = 0;
   private daysContainerRef: React.RefObject<HTMLDivElement>;
@@ -145,7 +147,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       columnsPerPage: 4,
       dayWidth: '100%',
       loading: true,
-      mainColumnStep,
       requiredDays: [
         moment()
           .startOf('day')
@@ -155,7 +156,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           .startOf('day')
           .subtract(1, 'day'),
       ],
-      shifts: {},
       stamps,
     };
   }
@@ -225,28 +225,24 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     return appointments;
   }
 
+  @action
   public shiftCell(x: number, y: number) {
-    const { shifts } = this.state;
+    const { shifts } = this;
 
     if (!(x in shifts)) shifts[x] = {};
 
-    shifts[x][y] = { dx: 1, dy: 0 };
+    shifts[x][y] = { dx: 0, dy: 1 };
 
     console.log('shift', JSON.stringify(shifts));
-
-    this.setState({ shifts });
-    this.forceUpdate();
   }
 
+  @action
   public unShiftCell(x: number, y: number) {
-    const { shifts } = this.state;
+    const { shifts } = this;
 
     if (x in shifts) delete shifts[x][y];
 
     console.log('unshift', JSON.stringify(shifts));
-
-    this.setState({ shifts });
-    this.forceUpdate();
   }
 
   public updateDropzones() {
@@ -285,7 +281,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
                 const x = parseInt(target.dataset.x || '0', 10);
                 const y = parseInt(target.dataset.y || '0', 10);
-                this.shiftCell(x, y);
+                if (!target.querySelector('.moving')) this.shiftCell(x, y);
               },
               ondragleave: e => {
                 const {
@@ -327,11 +323,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
                 if (subGridScale < 0) {
                   subGridScale += this.props.subGridColumns;
-                  targetStamp.subtract(this.state.mainColumnStep);
+                  targetStamp.subtract(this.props.mainColumnStep);
                 }
 
                 const subGridDuration = Moment.duration(
-                  (this.state.mainColumnStep.asSeconds() /
+                  (this.props.mainColumnStep.asSeconds() /
                     this.props.subGridColumns) *
                     subGridScale,
                   'second',
@@ -514,7 +510,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     this.selectedDay = newIndex;
     this.currentLeftColumnIndex = Math.min(
       Math.max(
-        this.currentLeftColumnIndex + delta * this.state.columnsPerPage,
+        this.currentLeftColumnIndex +
+          delta * this.state.columnsPerPage -
+          Math.sign(delta),
         0,
       ),
       this.props.days.length * this.state.columnsPerDay - 1,
@@ -748,14 +746,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public render() {
-    const {
-      columnsPerDay,
-      stamps,
-      dayWidth,
-      shifts,
-      mainColumnStep,
-    } = this.state;
-    const { subGridColumns, positionCount } = this.props;
+    const { shifts } = this;
+    const { columnsPerDay, stamps, dayWidth } = this.state;
+    const { subGridColumns, positionCount, mainColumnStep } = this.props;
     const rect = this.daysContainerRef.current
       ? (this.daysContainerRef.current as HTMLElement).getBoundingClientRect()
       : { top: 0, right: 0, left: 0, bottom: 0, width: 0, height: 0 };

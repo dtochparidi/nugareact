@@ -34,6 +34,7 @@ it('renders without crashing', () => {
       positionCount={6}
       dayTimeRange={dayTimeRange}
       updateAppointment={ua}
+      mainColumnStep={Moment.duration(45, 'minutes')}
     />,
   );
   expect(component);

@@ -1,13 +1,13 @@
-import * as StyleVariables from '../../../../common/variables.scss';
-import './AppointmentCell.scss';
-
 import { IPerson } from 'interfaces/IPerson';
 import { observer } from 'mobx-react';
 import { Moment as IMoment } from 'moment';
 import * as moment from 'moment';
 import * as React from 'react';
 
+import * as StyleVariables from '../../../../common/variables.scss';
 import Appointment from '../../../../structures/Appointment';
+
+import './AppointmentCell.scss';
 
 export interface IProps {
   appointment: Appointment;
@@ -108,8 +108,6 @@ export default class AppointmentCell extends React.Component<IProps> {
     const offsetY = Math.floor((translateY / 100) * 2) * borderWidth;
 
     const translated = translateX || translateY;
-
-    console.log('update', translateX, translateY, offsetX, offsetY);
 
     if (!personInstance) {
       console.warn('missing instance');

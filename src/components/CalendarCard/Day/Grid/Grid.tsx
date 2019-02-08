@@ -63,18 +63,12 @@ export default class Grid extends React.Component<IProps> {
     const personCells = appointments
       .map(app => ({
         appointment: app,
-        // OPTIMIZE
-        x: stamps.findIndex(stamp => {
-          const diff =
-            -1 *
-            app.date
-              .clone()
-              .hour(stamp.hour())
-              .minute(stamp.minute())
-              .diff(app.date, 'minute');
-
-          return diff >= 0 && diff <= minutesStep;
-        }),
+        x: Math.floor(
+          (app.date.hour() * 60 +
+            app.date.minute() -
+            (stamps[0].hour() * 60 + stamps[0].minute())) /
+            minutesStep,
+        ),
         y: app.position,
       }))
       .reduce(
