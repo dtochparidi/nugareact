@@ -6,7 +6,7 @@ import Appointment from './Appointment';
 
 export default class CalendarDay implements ICalendarDay {
   private static calcId(date: IMoment) {
-    const id = date.format('DD:MM:YYYY');
+    const id = `day_${date.format('DD-MM-YYYY')}`;
     return id;
   }
 

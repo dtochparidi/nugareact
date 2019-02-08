@@ -1,15 +1,15 @@
-import ICalendarDay from 'interfaces/ICalendarDay';
 import { observer } from 'mobx-react';
 import * as moment from 'moment';
 import { Moment as IMoment } from 'moment';
 import * as React from 'react';
+import CalendarDay from 'structures/CalendarDay';
 import Appointment from '../../../structures/Appointment';
 import Grid from './Grid';
 
 export interface IProps {
   rows: number;
   cols: number;
-  dayData: ICalendarDay;
+  dayData: CalendarDay;
   stamps: moment.Moment[];
   mainColumnStep: moment.Duration;
   dayWidth: string;
@@ -64,7 +64,7 @@ export default class Day extends React.Component<IProps> {
         style={
           { '--columns-count': cols, width: dayWidth } as React.CSSProperties
         }
-        id={`day_${dayData.date.format('DD-MM-YYYY')}`}
+        id={`${dayData.id}`}
       >
         <div className="day">
           {/* <PositionRow positionCount={cols} /> */}
