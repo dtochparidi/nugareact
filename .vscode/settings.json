@@ -34,7 +34,15 @@
       //other styling properties goes here ...
     },
     {
-      "text": "// OPTIMIZE",
+      "text": "BUG",
+      // "border": "1px solid red",
+      "borderRadius": "2px", //NOTE: using borderRadius along with `border` or you will see nothing change
+      "backgroundColor": "transparent",
+      "color": "darkorange"
+      //other styling properties goes here ...
+    },
+    {
+      "text": "OPTIMIZE",
       "backgroundColor": "transparent",
       "color": "#009900"
     },

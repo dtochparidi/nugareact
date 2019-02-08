@@ -99,6 +99,9 @@ export default class Grid extends React.Component<IProps> {
         let coeffY = 0;
 
         if (app) {
+          // OPTIMIZE
+          // pass shifts to an AppointmentCell to prevent from re-rendering whole Grid
+
           const shiftExists = x in shifts && y in shifts[x];
           const shift = !shiftExists ? { dx: 0, dy: 0 } : shifts[x][y];
           const { dx, dy } = shift;
@@ -108,6 +111,8 @@ export default class Grid extends React.Component<IProps> {
             .clone()
             .hour(stamp.hour())
             .minute(stamp.minute());
+
+          if (dx || dy) console.log(dx, dy);
 
           coeffX =
             (d.diff(s, 'second') / this.props.mainColumnStep.asSeconds() + dx) *

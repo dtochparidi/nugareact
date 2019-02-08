@@ -119,7 +119,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   private currentDaysCount: number = 0;
   private isScrolling: boolean = false;
   private pageTurnEmitter: Emitter;
-  // private isDragging: boolean = false;
+  private clientRect: ClientRect;
 
   constructor(props: IProps) {
     super(props);
@@ -160,6 +160,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       ],
       stamps,
     };
+
+    this.updateBoundingRect();
   }
   public turnPageRight = () => {
     this.turnPage(1);
@@ -181,24 +183,23 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       .remove('dragOrigin');
   }
 
-  public freeCell(target: HTMLElement) {
-    const { stamp, position } = CalendarCard.getCellInfo(target);
-    const day = this.getDayByStamp(stamp);
-    const column = this.getColumnByStamp(stamp, day);
+  public freeCell(relatedTarget: HTMLElement, target: HTMLElement) {
+    const { stamp } = CalendarCard.getCellInfo(target);
+    // const day = this.getDayByStamp(stamp);
+    // const column = this.getColumnByStamp(stamp, day);
 
-    // console.log('---');
-    // column.forEach(app => console.log(app.date.hour(), app.position));
-
-    const isFree =
-      !target.querySelector('.appointmentCell') ||
-      column.every(app => app.position !== position);
+    const isFree = !(
+      target.querySelector('.appointmentCell') &&
+      !target.querySelector('.moving')
+    );
     if (isFree) return true;
 
-    return false;
+    const x = parseInt(target.dataset.x || '0', 10);
+    const y = parseInt(target.dataset.y || '0', 10);
+    // const app = Appointment.fromIdentifier(relatedTarget.id);
+    this.shiftCell(`day_${stamp.format('DD-MM-YYYY')}`, x, y);
 
-    // const appointment = day.appointments.find(
-    //   (app) => app.date.clone().startOf('minute').diff(stamp.clone().startOf('minute'), 'minute') === 0
-    // ) as Appointment;
+    return true;
   }
 
   public getDayByStamp(stamp: IMoment) {
@@ -268,9 +269,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           });
         });
       });
-    });
 
-    this.shifts = {};
+      if (Object.keys(this.shifts[dayId]).length) this.shifts[dayId] = {};
+    });
 
     console.log('shift', JSON.stringify(this.shifts));
   }
@@ -326,37 +327,29 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 } = e;
                 target.classList.add('enter');
 
-                const isFree = this.freeCell(target);
+                const isFree = this.freeCell(relatedTarget, target);
                 if (isFree || target.querySelector(`#${relatedTarget.id}`))
                   target.classList.remove('locked');
                 else target.classList.add('locked');
-
-                const x = parseInt(target.dataset.x || '0', 10);
-                const y = parseInt(target.dataset.y || '0', 10);
-                if (
-                  target.querySelector('.appointmentCell') &&
-                  !target.querySelector('.moving')
-                ) {
-                  const app = Appointment.fromIdentifier(relatedTarget.id);
-                  this.shiftCell(`day_${app.date.format('DD-MM-YYYY')}`, x, y);
-                }
               },
               ondragleave: e => {
                 const {
                   target,
-                  relatedTarget,
-                }: {
+                }: // relatedTarget,
+                {
                   target: HTMLElement;
-                  relatedTarget: HTMLElement;
+                  // relatedTarget: HTMLElement;
                 } = e;
                 target.classList.remove('enter', 'locked');
                 target.style.background = '';
 
+                const { stamp } = CalendarCard.getCellInfo(target);
+
                 const x = parseInt(target.dataset.x || '0', 10);
                 const y = parseInt(target.dataset.y || '0', 10);
 
-                const app = Appointment.fromIdentifier(relatedTarget.id);
-                this.unShiftCell(`day_${app.date.format('DD-MM-YYYY')}`, x, y);
+                // const app = Appointment.fromIdentifier(relatedTarget.id);
+                this.unShiftCell(`day_${stamp.format('DD-MM-YYYY')}`, x, y);
               },
               ondrop: e => {
                 const {
@@ -473,6 +466,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     this.startResizeHandling();
     this.startScrollHandling();
     this.updateColumnsCount();
+    this.updateBoundingRect();
 
     setTimeout(() => {
       this.updateDaysWidth();
@@ -655,8 +649,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       elem.dataset.isSticky = StringBoolean.true;
     }
 
-    function makeUnSticky(elem: IStickyHTMLElement) {
-      if (!elem.dataset.isSticky) return;
+    function makeUnSticky(elem: IStickyHTMLElement, f: boolean) {
+      if (!elem.dataset.isSticky && !f) return;
 
       elem.style.position = '';
       elem.style.top = '';
@@ -678,7 +672,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const overflowTop = parentRect.top <= 0 && rect.top >= parentRect.top;
 
     if (overflowTop || force) makeSticky(stickyElement, parentRect, force);
-    else makeUnSticky(stickyElement);
+    else makeUnSticky(stickyElement, force);
   }
 
   public updateScroll(force = false) {
@@ -805,19 +799,23 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     return dayWidth <= 0 ? '100%' : `${dayWidth}px`;
   }
 
+  public updateBoundingRect() {
+    this.clientRect = this.daysContainerRef.current
+      ? (this.daysContainerRef.current as HTMLElement).getBoundingClientRect()
+      : { top: 0, right: 0, left: 0, bottom: 0, width: 0, height: 0 };
+  }
+
   public render() {
     const { columnsPerDay, stamps, dayWidth } = this.state;
     const { subGridColumns, positionCount, mainColumnStep } = this.props;
-    const rect = this.daysContainerRef.current
-      ? (this.daysContainerRef.current as HTMLElement).getBoundingClientRect()
-      : { top: 0, right: 0, left: 0, bottom: 0, width: 0, height: 0 };
 
     this.props.days.forEach(day => {
       const { id } = day;
       const dayId = `${id}`;
-      if (!(dayId in this.shifts)) this.shifts[dayId] = {};
-
-      return this.shifts[dayId];
+      if (!(dayId in this.shifts)) {
+        console.log('new shift for new day registered');
+        this.shifts[dayId] = {};
+      }
     });
 
     return (
@@ -869,9 +867,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           <ToggleArea
             id="leftToggleArea"
             style={{
-              height: `${rect.height}px`,
-              left: `${rect.left}px`,
-              top: `${rect.top}px`,
+              height: `${this.clientRect.height}px`,
+              left: `${this.clientRect.left}px`,
+              top: `${this.clientRect.top}px`,
               width: `${calendarCellMinWidth / 2}px`,
             }}
             action={this.turnPageLeft}
@@ -881,10 +879,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           <ToggleArea
             id="rightToggleArea"
             style={{
-              height: `${rect.height}px`,
-              left: `calc(${rect.left + rect.width}px - ${calendarCellMinWidth /
-                2}px)`,
-              top: `${rect.top}px`,
+              height: `${this.clientRect.height}px`,
+              left: `calc(${this.clientRect.left +
+                this.clientRect.width}px - ${calendarCellMinWidth / 2}px)`,
+              top: `${this.clientRect.top}px`,
               width: `${calendarCellMinWidth / 2}px`,
             }}
             action={this.turnPageRight}
@@ -906,6 +904,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         this.updateColumnsCount();
         this.updateDaysWidth();
         this.updateScroll(true);
+        this.updateBoundingRect();
 
         setTimeout(() => this.updateStickyElements(true));
       }, boundTime);

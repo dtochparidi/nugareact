@@ -71,6 +71,9 @@ export default class CalendarDayStore {
 
     const { dayTimeRangeActual } = this.rootStore.uiStore;
 
+    // BUG
+    // when dropping close to day's border cell is jumping in haotic d
+
     // check if date is in borders
     const { start, end } = dayTimeRangeActual;
     const startDiff = start

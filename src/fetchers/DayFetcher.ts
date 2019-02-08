@@ -16,7 +16,7 @@ export function generateRandomDay(date: moment.Moment): ICalendarDay {
           date: date
             .clone()
             // .hour(random(17, 8))
-            .hour(random(13, 8))
+            .hour(random(11, 8))
             .minute(Math.floor(random(59, 1) / 10) * 10),
           personId: `${random(10)
             .toString()
