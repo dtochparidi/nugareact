@@ -172,32 +172,80 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   };
 
   public onAppointmentDraggingStart(e: interact.InteractEvent) {
-    (((((e.target as Element).parentNode as Element).parentNode as Element) // .appointmentCell // .gridCell // .grid
-      .parentNode as Element).parentNode as Element).classList // .topRow // .day // .dayWrapper
-      .add('dragOrigin');
+    // (((((e.target as Element).parentNode as Element).parentNode as Element) // .appointmentCell // .gridCell // .grid
+    //   .parentNode as Element).parentNode as Element).classList // .topRow // .day // .dayWrapper
+    //   .add('dragOrigin');
   }
 
   public onAppointmentDraggingEnd(e: interact.InteractEvent) {
-    (((((e.target as Element).parentNode as Element).parentNode as Element) // .appointmentCell // .gridCell // .grid
-      .parentNode as Element).parentNode as Element).classList // .topRow // .day // .dayWrapper
-      .remove('dragOrigin');
+    // (((((e.target as Element).parentNode as Element).parentNode as Element) // .appointmentCell // .gridCell // .grid
+    //   .parentNode as Element).parentNode as Element).classList // .topRow // .day // .dayWrapper
+    //   .remove('dragOrigin');
   }
 
-  public freeCell(relatedTarget: HTMLElement, target: HTMLElement) {
+  public unshiftWholeColumn(target: HTMLElement) {
     const { stamp } = CalendarCard.getCellInfo(target);
-    // const day = this.getDayByStamp(stamp);
-    // const column = this.getColumnByStamp(stamp, day);
+    const day = this.getDayByStamp(stamp);
+    const column = this.getColumnByStamp(stamp, day);
 
-    const isFree = !(
-      target.querySelector('.appointmentCell') &&
-      !target.querySelector('.moving')
-    );
+    const x = parseInt(target.dataset.x || '0', 10);
+
+    column.forEach(app => this.unShiftCell(day.id, x, app.position));
+  }
+
+  public freeCell(target: HTMLElement) {
+    enum Direction {
+      Top,
+      Bottom,
+      None,
+    }
+
+    // we need to detect whether it's okay to shift
+    function detectShiftDirection(
+      startIndex: number,
+      fullColumn: Appointment[],
+    ): Direction {
+      // check top direction
+      for (let i = startIndex; i > 0; i--)
+        if (!fullColumn[i]) return Direction.Top;
+
+      // check bottom direction
+      for (let i = startIndex + 1; i < fullColumn.length; i++)
+        if (!fullColumn[i]) return Direction.Bottom;
+
+      // column is totally filled :(
+      return Direction.None;
+    }
+
+    const { stamp } = CalendarCard.getCellInfo(target);
+    const day = this.getDayByStamp(stamp);
+    const column = this.getColumnByStamp(stamp, day);
+
+    const isFree =
+      !target.querySelector('.appointmentCell') ||
+      target.querySelector('.moving');
+
     if (isFree) return true;
 
     const x = parseInt(target.dataset.x || '0', 10);
     const y = parseInt(target.dataset.y || '0', 10);
-    // const app = Appointment.fromIdentifier(relatedTarget.id);
-    this.shiftCell(`day_${stamp.format('DD-MM-YYYY')}`, x, y);
+    const filledColumn = new Array(this.props.positionCount).fill(null);
+    column.forEach(app => (filledColumn[app.position] = app));
+
+    const shiftDirection = detectShiftDirection(y, column);
+
+    if (shiftDirection === Direction.None) return false;
+
+    const delta = shiftDirection === Direction.Top ? 1 : -1;
+
+    let index = y;
+    do {
+      this.shiftCell(`day_${stamp.format('DD-MM-YYYY')}`, x, index, 0, delta);
+      index += delta;
+    } while (
+      filledColumn[index] &&
+      (index > 0 && index < this.props.positionCount - 1)
+    );
 
     return true;
   }
@@ -209,20 +257,30 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           .clone()
           .startOf('day')
           .diff(stamp, 'day') === 0,
-    ) as ICalendarDay;
+    ) as CalendarDay;
 
     return day;
   }
 
+  public getColumnIndex(start: IMoment, time: IMoment, step: IDuration) {
+    return Math.floor(time.diff(start, 'minute') / step.asMinutes());
+  }
+
   public getColumnByStamp(stamp: IMoment, calendarDay?: ICalendarDay) {
     const day = calendarDay || this.getDayByStamp(stamp);
-    const targetStamp = stamp.clone().startOf('hour');
+    const targetIndex = this.getColumnIndex(
+      this.props.dayTimeRange.start,
+      stamp,
+      this.props.mainColumnStep,
+    );
+
     const appointments = day.appointments.filter(
       app =>
-        app.date
-          .clone()
-          .startOf('hour')
-          .diff(targetStamp, 'hour') === 0,
+        this.getColumnIndex(
+          this.props.dayTimeRange.start,
+          app.date,
+          this.props.mainColumnStep,
+        ) === targetIndex,
     );
 
     return appointments;
@@ -277,12 +335,18 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   @action
-  public shiftCell(dayId: string, x: number, y: number) {
+  public shiftCell(
+    dayId: string,
+    x: number,
+    y: number,
+    dx: number,
+    dy: number,
+  ) {
     if (!(dayId in this.shifts)) this.shifts[dayId] = {};
 
     if (!(x in this.shifts[dayId])) this.shifts[dayId][x] = {};
 
-    this.shifts[dayId][x][y] = { dx: 0, dy: 1 };
+    this.shifts[dayId][x][y] = { dx, dy };
 
     // console.log('shift', JSON.stringify(this.shifts[dayId]));
   }
@@ -327,7 +391,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 } = e;
                 target.classList.add('enter');
 
-                const isFree = this.freeCell(relatedTarget, target);
+                const isFree = this.freeCell(target);
                 if (isFree || target.querySelector(`#${relatedTarget.id}`))
                   target.classList.remove('locked');
                 else target.classList.add('locked');
@@ -343,13 +407,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 target.classList.remove('enter', 'locked');
                 target.style.background = '';
 
-                const { stamp } = CalendarCard.getCellInfo(target);
-
-                const x = parseInt(target.dataset.x || '0', 10);
-                const y = parseInt(target.dataset.y || '0', 10);
-
-                // const app = Appointment.fromIdentifier(relatedTarget.id);
-                this.unShiftCell(`day_${stamp.format('DD-MM-YYYY')}`, x, y);
+                // this.unShiftCell(`day_${stamp.format('DD-MM-YYYY')}`, x, y);
+                this.unshiftWholeColumn(target);
               },
               ondrop: e => {
                 const {

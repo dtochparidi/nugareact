@@ -112,8 +112,6 @@ export default class Grid extends React.Component<IProps> {
             .hour(stamp.hour())
             .minute(stamp.minute());
 
-          if (dx || dy) console.log(dx, dy);
-
           coeffX =
             (d.diff(s, 'second') / this.props.mainColumnStep.asSeconds() + dx) *
             100;
