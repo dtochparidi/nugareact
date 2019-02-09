@@ -522,7 +522,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 const app = target.querySelector(`#${relatedTarget.id}`);
                 if (app) target.classList.remove('locked');
               },
-              overlap: 'center',
+              overlap: 'leftCenter',
             };
           })(),
         );
