@@ -13,7 +13,7 @@ import * as StyleVariables from '../../common/variables.scss';
 import * as CardVariables from './CalendarCard.scss';
 import './CalendarCard.scss';
 
-import * as interact from 'interactjs';
+import * as interact from 'levabala_interactjs';
 import CalendarDay from 'structures/CalendarDay';
 import { clientSide } from '../../dev/clientSide';
 import Appointment from '../../structures/Appointment';

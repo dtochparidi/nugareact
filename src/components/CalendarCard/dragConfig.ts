@@ -1,4 +1,4 @@
-import { DraggableOptions, InteractEvent } from 'interactjs';
+import { DraggableOptions, InteractEvent } from 'levabala_interactjs';
 
 function createDragConfig(
   onstart: (e: InteractEvent) => void = () => null,

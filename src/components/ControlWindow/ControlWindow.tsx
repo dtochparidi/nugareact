@@ -1,9 +1,9 @@
-import './ControlWindow.scss';
-
-import * as interact from 'interactjs';
+import * as interact from 'levabala_interactjs';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import { RootStore } from 'stores/RootStore';
+
+import './ControlWindow.scss';
 
 // import { AppStore } from 'store/AppStore';
 

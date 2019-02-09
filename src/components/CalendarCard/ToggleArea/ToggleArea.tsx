@@ -1,5 +1,5 @@
 import * as Emitter from 'events';
-import * as interact from 'interactjs';
+import * as interact from 'levabala_interactjs';
 import * as React from 'react';
 
 import { clientSide } from '../../../dev/clientSide';
