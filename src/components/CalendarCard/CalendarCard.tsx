@@ -193,7 +193,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     column.forEach(app => this.unShiftCell(day.id, x, app.position));
   }
 
-  public freeCell(target: HTMLElement) {
+  public freeCell(relatedTarget: HTMLElement, target: HTMLElement) {
     enum Direction {
       Top,
       Bottom,
@@ -227,23 +227,37 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     if (isFree) return true;
 
+    // const rx = parseInt(relatedTarget.dataset.x || '0', 10);
+    const ry = parseInt(relatedTarget.dataset.y || '0', 10);
+
     const x = parseInt(target.dataset.x || '0', 10);
     const y = parseInt(target.dataset.y || '0', 10);
     const filledColumn = new Array(this.props.positionCount).fill(null);
-    column.forEach(app => (filledColumn[app.position] = app));
+    column.forEach(app =>
+      ry !== app.position ? (filledColumn[app.position] = app) : null,
+    );
 
-    const shiftDirection = detectShiftDirection(y, column);
+    const shiftDirection = detectShiftDirection(y, filledColumn);
 
     if (shiftDirection === Direction.None) return false;
 
-    const delta = shiftDirection === Direction.Top ? 1 : -1;
+    const delta = shiftDirection === Direction.Top ? -1 : 1;
+    const targetDay = document.querySelector(`#${day.id}`) as HTMLElement;
 
     let index = y;
+    let targetCell;
     do {
       this.shiftCell(`day_${stamp.format('DD-MM-YYYY')}`, x, index, 0, delta);
       index += delta;
+
+      targetCell = targetDay.querySelector(
+        `[data-x="${x}"][data-y="${index}"]`,
+      ) as HTMLElement;
     } while (
       filledColumn[index] &&
+      !(targetCell.querySelector(
+        '.appointmentCell',
+      ) as HTMLElement).classList.contains('moving') &&
       (index > 0 && index < this.props.positionCount - 1)
     );
 
@@ -289,6 +303,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   @action
   public lockShifts() {
     const { shifts } = this;
+    let shiftsIsEmpty = true;
+
     Object.entries(shifts).forEach(entrie0 => {
       const [dayId, dayShifts] = entrie0;
       Object.entries(dayShifts).forEach(entrie1 => {
@@ -328,10 +344,15 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         });
       });
 
-      if (Object.keys(this.shifts[dayId]).length) this.shifts[dayId] = {};
+      if (Object.keys(this.shifts[dayId]).length) {
+        this.shifts[dayId] = {};
+        shiftsIsEmpty = false;
+      }
     });
 
     console.log('shift', JSON.stringify(this.shifts));
+
+    return shiftsIsEmpty;
   }
 
   @action
@@ -391,7 +412,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 } = e;
                 target.classList.add('enter');
 
-                const isFree = this.freeCell(target);
+                const isFree = this.freeCell(relatedTarget, target);
                 if (isFree || target.querySelector(`#${relatedTarget.id}`))
                   target.classList.remove('locked');
                 else target.classList.add('locked');
@@ -407,7 +428,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 target.classList.remove('enter', 'locked');
                 target.style.background = '';
 
-                // this.unShiftCell(`day_${stamp.format('DD-MM-YYYY')}`, x, y);
                 this.unshiftWholeColumn(target);
               },
               ondrop: e => {
@@ -418,13 +438,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                   target: HTMLElement;
                   relatedTarget: HTMLElement;
                 } = e;
-                // if (target.classList.contains('locked')) {
-                //   console.log('locked');
-                //   return;
-                // }
+                if (target.classList.contains('locked')) {
+                  console.log('locked');
+                  return;
+                }
                 console.log('drop');
-
-                this.lockShifts();
 
                 const appointmentId = relatedTarget.id;
                 const app = Appointment.fromIdentifier(appointmentId);
@@ -450,6 +468,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 );
 
                 targetStamp.add(subGridDuration);
+
+                this.lockShifts();
 
                 this.props.updateAppointment({
                   appointment: undefined,

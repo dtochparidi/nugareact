@@ -10,7 +10,7 @@ function random(to: number, from: number = 0) {
 
 export function generateRandomDay(date: moment.Moment): ICalendarDay {
   return {
-    appointments: new Array(random(10, 5)).fill(null).map(
+    appointments: new Array(random(25, 10)).fill(null).map(
       (): Appointment => {
         const app = {
           date: date
