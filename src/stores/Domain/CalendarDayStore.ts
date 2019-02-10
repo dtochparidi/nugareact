@@ -169,6 +169,7 @@ export default class CalendarDayStore {
             : personStore.loadPerson(app.personId);
         return new Appointment({
           date: app.date,
+          duration: app.duration,
           personId: app.personId,
           personInstance: person,
           position: app.position,

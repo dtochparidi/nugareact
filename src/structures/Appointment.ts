@@ -32,6 +32,8 @@ export default class Appointment implements IAppointment {
   @observable
   public date: moment.Moment;
   @observable
+  public duration: moment.Duration;
+  @observable
   public position: number;
   @observable
   public personId: string;
@@ -47,6 +49,7 @@ export default class Appointment implements IAppointment {
     position: number;
     personId: string;
     personInstance?: IPerson | IPersonLoading;
+    duration: moment.Duration;
   }) {
     this.update(obj);
   }
@@ -57,16 +60,19 @@ export default class Appointment implements IAppointment {
     position,
     personId,
     personInstance,
+    duration,
   }: {
     date?: moment.Moment;
     position?: number;
     personId?: string;
     personInstance?: IPerson | IPersonLoading;
+    duration?: moment.Duration;
   }) {
     if (date) this.date = date;
     if (position || position === 0) this.position = position;
     if (personId) this.personId = personId;
     if (personInstance) this.personInstance = personInstance;
+    if (duration) this.duration = duration;
 
     this.identifier = Appointment.calcId(
       this.date,

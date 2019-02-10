@@ -97,8 +97,16 @@ export default class AppointmentCell extends React.Component<IProps> {
   }
 
   public render() {
-    const { personInstance, identifier } = this.props.appointment;
+    const { personInstance, identifier, duration } = this.props.appointment;
+
     let { translateX, translateY } = this.props;
+    const { gridColumnDuration } = this.props;
+
+    if (!personInstance) {
+      console.warn('missing instance');
+      return null;
+    }
+
     const borderWidth = parseFloat(StyleVariables.thinWidth);
 
     translateX = translateX || 0;
@@ -109,10 +117,8 @@ export default class AppointmentCell extends React.Component<IProps> {
 
     const translated = translateX || translateY;
 
-    if (!personInstance) {
-      console.warn('missing instance');
-      return null;
-    }
+    const widthScale = duration.asMinutes() / gridColumnDuration.asMinutes();
+    const width = `${widthScale * 100}%`;
 
     const person = personInstance as IPerson;
     return (
@@ -130,13 +136,9 @@ export default class AppointmentCell extends React.Component<IProps> {
       >
         <div
           className="container"
-          // style={
-          //   translated
-          //     ? {
-          //         transform: `translate(${translateX}%,${translateY}%)`,
-          //       }
-          //     : {}
-          // }
+          style={{
+            width,
+          }}
         >
           {!personInstance.loaded
             ? [

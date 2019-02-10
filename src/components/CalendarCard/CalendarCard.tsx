@@ -139,13 +139,26 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     );
 
     if (clientSide)
-      interact('.appointmentCell').draggable(
-        createDragConfig(
-          this.onAppointmentDraggingStart.bind(this),
-          () => null,
-          this.onAppointmentDraggingEnd.bind(this),
-        ),
-      );
+      interact('.appointmentCell .container')
+        .draggable(
+          createDragConfig(
+            this.onAppointmentDraggingStart.bind(this),
+            () => null,
+            this.onAppointmentDraggingEnd.bind(this),
+          ),
+        )
+        .resizable({
+          edges: {
+            right: true,
+          },
+          onmove: (e: interact.InteractEvent & { rect: ClientRect }) => {
+            const { target }: { target: HTMLElement } = e;
+
+            (target.querySelector(
+              '.container',
+            ) as HTMLElement).style.width = `${e.rect.width}px`;
+          },
+        });
 
     this.state = {
       cellWidth: 0,
@@ -358,7 +371,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         shiftsIsEmpty = false;
 
         this.shiftsHash[dayId] = v4();
-        console.log(dayId, 'lockshift');
       }
     });
 
@@ -418,15 +430,20 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           ((): interact.DropZoneOptions => {
             const lastPosition = { x: 0, y: 0 };
             return {
-              accept: '.appointmentCell',
+              accept: '.appointmentCell .container',
               ondragenter: e => {
                 const {
                   target,
-                  relatedTarget,
                 }: {
                   target: HTMLElement;
+                } = e;
+                let {
+                  relatedTarget,
+                }: {
                   relatedTarget: HTMLElement;
                 } = e;
+                relatedTarget = relatedTarget.parentNode as HTMLElement; // go up from .container to .appointmentCell
+
                 target.classList.add('enter');
 
                 const isFree = this.freeCell(relatedTarget, target);
@@ -437,11 +454,16 @@ export default class CalendarCard extends React.Component<IProps, IState> {
               ondragleave: e => {
                 const {
                   target,
-                }: // relatedTarget,
-                {
+                }: {
                   target: HTMLElement;
-                  // relatedTarget: HTMLElement;
                 } = e;
+                let {
+                  relatedTarget,
+                }: {
+                  relatedTarget: HTMLElement;
+                } = e;
+                relatedTarget = relatedTarget.parentNode as HTMLElement; // go up from .container to .appointmentCell
+
                 target.classList.remove('enter', 'locked');
                 target.style.background = '';
 
@@ -450,11 +472,16 @@ export default class CalendarCard extends React.Component<IProps, IState> {
               ondrop: e => {
                 const {
                   target,
-                  relatedTarget,
                 }: {
                   target: HTMLElement;
+                } = e;
+                let {
+                  relatedTarget,
+                }: {
                   relatedTarget: HTMLElement;
                 } = e;
+                relatedTarget = relatedTarget.parentNode as HTMLElement; // go up from .container to .appointmentCell
+
                 if (target.classList.contains('locked')) {
                   console.log('locked');
                   return;
@@ -503,6 +530,13 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 }: {
                   target: HTMLElement;
                 } = e;
+                let {
+                  relatedTarget,
+                }: {
+                  relatedTarget: HTMLElement;
+                } = e;
+                relatedTarget = relatedTarget.parentNode as HTMLElement; // go up from .container to .appointmentCell
+
                 // target.classList.add('dropzone', 'active');
                 target.classList.remove('locked');
                 // target.style.background = '';
@@ -515,6 +549,13 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 }: {
                   target: HTMLElement;
                 } = e;
+                let {
+                  relatedTarget,
+                }: {
+                  relatedTarget: HTMLElement;
+                } = e;
+                relatedTarget = relatedTarget.parentNode as HTMLElement; // go up from .container to .appointmentCell
+
                 target.classList.remove(
                   'dropzone',
                   'active',
@@ -526,11 +567,15 @@ export default class CalendarCard extends React.Component<IProps, IState> {
               ondropmove: e => {
                 const {
                   target,
-                  relatedTarget,
                 }: {
                   target: HTMLElement;
+                } = e;
+                let {
+                  relatedTarget,
+                }: {
                   relatedTarget: HTMLElement;
                 } = e;
+                relatedTarget = relatedTarget.parentNode as HTMLElement; // go up from .container to .appointmentCell
 
                 const rect = relatedTarget.getBoundingClientRect();
                 lastPosition.x = rect.left;
