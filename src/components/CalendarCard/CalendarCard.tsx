@@ -3,6 +3,7 @@ import * as Moment from 'moment';
 import { Duration as IDuration, Moment as IMoment } from 'moment';
 import { DateRange, extendMoment } from 'moment-range';
 import * as React from 'react';
+import { v4 } from 'uuid';
 
 import ICalendarDay from '../../interfaces/ICalendarDay';
 import Card from '../Card';
@@ -100,6 +101,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   @observable
+  public shiftsHash: { [dayId: string]: string } = {};
+  @observable
   public shifts: {
     [dayId: string]: {
       [x: number]: {
@@ -110,6 +113,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       };
     };
   } = {};
+
   public selectedDay: number = 0;
   public currentLeftColumnIndex: number = 0;
   private daysContainerRef: React.RefObject<HTMLDivElement>;
@@ -190,7 +194,12 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     const x = parseInt(target.dataset.x || '0', 10);
 
-    column.forEach(app => this.unShiftCell(day.id, x, app.position));
+    const changed = column.reduce(
+      (acc, app) => this.unShiftCell(day.id, x, app.position, true) || acc,
+      false,
+    );
+
+    if (changed) this.shiftsHash[day.id] = v4();
   }
 
   public freeCell(relatedTarget: HTMLElement, target: HTMLElement) {
@@ -347,10 +356,13 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       if (Object.keys(this.shifts[dayId]).length) {
         this.shifts[dayId] = {};
         shiftsIsEmpty = false;
+
+        this.shiftsHash[dayId] = v4();
+        console.log(dayId, 'lockshift');
       }
     });
 
-    console.log('shift', JSON.stringify(this.shifts));
+    // console.log('shift', JSON.stringify(this.shifts));
 
     return shiftsIsEmpty;
   }
@@ -369,18 +381,23 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     this.shifts[dayId][x][y] = { dx, dy };
 
+    this.shiftsHash[dayId] = v4();
     // console.log('shift', JSON.stringify(this.shifts[dayId]));
   }
 
   @action
-  public unShiftCell(dayId: string, x: number, y: number) {
+  public unShiftCell(dayId: string, x: number, y: number, stack = false) {
     if (x in this.shifts[dayId]) {
       delete this.shifts[dayId][x][y];
-      if (typeof this.shifts[dayId][x] !== 'object')
+      if (!Object.keys(this.shifts[dayId][x]).length)
         delete this.shifts[dayId][x];
+
+      if (!stack) this.shiftsHash[dayId] = v4();
+
+      return true;
     }
 
-    // console.log('unshift', JSON.stringify(this.shifts[dayId]));
+    return false;
   }
 
   public updateDropzones() {
@@ -891,10 +908,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     this.props.days.forEach(day => {
       const { id } = day;
       const dayId = `${id}`;
-      if (!(dayId in this.shifts)) {
-        console.log('new shift for new day registered');
-        this.shifts[dayId] = {};
-      }
+      if (!(dayId in this.shifts)) this.shifts[dayId] = {};
     });
 
     return (
@@ -937,6 +951,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 stamps={stamps}
                 dayWidth={dayWidth}
                 shifts={this.shifts[day.id]}
+                shiftsHash={this.shiftsHash[day.id]}
                 updateAppointment={this.props.updateAppointment}
                 subGridColumns={subGridColumns}
                 mainColumnStep={mainColumnStep}

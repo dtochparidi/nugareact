@@ -1,9 +1,10 @@
+import { action, observable, reaction } from 'mobx';
 import { observer } from 'mobx-react';
 import * as moment from 'moment';
 import { Moment as IMoment } from 'moment';
 import * as React from 'react';
 import Appointment from '../../../../structures/Appointment';
-import AppointmentCell from '../AppointmentCell';
+import GridCell from './GridCell';
 
 export interface IProps {
   cols: number;
@@ -11,9 +12,10 @@ export interface IProps {
   appointments: Appointment[];
   stamps: moment.Moment[];
   mainColumnStep: moment.Duration;
+  shiftsHash: string;
   shifts: {
     [x: number]: {
-      [x: number]: {
+      [y: number]: {
         dx: number;
         dy: number;
       };
@@ -48,19 +50,112 @@ export interface IProps {
 
 @observer
 export default class Grid extends React.Component<IProps> {
-  public render() {
+  @observable
+  public appointments: Array<Array<Appointment | object>>;
+  @observable
+  public shifts: Array<Array<{ dx: number; dy: number }>>;
+
+  public gridCells: React.ReactNode[] = [];
+
+  constructor(props: IProps) {
+    super(props);
+
+    this.updateApps();
+    this.updateShifts();
+    this.gridCells = this.generateGrid();
+
+    // appointments change reaction
+    reaction(
+      // OPTIMIZE
+      () => this.props.appointments.map(app => app.stateHash).join(),
+      apps => {
+        this.updateApps();
+      },
+    );
+
+    // shifts change reaction
+    reaction(
+      () => this.props.shiftsHash,
+      hash => {
+        this.updateShifts();
+      },
+    );
+  }
+
+  public generateGrid() {
     const {
       rows,
       cols,
-      appointments,
       stamps,
-      mainColumnStep,
-      shifts,
-      subGridColumns: subGridStep,
+      subGridColumns,
+      updateAppointment,
     } = this.props;
 
+    const gridColumnDuration = moment.duration(
+      stamps[1].diff(stamps[0]).valueOf(),
+      'millisecond',
+    );
+
+    const gridCells: React.ReactNode[] = [];
+    for (let y = 0; y < rows; y++)
+      for (let x = 0; x < cols; x++)
+        gridCells.push(
+          <GridCell
+            key={`${x}:${y}`}
+            x={x}
+            y={y}
+            cols={cols}
+            stamp={stamps[x]}
+            subGridStep={subGridColumns}
+            gridColumnDuration={gridColumnDuration}
+            shift={this.shifts[x][y]}
+            app={this.appointments[x][y]}
+            updateAppointment={updateAppointment}
+          />,
+        );
+
+    return gridCells;
+  }
+
+  @action
+  public updateShifts() {
+    const { cols, rows, shifts } = this.props;
+
+    this.shifts =
+      this.shifts ||
+      new Array(cols)
+        .fill(null)
+        .map(w => new Array(rows).fill(null).map(u => ({ dx: 0, dy: 0 })));
+
+    for (let x = 0; x < cols; x++)
+      for (let y = 0; y < rows; y++) {
+        const recordedShift = this.shifts[x][y];
+        const inputShift = (x in shifts
+          ? y in shifts[x]
+            ? shifts[x][y]
+            : null
+          : null) || { dx: 0, dy: 0 };
+
+        if (
+          recordedShift.dx !== inputShift.dx ||
+          recordedShift.dy !== inputShift.dy
+        )
+          Object.assign(recordedShift, inputShift);
+      }
+  }
+
+  @action
+  public updateApps() {
+    const { appointments, stamps, mainColumnStep, cols, rows } = this.props;
+
+    this.appointments =
+      this.appointments ||
+      new Array(cols)
+        .fill(null)
+        .map(w => new Array(rows).fill(null).map(u => ({})));
+
     const minutesStep = mainColumnStep.asMinutes();
-    const personCells = appointments
+    const positionedApps: Array<Array<Appointment | object>> = appointments
       .map(app => ({
         appointment: app,
         x: Math.floor(
@@ -71,27 +166,57 @@ export default class Grid extends React.Component<IProps> {
         ),
         y: app.position,
       }))
-      .reduce(
-        (
-          acc: Array<{ x: number; y: number; appointment: Appointment }>,
-          app,
-        ) => {
-          const { x, y } = app;
+      .reduce((acc, val) => {
+        acc[val.x][val.y] = val.appointment;
+        return acc;
+      }, new Array(cols).fill(null).map(w => new Array(rows).fill(null).map(u => ({}))));
 
-          acc[y * cols + x] = app;
+    for (let x = 0; x < cols; x++)
+      for (let y = 0; y < rows; y++) {
+        const recordedApp = this.appointments[x][y];
+        const inputApp = positionedApps[x][y];
 
-          return acc;
-        },
-        [],
-      );
+        const recordEmpty = Object.keys(recordedApp).length === 0;
+        const inputEmpty = Object.keys(inputApp).length === 0;
 
-    const gridColumnDuration = moment.duration(
-      stamps[1].diff(stamps[0]).valueOf(),
-      'millisecond',
-    );
+        if (recordEmpty && inputEmpty) continue;
 
-    const gridCells: React.ReactNode[] = [];
-    for (let y = 0; y < rows; y++)
+        if (!recordEmpty && inputEmpty) {
+          for (const i in this.appointments[x][y])
+            delete this.appointments[x][y][i];
+
+          continue;
+        }
+
+        if (recordEmpty && !inputEmpty) {
+          Object.assign(this.appointments[x][y], inputApp);
+
+          continue;
+        }
+
+        if (
+          (recordedApp as Appointment).stateHash !==
+          (inputApp as Appointment).stateHash
+        ) {
+          Object.assign(this.appointments[x][y], inputApp);
+
+          continue;
+        }
+      }
+  }
+
+  // public componentDidUpdate() {
+  //   this.updateApps();
+  //   console.log('update');
+  // }
+
+  public render() {
+    return <div className="grid">{this.gridCells}</div>;
+  }
+}
+
+/*
+for (let y = 0; y < rows; y++)
       for (let x = 0; x < cols; x++) {
         const app = personCells[y * cols + x];
         const stamp = stamps[x];
@@ -157,6 +282,4 @@ export default class Grid extends React.Component<IProps> {
           </div>,
         );
       }
-    return <div className="grid">{gridCells}</div>;
-  }
-}
+      */

@@ -17,6 +17,13 @@ const versions: Array<[string, string]> = [
 > (время разработки не учитывалось, как рабочее)
 `,
   ],
+  [
+    'Grid Great Optimizations',
+    `
+  # Large optimizations
+
+Полностью переделан data-binding и огранизация layout-а для сетки записи`,
+  ],
 ];
 
 export default versions;

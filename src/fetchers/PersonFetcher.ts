@@ -24,11 +24,17 @@ function generateRandomPerson(id: string): IPerson {
     id,
     invitedBy: 'Ален Евсеев',
     loaded: true,
-    name: takeRandom('Алексей Дмитрий Андрей Юлий Галий Валерий'.split(' ')),
+    name: takeRandom(
+      'Алексей Дмитрий Андрей Юлий Галий Валерий Глеб Лёха Коля'.split(' '),
+    ),
     patronymic: '',
     phone: '+371 28481181',
     rate: 20,
-    surname: takeRandom('Долматов Бубликов Смирнов Баженов Святов'.split(' ')),
+    surname: takeRandom(
+      'Долматов Бубликов Смирнов Баженов Святов Вячеславов Куприков Блинов Карамзинов'.split(
+        ' ',
+      ),
+    ),
   };
 }
 

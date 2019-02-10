@@ -3,6 +3,7 @@ import { IPerson } from 'interfaces/IPerson';
 import { IPersonLoading } from 'interfaces/IPersonLoading';
 import { action, observable } from 'mobx';
 import * as moment from 'moment';
+import { v4 } from 'uuid';
 
 export default class Appointment implements IAppointment {
   public static fromIdentifier(id: string) {
@@ -13,6 +14,10 @@ export default class Appointment implements IAppointment {
       personId: arr[3],
       position: parseInt(arr[2], 10),
     };
+  }
+
+  private static getStateHash() {
+    return v4();
   }
 
   private static calcId(
@@ -34,6 +39,8 @@ export default class Appointment implements IAppointment {
   public personInstance?: IPerson | IPersonLoading;
   @observable
   public identifier: string;
+  @observable
+  public stateHash: string;
 
   constructor(obj: {
     date: moment.Moment;
@@ -66,5 +73,6 @@ export default class Appointment implements IAppointment {
       this.position,
       this.personId,
     );
+    this.stateHash = Appointment.getStateHash();
   }
 }

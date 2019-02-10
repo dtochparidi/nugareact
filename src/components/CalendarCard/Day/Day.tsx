@@ -22,6 +22,7 @@ export interface IProps {
       };
     };
   };
+  shiftsHash: string;
   updateAppointment: ({
     date,
     position,
@@ -57,7 +58,13 @@ export default class Day extends React.Component<IProps> {
       cols,
       dayData,
       dayWidth,
+      stamps,
+      shifts,
+      shiftsHash,
+      mainColumnStep,
+      updateAppointment,
     } = this.props;
+
     return (
       <div
         className="dayWrapper"
@@ -72,11 +79,12 @@ export default class Day extends React.Component<IProps> {
             rows={rows}
             cols={cols}
             appointments={dayData.appointments}
-            stamps={this.props.stamps}
-            shifts={this.props.shifts}
-            updateAppointment={this.props.updateAppointment}
+            stamps={stamps}
+            shifts={shifts}
+            shiftsHash={shiftsHash}
+            updateAppointment={updateAppointment}
             subGridColumns={subGridStep}
-            mainColumnStep={this.props.mainColumnStep}
+            mainColumnStep={mainColumnStep}
           />
         </div>
       </div>
