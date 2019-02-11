@@ -31,16 +31,10 @@
     visibility: visible;
     display: inline;
 
-    background: rgba(255, 255, 255, 0.397);
     transition: none;
 
     position: fixed;
     z-index: 101;
-  }
-
-  &.translated {
-    outline: dotted lightgrey 1px;
-    outline-offset: -1px;
   }
 
   &.hidden {
@@ -52,133 +46,173 @@
     left: 0;
     top: 0;
 
-    background: white;
-
     width: 100%;
     height: 100%;
 
-    outline: solid lightgrey 1px;
-
-    .moving & {
-      @extend .light-box-shadow;
-    }
-
-    .marker {
+    .containerTempWidth {
       position: absolute;
-      top: 0;
       left: 0;
-      bottom: 0;
-      width: $marker-width;
-
-      background: green;
-
-      &.loading {
-        background: lightgrey;
-      }
-    }
-
-    $avatar-width: $calendar-cell-height - $avatar-left-margin * 2 - $thin-width;
-    .avatar {
-      position: absolute;
-
-      left: $avatar-left-margin;
-      top: $avatar-left-margin;
-      bottom: $avatar-left-margin;
-
-      width: $avatar-width;
-      border-radius: 50%;
-
-      background: lightgrey;
-
-      &.loading {
-        background: lightgrey;
-      }
-    }
-
-    .mainInfoWrapper {
-      position: absolute;
-      left: $avatar-width + $avatar-left-margin * 2;
       top: 0;
-      bottom: 0;
-      right: $points-right-margin + $points-size + $avatar-left-margin;
 
-      display: flex;
-      justify-content: left;
-      align-items: center;
+      width: 100%;
+      height: 100%;
 
-      .subWrapper {
-        width: 100%;
+      background: white;
+      outline: solid lightgrey 1px;
+
+      .translated & & {
+        outline: dotted lightgrey 1px;
+        outline-offset: -1px;
       }
 
-      .content {
-        overflow-wrap: break-word;
-        white-space: normal;
-
-        span {
-          white-space: nowrap;
-        }
-
-        .surname,
-        .name,
-        .patronymic,
-        .grade {
-          @extend .font-primary-semibold;
-        }
-
-        .grade {
-          color: green;
-        }
-
-        .visits {
-          @extend .font-secondary-little-semibold;
-          margin-left: $visits-count-margin;
-          margin-right: $visits-count-margin;
-          padding: 0;
-          color: black;
-          vertical-align: top;
-        }
-
-        .number {
-          @extend .font-secondary-middle;
-        }
-
-        &.loading {
-          background: lightgrey;
-          height: 15px;
-          width: auto;
-
-          margin: 2.5px;
-        }
+      .moving & & {
+        @extend .light-box-shadow;
+        background: rgba(255, 255, 255, 0.397);
       }
-    }
 
-    .pointsWrapper {
-      position: absolute;
-      right: $points-right-margin;
-      top: 0;
-      bottom: 0;
+      .layoutController {
+        &.widthMin {
+          > .pointsWrapper {
+            display: none;
+          }
 
-      width: $points-size;
+          > .mainInfoWrapper {
+            display: none;
+          }
+        }
 
-      display: flex;
-      justify-content: center;
-      align-items: center;
+        &.widthMedium {
+          > .pointsWrapper {
+            display: none;
+          }
 
-      .content {
-        @extend .font-points-circle;
+          > .mainInfoWrapper .subWrapper .content .number {
+            display: none;
+          }
+        }
 
-        background: $color-calendar-points-background;
-        width: $points-size;
-        height: $points-size;
+        .marker {
+          position: absolute;
+          top: 0;
+          left: 0;
+          bottom: 0;
+          width: $marker-width;
 
-        border-radius: 50%;
+          background: green;
 
-        display: flex;
-        justify-content: center;
-        align-items: center;
+          &.loading {
+            background: lightgrey;
+          }
+        }
 
-        &.loading {
+        $avatar-width: $calendar-cell-height - $avatar-left-margin * 2 -
+          $thin-width;
+        .avatar {
+          position: absolute;
+
+          left: $avatar-left-margin;
+          top: $avatar-left-margin;
+          bottom: $avatar-left-margin;
+
+          width: $avatar-width;
+          border-radius: 50%;
+
           background: lightgrey;
+
+          &.loading {
+            background: lightgrey;
+          }
+        }
+
+        .mainInfoWrapper {
+          position: absolute;
+          left: $avatar-width + $avatar-left-margin * 2;
+          top: 0;
+          bottom: 0;
+          right: $points-right-margin + $points-size + $avatar-left-margin;
+
+          display: flex;
+          justify-content: left;
+          align-items: center;
+
+          .subWrapper {
+            width: 100%;
+          }
+
+          .content {
+            overflow-wrap: break-word;
+            white-space: normal;
+
+            span {
+              white-space: nowrap;
+            }
+
+            .surname,
+            .name,
+            .patronymic,
+            .grade {
+              @extend .font-primary-semibold;
+            }
+
+            .additionalInfo {
+              .grade {
+                color: green;
+              }
+
+              .visits {
+                @extend .font-secondary-little-semibold;
+                margin-left: $visits-count-margin;
+                margin-right: $visits-count-margin;
+                padding: 0;
+                color: black;
+                vertical-align: top;
+              }
+            }
+
+            .number {
+              @extend .font-secondary-middle;
+            }
+
+            &.loading {
+              background: lightgrey;
+              height: 15px;
+              width: auto;
+
+              margin: 2.5px;
+            }
+          }
+        }
+
+        .pointsWrapper {
+          position: absolute;
+          right: $points-right-margin;
+          top: 0;
+          bottom: 0;
+
+          width: $points-size;
+
+          display: flex;
+          justify-content: center;
+          align-items: center;
+
+          .content {
+            @extend .font-points-circle;
+
+            background: $color-calendar-points-background;
+
+            width: $points-size;
+            height: $points-size;
+
+            border-radius: 50%;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            &.loading {
+              background: lightgrey;
+            }
+          }
         }
       }
     }

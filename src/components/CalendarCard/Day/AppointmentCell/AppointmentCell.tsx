@@ -7,7 +7,10 @@ import * as React from 'react';
 import * as StyleVariables from '../../../../common/variables.scss';
 import Appointment from '../../../../structures/Appointment';
 
+import * as CardVariables from 'components/CalendarCard/CalendarCard.scss';
 import './AppointmentCell.scss';
+
+const MIN_CELL_WIDTH = parseFloat(CardVariables.calendarCellWidthMin);
 
 export interface IProps {
   appointment: Appointment;
@@ -33,16 +36,45 @@ export interface IProps {
   }) => void;
 }
 
+enum WidthClass {
+  Min = 'widthMin',
+  Medium = 'widthMedium',
+  Max = 'widthMax',
+}
+
 @observer
 export default class AppointmentCell extends React.Component<IProps> {
   public onMouseWheelHandler: (e: React.WheelEvent<any> | WheelEvent) => void;
   public mouseWheelStep: number = 150;
   private mouseDeltaBuffer: number = 0;
+  private widthClass = WidthClass.Max;
+  private widthDivRef: React.RefObject<HTMLDivElement>;
 
   constructor(props: IProps) {
     super(props);
 
     this.onMouseWheelHandler = this.onMouseWheel.bind(this);
+    this.widthDivRef = React.createRef();
+  }
+
+  public componentDidUpdate() {
+    const rect = (this.widthDivRef
+      .current as HTMLElement).getBoundingClientRect();
+    const { width } = rect;
+
+    const newWidthClass =
+      width < MIN_CELL_WIDTH / 2
+        ? WidthClass.Min
+        : width < MIN_CELL_WIDTH / 1.5
+        ? WidthClass.Medium
+        : WidthClass.Max;
+
+    if (newWidthClass !== this.widthClass) {
+      this.widthClass = newWidthClass;
+      this.forceUpdate();
+
+      console.log('foooorce!', newWidthClass);
+    }
   }
 
   public onMouseWheel(e: React.WheelEvent<any> | WheelEvent) {
@@ -113,6 +145,8 @@ export default class AppointmentCell extends React.Component<IProps> {
     const widthCorrect = Math.floor(widthScale) * 2;
     const width = `calc(${widthScale * 100}% + ${widthCorrect}px)`;
 
+    console.log('update', width);
+
     const person = personInstance as IPerson;
     return (
       <div
@@ -133,45 +167,51 @@ export default class AppointmentCell extends React.Component<IProps> {
             width,
           }}
         >
-          {!personInstance.loaded
-            ? [
-                <div className="marker loading" key="marker" />,
-                <div className="avatar loading" key="avatar" />,
-                <div className="mainInfoWrapper" key="mainInfoWrapper">
-                  <div className="subWrapper">
-                    <div className="content loading" />
-                    <div className="content loading" />
-                  </div>
-                </div>,
-                <div className="pointsWrapper" key="poinsWrapper">
-                  <div className="content loading" />
-                </div>,
-              ]
-            : [
-                <div className="marker" key="marker" />,
-                <div className="avatar" key="avatar" />,
-                <div className="mainInfoWrapper" key="mainInfoWrapper">
-                  <div className="subWrapper">
-                    <div className="content">
-                      <span className="surname">{person.surname}</span>{' '}
-                      <span className="name">{person.name}</span>{' '}
-                      {person.patronymic ? (
-                        <span className="patronymic">{person.patronymic} </span>
-                      ) : null}
-                      <span>
-                        <span className="visits">13</span>{' '}
-                        <span className="grade">A</span>
-                      </span>
-                    </div>
-                    <div className="content">
-                      <span className="number">{person.phone}</span>
-                    </div>
-                  </div>
-                </div>,
-                <div className="pointsWrapper" key="poinsWrapper">
-                  <div className="content">19</div>
-                </div>,
-              ]}
+          <div className="containerTempWidth" ref={this.widthDivRef}>
+            <div className={`layoutController ${this.widthClass}`}>
+              {!personInstance.loaded
+                ? [
+                    <div className="marker loading" key="marker" />,
+                    <div className="avatar loading" key="avatar" />,
+                    <div className="mainInfoWrapper" key="mainInfoWrapper">
+                      <div className="subWrapper">
+                        <div className="content loading" />
+                        <div className="content loading" />
+                      </div>
+                    </div>,
+                    <div className="pointsWrapper" key="poinsWrapper">
+                      <div className="content loading" />
+                    </div>,
+                  ]
+                : [
+                    <div className="marker" key="marker" />,
+                    <div className="avatar" key="avatar" />,
+                    <div className="mainInfoWrapper" key="mainInfoWrapper">
+                      <div className="subWrapper">
+                        <div className="content">
+                          <span className="surname">{person.surname}</span>{' '}
+                          <span className="name">{person.name}</span>{' '}
+                          {person.patronymic ? (
+                            <span className="patronymic">
+                              {person.patronymic}{' '}
+                            </span>
+                          ) : null}
+                          <span className="additionalInfo">
+                            <span className="visits">13</span>{' '}
+                            <span className="grade">A</span>
+                          </span>
+                        </div>
+                        <div className="content">
+                          <span className="number">{person.phone}</span>
+                        </div>
+                      </div>
+                    </div>,
+                    <div className="pointsWrapper" key="poinsWrapper">
+                      <div className="content">19</div>
+                    </div>,
+                  ]}
+            </div>
+          </div>
         </div>
       </div>
     );

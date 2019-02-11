@@ -150,8 +150,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         )
         .resizable(
           (() => {
-            let rect: ClientRect;
-
             return {
               edges: {
                 right: true,
@@ -166,18 +164,27 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 const appointmentId = appCell.id;
                 const app = Appointment.fromIdentifier(appointmentId);
 
-                const leftOffset = rect.right - cellRect.left;
+                const widthNode = target.querySelector(
+                  '.containerTempWidth',
+                ) as HTMLElement;
+
+                const rect = widthNode.getBoundingClientRect();
                 const step = cellRect.width / this.props.subGridColumns;
-                const subGridScale = Math.floor(leftOffset / step);
+                const subGridScale = Math.ceil(rect.width / step);
                 const minutes =
                   (this.props.mainColumnStep.asMinutes() /
                     this.props.subGridColumns) *
                   subGridScale;
                 const duration = Moment.duration(
-                  Math.max(minutes, this.props.mainColumnStep.asMinutes()),
+                  Math.max(
+                    minutes,
+                    this.props.mainColumnStep.asMinutes() /
+                      this.props.subGridColumns,
+                  ),
                   'minute',
                 );
 
+                widthNode.style.width = '';
                 this.props.updateAppointment({
                   appointment: undefined,
                   date: app.date,
@@ -191,8 +198,13 @@ export default class CalendarCard extends React.Component<IProps, IState> {
               onmove: (e: interact.InteractEvent & { rect: ClientRect }) => {
                 const { target }: { target: HTMLElement } = e;
 
-                target.style.width = `${e.rect.width}px`;
-                rect = e.rect;
+                const widthNode = target.querySelector(
+                  '.containerTempWidth',
+                ) as HTMLElement;
+
+                widthNode.style.width = `${e.rect.width}px`;
+
+                console.log(e.rect.width);
               },
             };
           })(),
