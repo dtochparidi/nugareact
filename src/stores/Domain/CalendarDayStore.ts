@@ -2,7 +2,7 @@ import fetchDay from 'fetchers/DayFetcher';
 import IAppointment from 'interfaces/IAppointment';
 import ICalendarDay from 'interfaces/ICalendarDay';
 import { action, observable } from 'mobx';
-import { Moment as IMoment } from 'moment';
+import { Duration as IDuration, Moment as IMoment } from 'moment';
 import Appointment from 'structures/Appointment';
 import CalendarDay from 'structures/CalendarDay';
 
@@ -47,32 +47,26 @@ export default class CalendarDayStore {
     personId,
     targetDate,
     targetPosition,
+    targetDuration,
     appointment,
-  }:
-    | {
-        date: IMoment;
-        position: number;
-        personId: string;
-        targetDate: IMoment;
-        appointment?: undefined;
-        targetPosition: number;
-      }
-    | {
-        date?: undefined;
-        position?: undefined;
-        personId?: undefined;
-        appointment: Appointment;
-        targetDate: IMoment;
-        targetPosition: number;
-      }) {
+  }: {
+    date: IMoment;
+    position?: number;
+    personId?: string;
+    targetDate?: IMoment;
+    appointment?: Appointment;
+    targetPosition: number;
+    targetDuration?: IDuration;
+  }) {
     date = date || (appointment as Appointment).date;
     personId = personId || (appointment as Appointment).personId;
+    targetDate = targetDate || date;
     if (appointment) position = (appointment as Appointment).position;
 
     const { dayTimeRangeActual } = this.rootStore.uiStore;
 
     // BUG
-    // when dropping close to day's border cell is jumping in haotic d
+    // when dropping close to day's border cell is jumping in haotic direction
 
     // check if date is in borders
     const { start, end } = dayTimeRangeActual;
@@ -112,7 +106,7 @@ export default class CalendarDayStore {
         day.date
           .clone()
           .startOf('day')
-          .diff(targetDate.clone().startOf('day'), 'day') === 0,
+          .diff((targetDate as IMoment).clone().startOf('day'), 'day') === 0,
     );
 
     appointment =
@@ -136,10 +130,19 @@ export default class CalendarDayStore {
     }
 
     // change the appointment
-    appointment.update({
-      date: targetDate,
-      position: targetPosition,
-    });
+    appointment.update(
+      Object.assign(
+        Object.assign(
+          position
+            ? {
+                position: targetPosition,
+              }
+            : {},
+          targetDuration ? { duration: targetDuration } : {},
+        ),
+        targetDate ? { date: targetDate } : {},
+      ),
+    );
 
     // if day wasn't changed
     if (currentDay.date.diff(newDay.date, 'day') === 0) return;

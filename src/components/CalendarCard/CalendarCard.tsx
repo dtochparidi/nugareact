@@ -50,9 +50,10 @@ export interface IProps {
     date?: IMoment;
     position?: number;
     personId?: string;
-    targetDate: IMoment;
+    targetDate?: IMoment;
     appointment?: Appointment;
-    targetPosition: number;
+    targetPosition?: number;
+    targetDuration?: IDuration;
   }) => void;
 }
 
@@ -147,18 +148,55 @@ export default class CalendarCard extends React.Component<IProps, IState> {
             this.onAppointmentDraggingEnd.bind(this),
           ),
         )
-        .resizable({
-          edges: {
-            right: true,
-          },
-          onmove: (e: interact.InteractEvent & { rect: ClientRect }) => {
-            const { target }: { target: HTMLElement } = e;
+        .resizable(
+          (() => {
+            let rect: ClientRect;
 
-            (target.querySelector(
-              '.container',
-            ) as HTMLElement).style.width = `${e.rect.width}px`;
-          },
-        });
+            return {
+              edges: {
+                right: true,
+              },
+              onend: (e: interact.InteractEvent) => {
+                const { target }: { target: HTMLElement } = e;
+
+                const appCell = target.parentNode as HTMLElement;
+                const gridCell = appCell.parentNode as HTMLElement;
+                const cellRect = gridCell.getBoundingClientRect();
+
+                const appointmentId = appCell.id;
+                const app = Appointment.fromIdentifier(appointmentId);
+
+                const leftOffset = rect.right - cellRect.left;
+                const step = cellRect.width / this.props.subGridColumns;
+                const subGridScale = Math.floor(leftOffset / step);
+                const minutes =
+                  (this.props.mainColumnStep.asMinutes() /
+                    this.props.subGridColumns) *
+                  subGridScale;
+                const duration = Moment.duration(
+                  Math.max(minutes, this.props.mainColumnStep.asMinutes()),
+                  'minute',
+                );
+
+                this.props.updateAppointment({
+                  appointment: undefined,
+                  date: app.date,
+                  personId: app.personId,
+                  position: app.position,
+                  targetDate: undefined,
+                  targetDuration: duration,
+                  targetPosition: undefined,
+                });
+              },
+              onmove: (e: interact.InteractEvent & { rect: ClientRect }) => {
+                const { target }: { target: HTMLElement } = e;
+
+                target.style.width = `${e.rect.width}px`;
+                rect = e.rect;
+              },
+            };
+          })(),
+        );
 
     this.state = {
       cellWidth: 0,

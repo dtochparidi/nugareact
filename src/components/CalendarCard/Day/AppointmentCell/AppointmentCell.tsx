@@ -1,6 +1,6 @@
 import { IPerson } from 'interfaces/IPerson';
 import { observer } from 'mobx-react';
-import { Moment as IMoment } from 'moment';
+import { Duration as IDuration, Moment as IMoment } from 'moment';
 import * as moment from 'moment';
 import * as React from 'react';
 
@@ -22,23 +22,15 @@ export interface IProps {
     targetDate,
     targetPosition,
     appointment,
-  }:
-    | {
-        date: IMoment;
-        position: number;
-        personId: string;
-        targetDate: IMoment;
-        appointment: undefined;
-        targetPosition: number;
-      }
-    | {
-        date: undefined;
-        position: undefined;
-        personId: undefined;
-        appointment: Appointment;
-        targetDate: IMoment;
-        targetPosition: number;
-      }) => void;
+  }: {
+    date?: IMoment;
+    position?: number;
+    personId?: string;
+    targetDate?: IMoment;
+    appointment?: Appointment;
+    targetPosition: number;
+    targetDuration?: IDuration;
+  }) => void;
 }
 
 @observer
@@ -118,7 +110,8 @@ export default class AppointmentCell extends React.Component<IProps> {
     const translated = translateX || translateY;
 
     const widthScale = duration.asMinutes() / gridColumnDuration.asMinutes();
-    const width = `${widthScale * 100}%`;
+    const widthCorrect = Math.floor(widthScale) * 2;
+    const width = `calc(${widthScale * 100}% + ${widthCorrect}px)`;
 
     const person = personInstance as IPerson;
     return (

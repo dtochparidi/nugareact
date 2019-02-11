@@ -1,7 +1,7 @@
 import { action, observable, reaction } from 'mobx';
 import { observer } from 'mobx-react';
 import * as moment from 'moment';
-import { Moment as IMoment } from 'moment';
+import { Duration as IDuration, Moment as IMoment } from 'moment';
 import * as React from 'react';
 import Appointment from '../../../../structures/Appointment';
 import GridCell from './GridCell';
@@ -29,23 +29,15 @@ export interface IProps {
     targetDate,
     targetPosition,
     appointment,
-  }:
-    | {
-        date: IMoment;
-        position: number;
-        personId: string;
-        targetDate: IMoment;
-        appointment: undefined;
-        targetPosition: number;
-      }
-    | {
-        date: undefined;
-        position: undefined;
-        personId: undefined;
-        appointment: Appointment;
-        targetDate: IMoment;
-        targetPosition: number;
-      }) => void;
+  }: {
+    date?: IMoment;
+    position?: number;
+    personId?: string;
+    targetDate?: IMoment;
+    appointment?: Appointment;
+    targetPosition: number;
+    targetDuration?: IDuration;
+  }) => void;
 }
 
 @observer
