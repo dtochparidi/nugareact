@@ -31,6 +31,8 @@ $calendar-cell-width-min: 220px;
     align-items: center;
     justify-content: center;
 
+    background: #fcfcfc;
+
     &.first {
       border-left-style: dashed;
     }
@@ -105,9 +107,9 @@ $calendar-cell-width-min: 220px;
 
               will-change: left, width;
 
-              .item {
-                background: white;
-              }
+              // .item {
+              //   background: white;
+              // }
             }
           }
         }

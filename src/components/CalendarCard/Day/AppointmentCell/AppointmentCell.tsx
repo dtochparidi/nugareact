@@ -36,18 +36,36 @@ export interface IProps {
   }) => void;
 }
 
+export interface IState {
+  widthClass: WidthClass;
+  tempWidth: string;
+}
+
 enum WidthClass {
   Min = 'widthMin',
+  Slim = 'widthSlim',
   Medium = 'widthMedium',
+  Wide = 'widthWide',
   Max = 'widthMax',
 }
 
+// const downgradeMap = {
+//   [WidthClass.Min]: WidthClass.Min,
+//   [WidthClass.Medium]: WidthClass.Min,
+//   [WidthClass.Max]: WidthClass.Medium,
+// };
+
+// const upgradeMap = {
+//   [WidthClass.Min]: WidthClass.Medium,
+//   [WidthClass.Medium]: WidthClass.Max,
+//   [WidthClass.Max]: WidthClass.Max,
+// };
+
 @observer
-export default class AppointmentCell extends React.Component<IProps> {
+export default class AppointmentCell extends React.Component<IProps, IState> {
   public onMouseWheelHandler: (e: React.WheelEvent<any> | WheelEvent) => void;
   public mouseWheelStep: number = 150;
   private mouseDeltaBuffer: number = 0;
-  private widthClass = WidthClass.Max;
   private widthDivRef: React.RefObject<HTMLDivElement>;
 
   constructor(props: IProps) {
@@ -55,26 +73,43 @@ export default class AppointmentCell extends React.Component<IProps> {
 
     this.onMouseWheelHandler = this.onMouseWheel.bind(this);
     this.widthDivRef = React.createRef();
+
+    this.state = {
+      tempWidth: '',
+      widthClass: WidthClass.Max,
+    };
   }
 
-  public componentDidUpdate() {
-    const rect = (this.widthDivRef
-      .current as HTMLElement).getBoundingClientRect();
-    const { width } = rect;
+  public updateLayout = () => {
+    const elem = this.widthDivRef.current as HTMLElement;
+    const cellRect = elem.getBoundingClientRect();
+    const { width } = cellRect;
 
     const newWidthClass =
-      width < MIN_CELL_WIDTH / 2
+      width < MIN_CELL_WIDTH * 0.5
         ? WidthClass.Min
-        : width < MIN_CELL_WIDTH / 1.5
+        : width < MIN_CELL_WIDTH * 0.7
+        ? WidthClass.Slim
+        : width < MIN_CELL_WIDTH * 0.8
         ? WidthClass.Medium
+        : width < MIN_CELL_WIDTH * 0.9
+        ? WidthClass.Wide
         : WidthClass.Max;
 
-    if (newWidthClass !== this.widthClass) {
-      this.widthClass = newWidthClass;
-      this.forceUpdate();
+    if (newWidthClass !== this.state.widthClass)
+      this.setState({ widthClass: newWidthClass });
+  };
 
-      console.log('foooorce!', newWidthClass);
-    }
+  public componentDidUpdate() {
+    this.updateLayout();
+  }
+
+  public componentDidMount() {
+    const elem = this.widthDivRef.current as HTMLElement;
+
+    elem.onresize = this.updateLayout;
+
+    this.updateLayout();
   }
 
   public onMouseWheel(e: React.WheelEvent<any> | WheelEvent) {
@@ -145,8 +180,6 @@ export default class AppointmentCell extends React.Component<IProps> {
     const widthCorrect = Math.floor(widthScale) * 2;
     const width = `calc(${widthScale * 100}% + ${widthCorrect}px)`;
 
-    console.log('update', width);
-
     const person = personInstance as IPerson;
     return (
       <div
@@ -168,7 +201,7 @@ export default class AppointmentCell extends React.Component<IProps> {
           }}
         >
           <div className="containerTempWidth" ref={this.widthDivRef}>
-            <div className={`layoutController ${this.widthClass}`}>
+            <div className={`layoutController ${this.state.widthClass}`}>
               {!personInstance.loaded
                 ? [
                     <div className="marker loading" key="marker" />,

@@ -61,8 +61,8 @@
       outline: solid lightgrey 1px;
 
       .translated & & {
-        outline: dotted lightgrey 1px;
-        outline-offset: -1px;
+        outline: dotted lightgrey 2px;
+        outline-offset: -2px;
       }
 
       .moving & & {
@@ -81,12 +81,32 @@
           }
         }
 
+        &.widthSlim {
+          > .pointsWrapper {
+            display: none;
+          }
+
+          > .mainInfoWrapper .subWrapper .content .surname {
+            display: none;
+          }
+
+          > .mainInfoWrapper .subWrapper .content .number {
+            display: none;
+          }
+        }
+
         &.widthMedium {
           > .pointsWrapper {
             display: none;
           }
 
           > .mainInfoWrapper .subWrapper .content .number {
+            display: none;
+          }
+        }
+
+        &.widthWide {
+          > .pointsWrapper {
             display: none;
           }
         }

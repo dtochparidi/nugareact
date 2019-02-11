@@ -149,7 +149,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           ),
         )
         .resizable(
-          (() => {
+          ((): interact.ResizableOptions => {
             return {
               edges: {
                 right: true,
@@ -170,7 +170,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
                 const rect = widthNode.getBoundingClientRect();
                 const step = cellRect.width / this.props.subGridColumns;
-                const subGridScale = Math.ceil(rect.width / step);
+                const subGridScale = Math.max(Math.ceil(rect.width / step), 1);
+
                 const minutes =
                   (this.props.mainColumnStep.asMinutes() /
                     this.props.subGridColumns) *
@@ -198,13 +199,17 @@ export default class CalendarCard extends React.Component<IProps, IState> {
               onmove: (e: interact.InteractEvent & { rect: ClientRect }) => {
                 const { target }: { target: HTMLElement } = e;
 
+                const minWidth =
+                  (target.parentNode as HTMLElement).getBoundingClientRect()
+                    .width / this.props.subGridColumns;
+                if (e.rect.width < minWidth) return;
+
                 const widthNode = target.querySelector(
                   '.containerTempWidth',
                 ) as HTMLElement;
 
                 widthNode.style.width = `${e.rect.width}px`;
-
-                console.log(e.rect.width);
+                widthNode.dispatchEvent(new Event('resize'));
               },
             };
           })(),
