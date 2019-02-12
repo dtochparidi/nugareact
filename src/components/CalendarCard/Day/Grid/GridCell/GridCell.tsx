@@ -2,6 +2,7 @@ import { observer } from 'mobx-react';
 import { Duration as IDuration, Moment as IMoment } from 'moment';
 import * as React from 'react';
 import Appointment from 'structures/Appointment';
+
 import AppointmentCell from '../../AppointmentCell';
 
 export interface IProps {
@@ -11,7 +12,7 @@ export interface IProps {
   x: number;
   y: number;
   cols: number;
-  app: Appointment | object;
+  apps: { [uniqueId: string]: Appointment };
   shift: { dx: number; dy: number };
   updateAppointment: ({
     date,
@@ -48,15 +49,15 @@ export default class GridCell extends React.Component<IProps> {
       cols,
       stamp,
       subGridStep,
-      app,
+      apps,
       gridColumnDuration,
       updateAppointment,
       shift,
     } = this.props;
 
-    const appExists = Object.keys(app).length > 0;
-    let appointmentNode = null;
-    if (appExists) {
+    if (Object.keys(apps).length) console.log(Object.keys(apps).length, x, y);
+
+    const appNodes = Object.values(apps).map(app => {
       const appointment = app as Appointment;
 
       const { dx, dy } = shift;
@@ -71,8 +72,9 @@ export default class GridCell extends React.Component<IProps> {
 
       const coeffY = dy * 100;
 
-      appointmentNode = (
+      return (
         <AppointmentCell
+          key={appointment.personId + appointment.position}
           translateX={coeffX}
           translateY={coeffY}
           appointment={app as Appointment}
@@ -81,7 +83,9 @@ export default class GridCell extends React.Component<IProps> {
           gridColumnDuration={gridColumnDuration}
         />
       );
-    }
+
+      return null;
+    });
 
     return (
       <div
@@ -98,7 +102,7 @@ export default class GridCell extends React.Component<IProps> {
             <div className="subGridElem" key={i} />
           ))}
         </div>
-        {appointmentNode}
+        {appNodes}
       </div>
     );
   }

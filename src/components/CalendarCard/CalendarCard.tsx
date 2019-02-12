@@ -271,6 +271,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public freeCell(relatedTarget: HTMLElement, target: HTMLElement) {
+    return true;
+
     enum Direction {
       Top,
       Bottom,

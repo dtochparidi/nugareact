@@ -35,11 +35,7 @@ if (clientSide) {
       change.type !== 'add' &&
       change.type !== 'update' &&
       change.type !== 'scheduled-reaction',
-    // logFilter: change => {
-    //   console.log(change.type);
-    //   return false;
-    // },
-    updatesEnabled: true,
+    updatesEnabled: false,
   });
 }
 

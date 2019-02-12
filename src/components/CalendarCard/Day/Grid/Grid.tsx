@@ -1,4 +1,4 @@
-import { action, observable, reaction } from 'mobx';
+import { action, observable, reaction, toJS } from 'mobx';
 import { observer } from 'mobx-react';
 import * as moment from 'moment';
 import { Duration as IDuration, Moment as IMoment } from 'moment';
@@ -43,7 +43,7 @@ export interface IProps {
 @observer
 export default class Grid extends React.Component<IProps> {
   @observable
-  public appointments: Array<Array<Appointment | object>>;
+  public appointments: Array<Array<{ [uniqueId: string]: Appointment }>>;
   @observable
   public shifts: Array<Array<{ dx: number; dy: number }>>;
 
@@ -90,7 +90,10 @@ export default class Grid extends React.Component<IProps> {
 
     const gridCells: React.ReactNode[] = [];
     for (let y = 0; y < rows; y++)
-      for (let x = 0; x < cols; x++)
+      for (let x = 0; x < cols; x++) {
+        const apps = this.appointments[x][y];
+        if (Object.keys(apps).length > 0) console.log(toJS(apps));
+
         gridCells.push(
           <GridCell
             key={`${x}:${y}`}
@@ -101,10 +104,11 @@ export default class Grid extends React.Component<IProps> {
             subGridStep={subGridColumns}
             gridColumnDuration={gridColumnDuration}
             shift={this.shifts[x][y]}
-            app={this.appointments[x][y]}
+            apps={apps}
             updateAppointment={updateAppointment}
           />,
         );
+      }
 
     return gridCells;
   }
@@ -147,7 +151,9 @@ export default class Grid extends React.Component<IProps> {
         .map(w => new Array(rows).fill(null).map(u => ({})));
 
     const minutesStep = mainColumnStep.asMinutes();
-    const positionedApps: Array<Array<Appointment | object>> = appointments
+    const positionedApps: Array<
+      Array<{ [uniqueId: string]: Appointment }>
+    > = appointments
       .map(app => ({
         appointment: app,
         x: Math.floor(
@@ -159,17 +165,17 @@ export default class Grid extends React.Component<IProps> {
         y: app.position,
       }))
       .reduce((acc, val) => {
-        acc[val.x][val.y] = val.appointment;
+        acc[val.x][val.y][val.appointment.uniqueId] = val.appointment;
         return acc;
       }, new Array(cols).fill(null).map(w => new Array(rows).fill(null).map(u => ({}))));
 
     for (let x = 0; x < cols; x++)
       for (let y = 0; y < rows; y++) {
-        const recordedApp = this.appointments[x][y];
-        const inputApp = positionedApps[x][y];
+        const recordedApps = this.appointments[x][y];
+        const inputApps = positionedApps[x][y];
 
-        const recordEmpty = Object.keys(recordedApp).length === 0;
-        const inputEmpty = Object.keys(inputApp).length === 0;
+        const recordEmpty = Object.keys(recordedApps).length === 0;
+        const inputEmpty = Object.keys(inputApps).length === 0;
 
         if (recordEmpty && inputEmpty) continue;
 
@@ -177,23 +183,48 @@ export default class Grid extends React.Component<IProps> {
           for (const i in this.appointments[x][y])
             delete this.appointments[x][y][i];
 
+          console.log('remove all');
+
           continue;
         }
 
         if (recordEmpty && !inputEmpty) {
-          Object.assign(this.appointments[x][y], inputApp);
+          Object.assign(this.appointments[x][y], inputApps);
+
+          console.log('fill empty');
 
           continue;
         }
 
-        if (
-          (recordedApp as Appointment).stateHash !==
-          (inputApp as Appointment).stateHash
-        ) {
-          Object.assign(this.appointments[x][y], inputApp);
+        const updatedIds: string[] = [];
+        Object.entries(inputApps).forEach(([inputId, inputApp]) => {
+          const recordedApp = recordedApps[inputId];
 
-          continue;
-        }
+          // remember that we've updated it
+          updatedIds.push(inputId);
+
+          // if inputApp is new
+          if (!recordedApp) {
+            recordedApps[inputId] = inputApp;
+
+            console.log('new');
+            return;
+          }
+
+          // if changed
+          if (recordedApp.stateHash !== inputApp.stateHash) {
+            Object.assign(recordedApps[inputId], inputApp);
+            console.log('update');
+          }
+        });
+
+        Object.entries(recordedApps).forEach(([recordedId, recordedApp]) => {
+          if (updatedIds.includes(recordedId)) return;
+
+          delete recordedApps[recordedId];
+
+          console.log('remove');
+        });
       }
   }
 

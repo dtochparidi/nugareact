@@ -43,6 +43,7 @@ export default class Appointment implements IAppointment {
   public identifier: string;
   @observable
   public stateHash: string;
+  public uniqueId: string;
 
   constructor(obj: {
     date: moment.Moment;
@@ -51,6 +52,9 @@ export default class Appointment implements IAppointment {
     personInstance?: IPerson | IPersonLoading;
     duration: moment.Duration;
   }) {
+    this.uniqueId = v4();
+    console.log('new unique');
+
     this.update(obj);
   }
 
@@ -80,5 +84,7 @@ export default class Appointment implements IAppointment {
       this.personId,
     );
     this.stateHash = Appointment.getStateHash();
+
+    console.log('update state');
   }
 }
