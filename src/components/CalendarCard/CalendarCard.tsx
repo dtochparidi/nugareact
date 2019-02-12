@@ -91,6 +91,31 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     return [Direction.None, 0];
   }
 
+  private static tryShiftToDirection(
+    startIndex: number,
+    fullColumn: boolean[],
+    direction: Direction,
+  ): [Direction, number] {
+    // check top direction
+    switch (direction) {
+      case Direction.Top:
+        for (let i = startIndex - 1; i > 0; i--)
+          if (!fullColumn[i]) return [Direction.Top, startIndex - i];
+        break;
+
+      // check bottom direction
+      case Direction.Bottom:
+        for (let i = startIndex + 1; i < fullColumn.length; i++)
+          if (!fullColumn[i]) return [Direction.Bottom, i - startIndex];
+        break;
+
+      // column is totally filled :(
+      default:
+        return [Direction.None, 0];
+    }
+    return [Direction.None, 0];
+  }
+
   private static calcDaySize(
     columnsPerPage: number,
     columnsPerDay: number,
@@ -265,15 +290,17 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   };
 
   public onAppointmentDraggingStart(e: interact.InteractEvent) {
-    // (((((e.target as Element).parentNode as Element).parentNode as Element) // .appointmentCell // .gridCell // .grid
-    //   .parentNode as Element).parentNode as Element).classList // .topRow // .day // .dayWrapper
-    //   .add('dragOrigin');
+    ((((((e.target as Element).parentNode as Element).parentNode as Element) // .appointmentCell // .gridCell // .grid
+      .parentNode as Element).parentNode as Element)
+      .parentNode as Element).classList // .topRow // .day // .dayWrapper
+      .add('dragOrigin');
   }
 
   public onAppointmentDraggingEnd(e: interact.InteractEvent) {
-    // (((((e.target as Element).parentNode as Element).parentNode as Element) // .appointmentCell // .gridCell // .grid
-    //   .parentNode as Element).parentNode as Element).classList // .topRow // .day // .dayWrapper
-    //   .remove('dragOrigin');
+    ((((((e.target as Element).parentNode as Element).parentNode as Element) // .appointmentCell // .gridCell // .grid
+      .parentNode as Element).parentNode as Element)
+      .parentNode as Element).classList // .topRow // .day // .dayWrapper
+      .remove('dragOrigin');
   }
 
   public unshiftWholeColumn(target: HTMLElement) {
@@ -296,6 +323,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     position: number,
     dateRange: DateRange,
     shiftedList: string[] = [],
+    lockedDirection: Direction = Direction.None,
   ) {
     if (!shiftedList.length) {
       if ((window as any).recursiveDrop) console.log('recursive drop');
@@ -341,10 +369,25 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       app => filledColumn[app.position].push(app),
     );
 
-    const [shiftDirection, amount] = CalendarCard.detectShiftDirectionAndLength(
+    let [shiftDirection, amount] = CalendarCard.detectShiftDirectionAndLength(
       position,
       filledColumn.map(arr => !!arr.length),
     );
+
+    // if we locked the direction
+    if (
+      lockedDirection !== Direction.None &&
+      shiftDirection !== Direction.None
+    ) {
+      const [newShiftDirection, newAmount] = CalendarCard.tryShiftToDirection(
+        position,
+        filledColumn.map(arr => !!arr.length),
+        lockedDirection,
+      );
+
+      shiftDirection = newShiftDirection;
+      amount = newAmount;
+    }
 
     if (shiftDirection === Direction.None) return false;
 
@@ -355,20 +398,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const collisingApps = filledColumn
       .slice(from, to)
       .reduce((acc, app) => acc.concat(app), []);
-
-    // console.log(
-    //   'startPos',
-    //   position,
-    //   'apps',
-    //   collisingApps.length,
-    //   'from, to',
-    //   from - 1,
-    //   to,
-    //   'delta',
-    //   delta,
-    //   'amount',
-    //   amount,
-    // );
 
     shiftedList.push(uniqueId);
     shiftedList.push(...collisingApps.map(app => app.uniqueId));
@@ -395,6 +424,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           // pos,
           moment.range(app.date, app.endDate),
           shiftedList,
+          (window as any).lockedDirection ? shiftDirection : 0,
         );
       }
     });
