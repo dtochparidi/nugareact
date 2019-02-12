@@ -67,8 +67,30 @@ export interface IState {
   stamps: IMoment[];
 }
 
+enum Direction {
+  Top = -1,
+  Bottom = 1,
+  None = 0,
+}
+
 @observer
 export default class CalendarCard extends React.Component<IProps, IState> {
+  private static detectShiftDirectionAndLength(
+    startIndex: number,
+    fullColumn: boolean[],
+  ): [Direction, number] {
+    // check top direction
+    for (let i = startIndex - 1; i > 0; i--)
+      if (!fullColumn[i]) return [Direction.Top, startIndex - i];
+
+    // check bottom direction
+    for (let i = startIndex + 1; i < fullColumn.length; i++)
+      if (!fullColumn[i]) return [Direction.Bottom, i - startIndex];
+
+    // column is totally filled :(
+    return [Direction.None, 0];
+  }
+
   private static calcDaySize(
     columnsPerPage: number,
     columnsPerDay: number,
@@ -115,7 +137,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     };
   } = {};
 
-  public selectedDay: number = 0;
   public currentLeftColumnIndex: number = 0;
   private daysContainerRef: React.RefObject<HTMLDivElement>;
   private containerScrollTimeout: NodeJS.Timeout;
@@ -270,37 +291,112 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     if (changed) this.shiftsHash[day.id] = v4();
   }
 
-  public freePlaceToDrop(dateRange: DateRange) {
-    const column = this.getColumnByRange(dateRange);
-    console.log(column);
+  public freePlaceToDrop(
+    uniqueId: string,
+    position: number,
+    dateRange: DateRange,
+    shiftedList: string[] = [],
+  ) {
+    if (!shiftedList.length) this.clearShifts();
+
+    const day = this.getDayByStamp(dateRange.start);
+    const filledColumn = new Array(this.props.positionCount)
+      .fill(null)
+      .map(() => [] as Appointment[]);
+
+    // const appPositions = day.appointments.reduce((acc, app) => {
+    //   const column = this.getColumnIndex(app.date);
+    //   acc[app.uniqueId] =
+    //     app.position +
+    //     (column in this.shifts[day.id]
+    //       ? app.position in this.shifts[day.id][column]
+    //         ? this.shifts[day.id][column][app.position].dy
+    //         : 0
+    //       : 0);
+
+    //   return acc;
+    // }, {});
+
+    const ordinateCollisingApps = day.appointments.filter(
+      app =>
+        app.uniqueId !== uniqueId &&
+        !shiftedList.includes(app.uniqueId) &&
+        dateRange.overlaps(moment.range(app.date, app.endDate)),
+    );
+
+    if (
+      !ordinateCollisingApps.length ||
+      ordinateCollisingApps.every(
+        // app => appPositions[app.uniqueId] !== position,
+        app => app.position !== position,
+      )
+    )
+      return true;
+
+    ordinateCollisingApps.forEach(
+      // app => filledColumn[appPositions[app.uniqueId]].push(app),
+      app => filledColumn[app.position].push(app),
+    );
+
+    const [shiftDirection, amount] = CalendarCard.detectShiftDirectionAndLength(
+      position,
+      filledColumn.map(arr => !!arr.length),
+    );
+
+    if (shiftDirection === Direction.None) return false;
+
+    const delta = shiftDirection === Direction.Top ? -1 : 1;
+    const range = [position, position + delta * amount];
+    const from = Math.min(...range);
+    const to = Math.max(...range) + 1;
+    const collisingApps = filledColumn
+      .slice(from, to)
+      .reduce((acc, app) => acc.concat(app), []);
+
+    // console.log(
+    //   'startPos',
+    //   position,
+    //   'apps',
+    //   collisingApps.length,
+    //   'from, to',
+    //   from - 1,
+    //   to,
+    //   'delta',
+    //   delta,
+    //   'amount',
+    //   amount,
+    // );
+
+    shiftedList.push(uniqueId);
+    shiftedList.push(...collisingApps.map(app => app.uniqueId));
+
+    // this.lockShifts();
+
+    collisingApps.forEach(app => {
+      // const pos = appPositions[app.uniqueId];
+
+      this.shiftCell(
+        `day_${app.date.format('DD-MM-YYYY')}`,
+        this.getColumnIndex(app.date),
+        app.position,
+        // pos,
+        0,
+        delta,
+      );
+
+      this.freePlaceToDrop(
+        app.uniqueId,
+        app.position + delta,
+        // pos,
+        moment.range(app.date, app.endDate),
+        shiftedList,
+      );
+    });
 
     return true;
   }
 
   public freeCell(relatedTarget: HTMLElement, target: HTMLElement) {
-    enum Direction {
-      Top,
-      Bottom,
-      None,
-    }
-
-    // we need to detect whether it's okay to shift
-    function detectShiftDirection(
-      startIndex: number,
-      fullColumn: Appointment[],
-    ): Direction {
-      // check top direction
-      for (let i = startIndex; i > 0; i--)
-        if (!fullColumn[i]) return Direction.Top;
-
-      // check bottom direction
-      for (let i = startIndex + 1; i < fullColumn.length; i++)
-        if (!fullColumn[i]) return Direction.Bottom;
-
-      // column is totally filled :(
-      return Direction.None;
-    }
-
     const { stamp } = CalendarCard.getCellInfo(target);
     const day = this.getDayByStamp(stamp);
     const column = this.getColumnByStamp(stamp, day);
@@ -321,7 +417,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       ry !== app.position ? (filledColumn[app.position] = app) : null,
     );
 
-    const shiftDirection = detectShiftDirection(y, filledColumn);
+    const [shiftDirection] = CalendarCard.detectShiftDirectionAndLength(
+      y,
+      filledColumn,
+    );
 
     if (shiftDirection === Direction.None) return false;
 
@@ -360,30 +459,38 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     return day;
   }
 
-  public getColumnIndex(start: IMoment, time: IMoment, step: IDuration) {
+  public getColumnIndex(time: IMoment) {
+    const { start: absStart } = this.props.dayTimeRange;
+
+    const start = time
+      .clone()
+      .hour(absStart.hour())
+      .minute(absStart.minute());
+    const step = this.props.mainColumnStep;
     return Math.floor(time.diff(start, 'minute') / step.asMinutes());
   }
 
   public getColumnByRange(range: DateRange, calendarDay?: ICalendarDay) {
     const day = calendarDay || this.getDayByStamp(range.start);
     const columnIndexes = this.state.stamps
-      .filter(stamp => range.contains(stamp))
-      .map(stamp =>
-        this.getColumnIndex(
-          this.props.dayTimeRange.start,
-          stamp,
-          this.props.mainColumnStep,
-        ),
-      );
+      .map((stamp, index) => [stamp, index])
+      .filter(([stamp, index]) => {
+        const startDiff = range.start.diff(stamp, 'minute');
+        const endDiff = range.end.diff(stamp, 'minute');
+
+        const { mainColumnStep } = this.props;
+        const step = mainColumnStep.asMinutes();
+
+        const startIn = startDiff >= 0 && startDiff < step;
+        const endIn = endDiff >= 0 && endDiff < step;
+        const centerIn = startDiff < 0 && endDiff > 0;
+
+        return startIn || endIn || centerIn;
+      })
+      .map(([stamp, index]) => index);
 
     const appointments = day.appointments.filter(app =>
-      columnIndexes.includes(
-        this.getColumnIndex(
-          this.props.dayTimeRange.start,
-          app.date,
-          this.props.mainColumnStep,
-        ),
-      ),
+      columnIndexes.includes(app.date),
     );
 
     return appointments;
@@ -391,22 +498,30 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
   public getColumnByStamp(stamp: IMoment, calendarDay?: ICalendarDay) {
     const day = calendarDay || this.getDayByStamp(stamp);
-    const targetIndex = this.getColumnIndex(
-      this.props.dayTimeRange.start,
-      stamp,
-      this.props.mainColumnStep,
-    );
+    const targetIndex = this.getColumnIndex(stamp);
 
     const appointments = day.appointments.filter(
-      app =>
-        this.getColumnIndex(
-          this.props.dayTimeRange.start,
-          app.date,
-          this.props.mainColumnStep,
-        ) === targetIndex,
+      app => this.getColumnIndex(app.date) === targetIndex,
     );
 
     return appointments;
+  }
+
+  @action
+  public clearShifts() {
+    let shiftsIsEmpty = true;
+
+    Object.entries(this.shifts).forEach(entrie0 => {
+      const [dayId] = entrie0;
+
+      if (Object.keys(this.shifts[dayId]).length) {
+        this.shifts[dayId] = {};
+        shiftsIsEmpty = false;
+
+        this.shiftsHash[dayId] = v4();
+      }
+    });
+    return shiftsIsEmpty;
   }
 
   @action
@@ -428,27 +543,28 @@ export default class CalendarCard extends React.Component<IProps, IState> {
             `[data-x="${x}"][data-y="${y}"]`,
           ) as HTMLElement;
 
-          const appCell = gridCell.querySelector(
-            '.appointmentCell',
-          ) as HTMLElement;
-          const appointmentId = appCell.id;
-          const app = Appointment.fromIdentifier(appointmentId);
-          const { stamp: targetStamp, position } = CalendarCard.getCellInfo(
-            gridCell,
-          );
+          const appCells = gridCell.querySelectorAll('.appointmentCell');
 
-          targetStamp.hour(app.date.hour()).minute(app.date.minute());
+          appCells.forEach(appCell => {
+            const appointmentId = appCell.id;
+            const app = Appointment.fromIdentifier(appointmentId);
+            const { stamp: targetStamp, position } = CalendarCard.getCellInfo(
+              gridCell,
+            );
 
-          this.props.updateAppointment({
-            appointment: undefined,
-            date: app.date,
-            personId: app.personId,
-            position: app.position,
-            targetDate: targetStamp.add(
-              this.props.mainColumnStep.asMinutes() * elem.dx,
-              'minute',
-            ),
-            targetPosition: position + elem.dy,
+            targetStamp.hour(app.date.hour()).minute(app.date.minute());
+
+            this.props.updateAppointment({
+              appointment: undefined,
+              date: app.date,
+              personId: app.personId,
+              position: app.position,
+              targetDate: targetStamp.add(
+                this.props.mainColumnStep.asMinutes() * elem.dx,
+                'minute',
+              ),
+              targetPosition: position + elem.dy,
+            });
           });
         });
       });
@@ -484,19 +600,30 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     // console.log('shift', JSON.stringify(this.shifts[dayId]));
   }
 
-  @action
   public unShiftCell(dayId: string, x: number, y: number, stack = false) {
     if (x in this.shifts[dayId]) {
-      delete this.shifts[dayId][x][y];
-      if (!Object.keys(this.shifts[dayId][x]).length)
-        delete this.shifts[dayId][x];
+      if (!(y in this.shifts[dayId][x])) return;
 
-      if (!stack) this.shiftsHash[dayId] = v4();
+      this.unShitsCellActually.apply(this, arguments);
 
       return true;
     }
 
     return false;
+  }
+
+  @action
+  public unShitsCellActually(
+    dayId: string,
+    x: number,
+    y: number,
+    stack = false,
+  ) {
+    delete this.shifts[dayId][x][y];
+    if (!Object.keys(this.shifts[dayId][x]).length)
+      delete this.shifts[dayId][x];
+
+    if (!stack) this.shiftsHash[dayId] = v4();
   }
 
   public updateDropzones() {
@@ -561,7 +688,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
                 const appointmentId = relatedTarget.id;
                 const app = Appointment.fromIdentifier(appointmentId);
-                const { stamp } = CalendarCard.getCellInfo(target);
+                const { stamp, position } = CalendarCard.getCellInfo(target);
 
                 // const isFree = this.freeCell(relatedTarget, target);
                 const dropStamp = getDropStamp(
@@ -572,6 +699,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                   this.props.mainColumnStep,
                 );
                 const isFree = this.freePlaceToDrop(
+                  app.uniqueId,
+                  position,
                   moment.range(dropStamp, dropStamp.clone().add(app.duration)),
                 );
 
@@ -701,7 +830,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
                 const appointmentId = relatedTarget.id;
                 const app = Appointment.fromIdentifier(appointmentId);
-                const { stamp } = CalendarCard.getCellInfo(target);
+                const { stamp, position } = CalendarCard.getCellInfo(target);
 
                 // const isFree = this.freeCell(relatedTarget, target);
                 const dropStamp = getDropStamp(
@@ -712,6 +841,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                   this.props.mainColumnStep,
                 );
                 this.freePlaceToDrop(
+                  app.uniqueId,
+                  position,
                   moment.range(dropStamp, dropStamp.clone().add(app.duration)),
                 );
               },
@@ -742,10 +873,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     setTimeout(() => {
       this.updateDaysWidth();
-
-      this.selectedDay = Math.floor(this.props.days.length / 2);
-      this.currentLeftColumnIndex =
-        this.selectedDay * this.state.columnsPerPage + 1;
 
       this.updateScroll(true);
 
@@ -829,16 +956,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       ),
     ]);
 
-    const newIndex = Math.min(
-      Math.max(this.selectedDay + delta, 0),
-      this.props.days.length - 1,
-    );
-    this.selectedDay = newIndex;
     this.currentLeftColumnIndex = Math.min(
       Math.max(
         this.currentLeftColumnIndex +
-          delta * this.state.columnsPerPage -
-          Math.sign(delta),
+          Math.floor((delta * this.state.columnsPerPage) / 2),
         0,
       ),
       this.props.days.length * this.state.columnsPerDay - 1,
@@ -852,38 +973,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       this.props.days.length === prevProps.days.length;
 
     return true;
-  }
-
-  // DEPRECATED
-  public updateScrollByDay(force = false) {
-    const container = this.daysContainerRef.current as HTMLDivElement;
-    const target = container.children[this.selectedDay] as HTMLElement;
-    const left = Math.round(
-      target.getBoundingClientRect().left -
-        container.getBoundingClientRect().left +
-        container.scrollLeft,
-    );
-
-    container.scrollTo({
-      behavior: force ? 'auto' : 'smooth',
-      left,
-    });
-    this.isScrolling = true;
-
-    const callback = () => {
-      clearTimeout(this.containerScrollTimeout);
-      this.containerScrollTimeout = setTimeout(() => {
-        this.updateVisibility([
-          this.currentLeftColumnIndex,
-          this.currentLeftColumnIndex + this.state.columnsPerPage,
-        ]);
-        container.removeEventListener('scroll', callback);
-
-        this.isScrolling = false;
-      }, 200);
-    };
-
-    container.addEventListener('scroll', callback);
   }
 
   public updateStickyElements(force = false) {

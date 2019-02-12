@@ -14,6 +14,7 @@ export default class Appointment implements IAppointment {
       identifier: id,
       personId: arr[3],
       position: parseInt(arr[2], 10),
+      uniqueId: arr[5],
     };
   }
 
@@ -26,15 +27,18 @@ export default class Appointment implements IAppointment {
     position: number,
     personId: string,
     duration: moment.Duration,
+    uniqueId: string,
   ) {
     const id = `app_${date.format(
       'mm-HH-DD-MM-YYYY',
-    )}_${position}_${personId}_${duration.asMinutes()}`;
+    )}_${position}_${personId}_${duration.asMinutes()}_${uniqueId}`;
     return id;
   }
 
   @observable
   public date: moment.Moment;
+  @observable
+  public endDate: moment.Moment;
   @observable
   public duration: moment.Duration;
   @observable
@@ -57,7 +61,6 @@ export default class Appointment implements IAppointment {
     duration: moment.Duration;
   }) {
     this.uniqueId = v4();
-    console.log('new unique');
 
     this.update(obj);
   }
@@ -82,14 +85,15 @@ export default class Appointment implements IAppointment {
     if (personInstance) this.personInstance = personInstance;
     if (duration) this.duration = duration;
 
+    this.endDate = this.date.clone().add(this.duration);
+
     this.identifier = Appointment.calcId(
       this.date,
       this.position,
       this.personId,
       this.duration,
+      this.uniqueId,
     );
     this.stateHash = Appointment.getStateHash();
-
-    console.log('update state');
   }
 }

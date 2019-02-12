@@ -183,7 +183,7 @@ export default class Grid extends React.Component<IProps> {
           for (const i in this.appointments[x][y])
             delete this.appointments[x][y][i];
 
-          console.log('remove all');
+          // console.log('remove all');
 
           continue;
         }
@@ -191,7 +191,7 @@ export default class Grid extends React.Component<IProps> {
         if (recordEmpty && !inputEmpty) {
           Object.assign(this.appointments[x][y], inputApps);
 
-          console.log('fill empty');
+          // console.log('fill empty');
 
           continue;
         }
@@ -207,7 +207,7 @@ export default class Grid extends React.Component<IProps> {
           if (!recordedApp) {
             recordedApps[inputId] = inputApp;
 
-            console.log('new');
+            // console.log('new');
             return;
           }
 
@@ -223,7 +223,7 @@ export default class Grid extends React.Component<IProps> {
 
           delete recordedApps[recordedId];
 
-          console.log('remove');
+          // console.log('remove');
         });
       }
   }

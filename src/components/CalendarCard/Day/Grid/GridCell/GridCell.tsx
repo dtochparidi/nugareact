@@ -42,6 +42,8 @@ export interface IProps {
 
 @observer
 export default class GridCell extends React.Component<IProps> {
+  private mainRef: React.RefObject<HTMLDivElement> = React.createRef();
+
   public render() {
     const {
       x,
@@ -55,22 +57,26 @@ export default class GridCell extends React.Component<IProps> {
       shift,
     } = this.props;
 
-    if (Object.keys(apps).length) console.log(Object.keys(apps).length, x, y);
+    // if (Object.keys(apps).length) console.log(Object.keys(apps).length, x, y);
 
     const appNodes = Object.values(apps).map(app => {
       const appointment = app as Appointment;
 
-      const { dx, dy } = shift;
-      const d = appointment.date;
-      const s = d
-        .clone()
-        .hour(stamp.hour())
-        .minute(stamp.minute());
+      let coeffX = 0;
+      let coeffY = 0;
+      if (!(this.mainRef.current as HTMLDivElement).querySelector('.moving')) {
+        const { dx, dy } = shift;
+        const d = appointment.date;
+        const s = d
+          .clone()
+          .hour(stamp.hour())
+          .minute(stamp.minute());
 
-      const coeffX =
-        (d.diff(s, 'second') / gridColumnDuration.asSeconds() + dx) * 100;
+        coeffX =
+          (d.diff(s, 'second') / gridColumnDuration.asSeconds() + dx) * 100;
 
-      const coeffY = dy * 100;
+        coeffY = dy * 100;
+      }
 
       return (
         <AppointmentCell
@@ -96,6 +102,7 @@ export default class GridCell extends React.Component<IProps> {
         data-y={y}
         data-hour={stamp.hour()}
         data-minute={stamp.minute()}
+        ref={this.mainRef}
       >
         <div className="subGrid">
           {new Array(subGridStep).fill(null).map((v, i) => (
