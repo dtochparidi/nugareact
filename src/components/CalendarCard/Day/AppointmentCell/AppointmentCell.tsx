@@ -85,7 +85,6 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     const cellRect = elem.getBoundingClientRect();
     const { width } = cellRect;
 
-    console.log(width);
     // BUG
     // 'display: none' is not taking into account - perfomance issue (not very big)
     if (width === 0) {

@@ -297,7 +297,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     dateRange: DateRange,
     shiftedList: string[] = [],
   ) {
-    if (!shiftedList.length) this.clearShifts();
+    if (!shiftedList.length) {
+      if ((window as any).recursiveDrop) console.log('recursive drop');
+      this.clearShifts();
+    }
 
     const day = this.getDayByStamp(dateRange.start);
     const filledColumn = new Array(this.props.positionCount)
@@ -384,13 +387,16 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         delta,
       );
 
-      this.freePlaceToDrop(
-        app.uniqueId,
-        app.position + delta,
-        // pos,
-        moment.range(app.date, app.endDate),
-        shiftedList,
-      );
+      if ((window as any).recursiveDrop) {
+        console.log('process next');
+        this.freePlaceToDrop(
+          app.uniqueId,
+          app.position + delta,
+          // pos,
+          moment.range(app.date, app.endDate),
+          shiftedList,
+        );
+      }
     });
 
     return true;

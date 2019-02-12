@@ -22,6 +22,8 @@ let needToShow: boolean = false;
 
 // do not do it while testing in jest
 if (clientSide) {
+  (window as any).recursiveDrop = false;
+
   // checking for updates
   versionName = Cookies.get('version');
   lastVersion = versions[versions.length - 1];
