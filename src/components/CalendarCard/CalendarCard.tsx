@@ -270,9 +270,14 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     if (changed) this.shiftsHash[day.id] = v4();
   }
 
-  public freeCell(relatedTarget: HTMLElement, target: HTMLElement) {
-    return true;
+  public freePlaceToDrop(dateRange: DateRange) {
+    const column = this.getColumnByRange(dateRange);
+    console.log(column);
 
+    return true;
+  }
+
+  public freeCell(relatedTarget: HTMLElement, target: HTMLElement) {
     enum Direction {
       Top,
       Bottom,
@@ -357,6 +362,31 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
   public getColumnIndex(start: IMoment, time: IMoment, step: IDuration) {
     return Math.floor(time.diff(start, 'minute') / step.asMinutes());
+  }
+
+  public getColumnByRange(range: DateRange, calendarDay?: ICalendarDay) {
+    const day = calendarDay || this.getDayByStamp(range.start);
+    const columnIndexes = this.state.stamps
+      .filter(stamp => range.contains(stamp))
+      .map(stamp =>
+        this.getColumnIndex(
+          this.props.dayTimeRange.start,
+          stamp,
+          this.props.mainColumnStep,
+        ),
+      );
+
+    const appointments = day.appointments.filter(app =>
+      columnIndexes.includes(
+        this.getColumnIndex(
+          this.props.dayTimeRange.start,
+          app.date,
+          this.props.mainColumnStep,
+        ),
+      ),
+    );
+
+    return appointments;
   }
 
   public getColumnByStamp(stamp: IMoment, calendarDay?: ICalendarDay) {
@@ -470,6 +500,32 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public updateDropzones() {
+    function getDropStamp(
+      targetStamp: IMoment,
+      target: HTMLElement,
+      pos: { x: number; y: number },
+      subGridColumns: number,
+      mainColumnStep: Moment.Duration,
+    ) {
+      const cellRect = target.getBoundingClientRect();
+      const leftOffset = pos.x - cellRect.left;
+      const step = cellRect.width / subGridColumns;
+      let subGridScale = Math.floor(leftOffset / step);
+
+      if (subGridScale < 0) {
+        subGridScale += subGridColumns;
+        targetStamp.subtract(mainColumnStep);
+      }
+
+      const subGridDuration = Moment.duration(
+        (mainColumnStep.asSeconds() / subGridColumns) * subGridScale,
+        'second',
+      );
+
+      targetStamp.add(subGridDuration);
+      return targetStamp;
+    }
+
     const minColumn = this.currentLeftColumnIndex;
     const maxColumn = this.currentLeftColumnIndex + this.state.columnsPerPage;
     const minDay = Math.floor(minColumn / this.state.columnsPerDay);
@@ -503,7 +559,22 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
                 target.classList.add('enter');
 
-                const isFree = this.freeCell(relatedTarget, target);
+                const appointmentId = relatedTarget.id;
+                const app = Appointment.fromIdentifier(appointmentId);
+                const { stamp } = CalendarCard.getCellInfo(target);
+
+                // const isFree = this.freeCell(relatedTarget, target);
+                const dropStamp = getDropStamp(
+                  stamp,
+                  target,
+                  lastPosition,
+                  this.props.subGridColumns,
+                  this.props.mainColumnStep,
+                );
+                const isFree = this.freePlaceToDrop(
+                  moment.range(dropStamp, dropStamp.clone().add(app.duration)),
+                );
+
                 if (isFree || target.querySelector(`#${relatedTarget.id}`))
                   target.classList.remove('locked');
                 else target.classList.add('locked');
@@ -547,28 +618,15 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
                 const appointmentId = relatedTarget.id;
                 const app = Appointment.fromIdentifier(appointmentId);
-                const {
-                  stamp: targetStamp,
-                  position,
-                } = CalendarCard.getCellInfo(target);
-                const cellRect = target.getBoundingClientRect();
-                const leftOffset = lastPosition.x - cellRect.left;
-                const step = cellRect.width / this.props.subGridColumns;
-                let subGridScale = Math.floor(leftOffset / step);
+                const { stamp, position } = CalendarCard.getCellInfo(target);
 
-                if (subGridScale < 0) {
-                  subGridScale += this.props.subGridColumns;
-                  targetStamp.subtract(this.props.mainColumnStep);
-                }
-
-                const subGridDuration = Moment.duration(
-                  (this.props.mainColumnStep.asSeconds() /
-                    this.props.subGridColumns) *
-                    subGridScale,
-                  'second',
+                const targetStamp = getDropStamp(
+                  stamp,
+                  target,
+                  lastPosition,
+                  this.props.subGridColumns,
+                  this.props.mainColumnStep,
                 );
-
-                targetStamp.add(subGridDuration);
 
                 this.lockShifts();
 
@@ -638,8 +696,24 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 lastPosition.x = rect.left;
                 lastPosition.y = rect.top;
 
-                const app = target.querySelector(`#${relatedTarget.id}`);
-                if (app) target.classList.remove('locked');
+                // const app = target.querySelector(`#${relatedTarget.id}`);
+                // if (app) target.classList.remove('locked');
+
+                const appointmentId = relatedTarget.id;
+                const app = Appointment.fromIdentifier(appointmentId);
+                const { stamp } = CalendarCard.getCellInfo(target);
+
+                // const isFree = this.freeCell(relatedTarget, target);
+                const dropStamp = getDropStamp(
+                  stamp,
+                  target,
+                  lastPosition,
+                  this.props.subGridColumns,
+                  this.props.mainColumnStep,
+                );
+                this.freePlaceToDrop(
+                  moment.range(dropStamp, dropStamp.clone().add(app.duration)),
+                );
               },
               overlap: 'leftCenter',
             };

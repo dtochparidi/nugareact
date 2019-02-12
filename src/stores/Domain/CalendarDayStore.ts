@@ -109,6 +109,8 @@ export default class CalendarDayStore {
           .diff((targetDate as IMoment).clone().startOf('day'), 'day') === 0,
     );
 
+    // OPTIMIZE
+    // get appointment by unique id
     appointment =
       appointment ||
       currentDay.appointments.find(

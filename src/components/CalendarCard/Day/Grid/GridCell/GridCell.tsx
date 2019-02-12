@@ -74,7 +74,7 @@ export default class GridCell extends React.Component<IProps> {
 
       return (
         <AppointmentCell
-          key={appointment.personId + appointment.position}
+          key={appointment.uniqueId}
           translateX={coeffX}
           translateY={coeffY}
           appointment={app as Appointment}

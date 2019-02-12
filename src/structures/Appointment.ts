@@ -10,6 +10,7 @@ export default class Appointment implements IAppointment {
     const arr = id.split('_');
     return {
       date: moment(arr[1], 'mm-HH-DD-MM-YYYY'),
+      duration: moment.duration(parseFloat(arr[4]), 'minute'),
       identifier: id,
       personId: arr[3],
       position: parseInt(arr[2], 10),
@@ -24,8 +25,11 @@ export default class Appointment implements IAppointment {
     date: moment.Moment,
     position: number,
     personId: string,
+    duration: moment.Duration,
   ) {
-    const id = `app_${date.format('mm-HH-DD-MM-YYYY')}_${position}_${personId}`;
+    const id = `app_${date.format(
+      'mm-HH-DD-MM-YYYY',
+    )}_${position}_${personId}_${duration.asMinutes()}`;
     return id;
   }
 
@@ -82,6 +86,7 @@ export default class Appointment implements IAppointment {
       this.date,
       this.position,
       this.personId,
+      this.duration,
     );
     this.stateHash = Appointment.getStateHash();
 
