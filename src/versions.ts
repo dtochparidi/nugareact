@@ -24,6 +24,13 @@ const versions: Array<[string, string]> = [
 
 Полностью переделан data-binding и огранизация layout-а для сетки записи`,
   ],
+  [
+    'Smart shifting yeah',
+    `
+  # Smart shifting
+
+Раздвижение ячеек происходит с учётом их продолжительности`,
+  ],
 ];
 
 export default versions;
