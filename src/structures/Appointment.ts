@@ -2,15 +2,19 @@ import IAppointment from 'interfaces/IAppointment';
 import { IPerson } from 'interfaces/IPerson';
 import { IPersonLoading } from 'interfaces/IPersonLoading';
 import { action, observable } from 'mobx';
-import * as moment from 'moment';
+import * as Moment from 'moment';
+import { Duration as IDuration, Moment as IMoment } from 'moment';
+import { DateRange, extendMoment } from 'moment-range';
 import { v4 } from 'uuid';
+
+const moment = extendMoment(Moment);
 
 export default class Appointment implements IAppointment {
   public static fromIdentifier(id: string) {
     const arr = id.split('_');
     return {
       date: moment(arr[1], 'mm-HH-DD-MM-YYYY'),
-      duration: moment.duration(parseFloat(arr[4]), 'minute'),
+      duration: Moment.duration(parseFloat(arr[4]), 'minute'),
       identifier: id,
       personId: arr[3],
       position: parseInt(arr[2], 10),
@@ -23,10 +27,10 @@ export default class Appointment implements IAppointment {
   }
 
   private static calcId(
-    date: moment.Moment,
+    date: IMoment,
     position: number,
     personId: string,
-    duration: moment.Duration,
+    duration: IDuration,
     uniqueId: string,
   ) {
     const id = `app_${date.format(
@@ -36,11 +40,11 @@ export default class Appointment implements IAppointment {
   }
 
   @observable
-  public date: moment.Moment;
+  public date: IMoment;
   @observable
-  public endDate: moment.Moment;
+  public endDate: IMoment;
   @observable
-  public duration: moment.Duration;
+  public duration: IDuration;
   @observable
   public position: number;
   @observable
@@ -52,13 +56,14 @@ export default class Appointment implements IAppointment {
   @observable
   public stateHash: string;
   public uniqueId: string;
+  public dateRange: DateRange;
 
   constructor(obj: {
-    date: moment.Moment;
+    date: IMoment;
     position: number;
     personId: string;
     personInstance?: IPerson | IPersonLoading;
-    duration: moment.Duration;
+    duration: IDuration;
   }) {
     this.uniqueId = v4();
 
@@ -73,11 +78,11 @@ export default class Appointment implements IAppointment {
     personInstance,
     duration,
   }: {
-    date?: moment.Moment;
+    date?: IMoment;
     position?: number;
     personId?: string;
     personInstance?: IPerson | IPersonLoading;
-    duration?: moment.Duration;
+    duration?: IDuration;
   }) {
     if (date) this.date = date;
     if (position || position === 0) this.position = position;
@@ -86,6 +91,7 @@ export default class Appointment implements IAppointment {
     if (duration) this.duration = duration;
 
     this.endDate = this.date.clone().add(this.duration);
+    this.dateRange = moment.range(this.date, this.endDate);
 
     this.identifier = Appointment.calcId(
       this.date,

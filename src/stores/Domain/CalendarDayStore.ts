@@ -135,7 +135,7 @@ export default class CalendarDayStore {
     appointment.update(
       Object.assign(
         Object.assign(
-          position
+          targetPosition || targetPosition === 0
             ? {
                 position: targetPosition,
               }

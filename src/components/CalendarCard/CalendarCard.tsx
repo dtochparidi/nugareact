@@ -75,46 +75,74 @@ enum Direction {
 
 @observer
 export default class CalendarCard extends React.Component<IProps, IState> {
-  private static detectShiftDirectionAndLength(
-    startIndex: number,
-    fullColumn: boolean[],
-  ): [Direction, number] {
+  private static detectShiftDirectionAndCollisions(
+    movingApp: { uniqueId: string; position: number; dateRange: DateRange },
+    fullColumn: Appointment[][],
+  ): [Direction, Appointment[]] {
+    let collisions = [];
+
     // check top direction
-    for (let i = startIndex - 1; i > 0; i--)
-      if (!fullColumn[i]) return [Direction.Top, startIndex - i];
+    for (let i = movingApp.position; i > 0; i--) {
+      const overlappingApps = fullColumn[i].filter(
+        app =>
+          (app.position === movingApp.position &&
+            app.dateRange.overlaps(movingApp.dateRange)) ||
+          fullColumn[i + 1].every(prevApp =>
+            app.dateRange.overlaps(prevApp.dateRange),
+          ),
+      );
+
+      collisions.push(...overlappingApps);
+
+      if (!overlappingApps.length) return [Direction.Top, collisions];
+    }
+
+    collisions = [];
 
     // check bottom direction
-    for (let i = startIndex + 1; i < fullColumn.length; i++)
-      if (!fullColumn[i]) return [Direction.Bottom, i - startIndex];
+    for (let i = movingApp.position; i < fullColumn.length; i++) {
+      const overlappingApps = fullColumn[i].filter(
+        app =>
+          (app.position === movingApp.position &&
+            app.dateRange.overlaps(movingApp.dateRange)) ||
+          fullColumn[i - 1].every(prevApp =>
+            app.dateRange.overlaps(prevApp.dateRange),
+          ),
+      );
+
+      collisions.push(...overlappingApps);
+
+      if (!overlappingApps.length) return [Direction.Bottom, collisions];
+    }
 
     // column is totally filled :(
-    return [Direction.None, 0];
+    return [Direction.None, []];
   }
 
-  private static tryShiftToDirection(
-    startIndex: number,
-    fullColumn: boolean[],
-    direction: Direction,
-  ): [Direction, number] {
-    // check top direction
-    switch (direction) {
-      case Direction.Top:
-        for (let i = startIndex - 1; i > 0; i--)
-          if (!fullColumn[i]) return [Direction.Top, startIndex - i];
-        break;
+  // private static tryShiftToDirection(
+  //   startIndex: number,
+  //   fullColumn: boolean[],
+  //   direction: Direction,
+  // ): [Direction, number] {
+  //   // check top direction
+  //   switch (direction) {
+  //     case Direction.Top:
+  //       for (let i = startIndex - 1; i > 0; i--)
+  //         if (!fullColumn[i]) return [Direction.Top, startIndex - i];
+  //       break;
 
-      // check bottom direction
-      case Direction.Bottom:
-        for (let i = startIndex + 1; i < fullColumn.length; i++)
-          if (!fullColumn[i]) return [Direction.Bottom, i - startIndex];
-        break;
+  //     // check bottom direction
+  //     case Direction.Bottom:
+  //       for (let i = startIndex + 1; i < fullColumn.length; i++)
+  //         if (!fullColumn[i]) return [Direction.Bottom, i - startIndex];
+  //       break;
 
-      // column is totally filled :(
-      default:
-        return [Direction.None, 0];
-    }
-    return [Direction.None, 0];
-  }
+  //     // column is totally filled :(
+  //     default:
+  //       return [Direction.None, 0];
+  //   }
+  //   return [Direction.None, 0];
+  // }
 
   private static calcDaySize(
     columnsPerPage: number,
@@ -171,6 +199,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   private isScrolling: boolean = false;
   private pageTurnEmitter: Emitter;
   private clientRect: ClientRect;
+  private shiftedIds: string[] = [];
 
   constructor(props: IProps) {
     super(props);
@@ -318,15 +347,17 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     if (changed) this.shiftsHash[day.id] = v4();
   }
 
+  // public checkForOverlaps() {
+
+  // }
+
   public freePlaceToDrop(
     uniqueId: string,
     position: number,
     dateRange: DateRange,
-    shiftedList: string[] = [],
-    lockedDirection: Direction = Direction.None,
   ) {
-    if (!shiftedList.length) {
-      if ((window as any).recursiveDrop) console.log('recursive drop');
+    if (!this.shiftedIds.length) {
+      console.log('crear shifts');
       this.clearShifts();
     }
 
@@ -351,7 +382,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const ordinateCollisingApps = day.appointments.filter(
       app =>
         app.uniqueId !== uniqueId &&
-        !shiftedList.includes(app.uniqueId) &&
+        !this.shiftedIds.includes(app.uniqueId) &&
         dateRange.overlaps(moment.range(app.date, app.endDate)),
     );
 
@@ -369,44 +400,27 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       app => filledColumn[app.position].push(app),
     );
 
-    let [shiftDirection, amount] = CalendarCard.detectShiftDirectionAndLength(
-      position,
-      filledColumn.map(arr => !!arr.length),
+    const [
+      shiftDirection,
+      collisingApps,
+    ] = CalendarCard.detectShiftDirectionAndCollisions(
+      { uniqueId, position, dateRange },
+      filledColumn,
     );
 
-    // if we locked the direction
-    if (
-      lockedDirection !== Direction.None &&
-      shiftDirection !== Direction.None
-    ) {
-      const [newShiftDirection, newAmount] = CalendarCard.tryShiftToDirection(
-        position,
-        filledColumn.map(arr => !!arr.length),
-        lockedDirection,
-      );
+    console.log(shiftDirection, collisingApps);
 
-      shiftDirection = newShiftDirection;
-      amount = newAmount;
-    }
-
-    if (shiftDirection === Direction.None) return false;
+    if (shiftDirection === Direction.None || !collisingApps.length)
+      return false;
 
     const delta = shiftDirection === Direction.Top ? -1 : 1;
-    const range = [position, position + delta * amount];
-    const from = Math.min(...range);
-    const to = Math.max(...range) + 1;
-    const collisingApps = filledColumn
-      .slice(from, to)
-      .reduce((acc, app) => acc.concat(app), []);
 
-    shiftedList.push(uniqueId);
-    shiftedList.push(...collisingApps.map(app => app.uniqueId));
+    this.shiftedIds.push(uniqueId);
+    this.shiftedIds.push(...collisingApps.map(app => app.uniqueId));
 
     // this.lockShifts();
 
     collisingApps.forEach(app => {
-      // const pos = appPositions[app.uniqueId];
-
       this.shiftCell(
         `day_${app.date.format('DD-MM-YYYY')}`,
         this.getColumnIndex(app.date),
@@ -416,69 +430,43 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         delta,
       );
 
-      if ((window as any).recursiveDrop) {
-        console.log('process next');
-        this.freePlaceToDrop(
-          app.uniqueId,
-          app.position + delta,
-          // pos,
-          moment.range(app.date, app.endDate),
-          shiftedList,
-          (window as any).lockedDirection ? shiftDirection : 0,
-        );
-      }
+      console.log('process next');
+      this.freePlaceToDrop(
+        app.uniqueId,
+        app.position + delta,
+        // pos,
+        moment.range(app.date, app.endDate),
+      );
     });
 
-    return true;
-  }
+    // step-by-step demonstration
+    // function iterator(context: any, apps: Appointment[], i = 0) {
+    //   const app = apps[i];
 
-  public freeCell(relatedTarget: HTMLElement, target: HTMLElement) {
-    const { stamp } = CalendarCard.getCellInfo(target);
-    const day = this.getDayByStamp(stamp);
-    const column = this.getColumnByStamp(stamp, day);
+    //   context.shiftCell(
+    //     `day_${app.date.format('DD-MM-YYYY')}`,
+    //     context.getColumnIndex(app.date),
+    //     app.position,
+    //     // pos,
+    //     0,
+    //     delta,
+    //   );
 
-    const isFree =
-      !target.querySelector('.appointmentCell') ||
-      target.querySelector('.moving');
+    //   console.log('process next');
+    //   context.freePlaceToDrop(
+    //     app.uniqueId,
+    //     app.position + delta,
+    //     // pos,
+    //     moment.range(app.date, app.endDate),
+    //   );
 
-    if (isFree) return true;
+    //   i++;
 
-    // const rx = parseInt(relatedTarget.dataset.x || '0', 10);
-    const ry = parseInt(relatedTarget.dataset.y || '0', 10);
+    //   if (i <= apps.length - 1)
+    //     setTimeout(() => iterator(context, apps, i), 500);
+    // }
 
-    const x = parseInt(target.dataset.x || '0', 10);
-    const y = parseInt(target.dataset.y || '0', 10);
-    const filledColumn = new Array(this.props.positionCount).fill(null);
-    column.forEach(app =>
-      ry !== app.position ? (filledColumn[app.position] = app) : null,
-    );
-
-    const [shiftDirection] = CalendarCard.detectShiftDirectionAndLength(
-      y,
-      filledColumn,
-    );
-
-    if (shiftDirection === Direction.None) return false;
-
-    const delta = shiftDirection === Direction.Top ? -1 : 1;
-    const targetDay = document.querySelector(`#${day.id}`) as HTMLElement;
-
-    let index = y;
-    let targetCell;
-    do {
-      this.shiftCell(`day_${stamp.format('DD-MM-YYYY')}`, x, index, 0, delta);
-      index += delta;
-
-      targetCell = targetDay.querySelector(
-        `[data-x="${x}"][data-y="${index}"]`,
-      ) as HTMLElement;
-    } while (
-      filledColumn[index] &&
-      !(targetCell.querySelector(
-        '.appointmentCell',
-      ) as HTMLElement).classList.contains('moving') &&
-      (index > 0 && index < this.props.positionCount - 1)
-    );
+    // iterator(this, collisingApps);
 
     return true;
   }
@@ -700,6 +688,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       ),
     ).forEach((child, index) => {
       const selector = `#${child.id} .gridCell`;
+      let lastRange: DateRange | null = null;
 
       if (index >= minDay && index <= maxDay)
         interact(selector).dropzone(
@@ -760,7 +749,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 target.classList.remove('enter', 'locked');
                 target.style.background = '';
 
-                this.unshiftWholeColumn(target);
+                this.shiftedIds = [];
               },
               ondrop: e => {
                 const {
@@ -803,6 +792,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                   targetDate: targetStamp,
                   targetPosition: position,
                 });
+
+                this.shiftedIds = [];
               },
               ondropactivate: e => {
                 const {
@@ -876,11 +867,18 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                   this.props.subGridColumns,
                   this.props.mainColumnStep,
                 );
-                this.freePlaceToDrop(
-                  app.uniqueId,
-                  position,
-                  moment.range(dropStamp, dropStamp.clone().add(app.duration)),
+
+                const range = moment.range(
+                  dropStamp,
+                  dropStamp.clone().add(app.duration),
                 );
+
+                if (lastRange && lastRange.isSame(range)) return;
+
+                lastRange = range;
+                this.shiftedIds = [];
+
+                this.freePlaceToDrop(app.uniqueId, position, range);
               },
               overlap: 'leftCenter',
             };
