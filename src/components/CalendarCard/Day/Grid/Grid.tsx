@@ -13,6 +13,7 @@ export interface IProps {
   stamps: moment.Moment[];
   mainColumnStep: moment.Duration;
   shiftsHash: string;
+  movingId: string;
   shifts: {
     [x: number]: {
       [y: number]: {
@@ -46,6 +47,8 @@ export default class Grid extends React.Component<IProps> {
   public appointments: Array<Array<{ [uniqueId: string]: Appointment }>>;
   @observable
   public shifts: Array<Array<{ dx: number; dy: number }>>;
+  @observable
+  public movingId: { id: string } = { id: '' };
 
   public gridCells: React.ReactNode[] = [];
 
@@ -55,6 +58,19 @@ export default class Grid extends React.Component<IProps> {
     this.updateApps();
     this.updateShifts();
     this.gridCells = this.generateGrid();
+
+    // movingId change reaction
+    reaction(
+      () => this.props.movingId,
+      id => {
+        if (
+          this.props.appointments.some(
+            app => app.identifier === this.props.movingId,
+          )
+        )
+          this.updateMovingId();
+      },
+    );
 
     // appointments change reaction
     reaction(
@@ -72,6 +88,11 @@ export default class Grid extends React.Component<IProps> {
         this.updateShifts();
       },
     );
+  }
+
+  @action
+  public updateMovingId() {
+    this.movingId.id = this.props.movingId;
   }
 
   public generateGrid() {
@@ -96,6 +117,7 @@ export default class Grid extends React.Component<IProps> {
 
         gridCells.push(
           <GridCell
+            movingIdObj={this.movingId}
             key={`${x}:${y}`}
             x={x}
             y={y}

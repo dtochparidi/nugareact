@@ -12,7 +12,7 @@ function createDragConfig(
 
   function startHandler(e: InteractEvent) {
     let { target }: { target: HTMLElement } = e;
-    target = target.parentNode as HTMLElement; // go up from .container to .appointmentCell
+    target = (target.parentNode as HTMLElement).parentNode as HTMLElement; // go up from .containerTempWidth to .appointmentCell
 
     transformBeforeDragging = target.style.transform || '';
 
@@ -37,7 +37,7 @@ function createDragConfig(
 
   function moveHandler(e: InteractEvent) {
     let { target }: { target: HTMLElement } = e;
-    target = target.parentNode as HTMLElement; // go up from .container to .appointmentCell
+    target = (target.parentNode as HTMLElement).parentNode as HTMLElement; // go up from .containerTempWidth to .appointmentCell
 
     const { clientX, clientY } = e;
 
@@ -56,7 +56,7 @@ function createDragConfig(
 
   function endHandler(e: InteractEvent) {
     let { target }: { target: HTMLElement } = e;
-    target = target.parentNode as HTMLElement; // go up from .container to .appointmentCell
+    target = (target.parentNode as HTMLElement).parentNode as HTMLElement; // go up from .containerTempWidth to .appointmentCell
 
     target.classList.remove('moving');
     target.style.left = '';

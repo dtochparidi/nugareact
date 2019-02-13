@@ -80,15 +80,16 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     fullColumn: Appointment[][],
   ): [Direction, Appointment[]] {
     let collisions = [];
+    const params = { adjacent: false };
 
     // check top direction
     for (let i = movingApp.position; i > 0; i--) {
       const overlappingApps = fullColumn[i].filter(
         app =>
           (app.position === movingApp.position &&
-            app.dateRange.overlaps(movingApp.dateRange)) ||
+            app.dateRange.overlaps(movingApp.dateRange, params)) ||
           fullColumn[i + 1].every(prevApp =>
-            app.dateRange.overlaps(prevApp.dateRange),
+            app.dateRange.overlaps(prevApp.dateRange, params),
           ),
       );
 
@@ -104,9 +105,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       const overlappingApps = fullColumn[i].filter(
         app =>
           (app.position === movingApp.position &&
-            app.dateRange.overlaps(movingApp.dateRange)) ||
+            app.dateRange.overlaps(movingApp.dateRange, params)) ||
           fullColumn[i - 1].every(prevApp =>
-            app.dateRange.overlaps(prevApp.dateRange),
+            app.dateRange.overlaps(prevApp.dateRange, params),
           ),
       );
 
@@ -190,6 +191,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     };
   } = {};
 
+  @observable
+  public movingId: string = '';
   public currentLeftColumnIndex: number = 0;
   private daysContainerRef: React.RefObject<HTMLDivElement>;
   private containerScrollTimeout: NodeJS.Timeout;
@@ -215,7 +218,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     );
 
     if (clientSide)
-      interact('.appointmentCell .container')
+      interact('.appointmentCell .container .containerTempWidth')
         .draggable(
           createDragConfig(
             this.onAppointmentDraggingStart.bind(this),
@@ -230,7 +233,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 right: true,
               },
               onend: (e: interact.InteractEvent) => {
-                const { target }: { target: HTMLElement } = e;
+                let { target }: { target: HTMLElement } = e;
+                target = target.parentNode as HTMLElement;
 
                 const appCell = target.parentNode as HTMLElement;
                 const gridCell = appCell.parentNode as HTMLElement;
@@ -272,7 +276,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 });
               },
               onmove: (e: interact.InteractEvent & { rect: ClientRect }) => {
-                const { target }: { target: HTMLElement } = e;
+                let { target }: { target: HTMLElement } = e;
+                target = target.parentNode as HTMLElement;
 
                 const minWidth =
                   (target.parentNode as HTMLElement).getBoundingClientRect()
@@ -318,18 +323,31 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     this.turnPage(-1);
   };
 
+  @action
+  public updateMovingId(movingId: string) {
+    this.movingId = movingId;
+  }
+
   public onAppointmentDraggingStart(e: interact.InteractEvent) {
-    ((((((e.target as Element).parentNode as Element).parentNode as Element) // .appointmentCell // .gridCell // .grid
-      .parentNode as Element).parentNode as Element)
-      .parentNode as Element).classList // .topRow // .day // .dayWrapper
-      .add('dragOrigin');
+    const appCell = ((e.target as Element).parentNode as Element)
+      .parentNode as Element;
+    ((((appCell.parentNode as Element).parentNode as Element)
+      .parentNode as Element).parentNode as Element).classList.add(
+      'dragOrigin',
+    );
+
+    this.updateMovingId(appCell.id);
   }
 
   public onAppointmentDraggingEnd(e: interact.InteractEvent) {
-    ((((((e.target as Element).parentNode as Element).parentNode as Element) // .appointmentCell // .gridCell // .grid
-      .parentNode as Element).parentNode as Element)
-      .parentNode as Element).classList // .topRow // .day // .dayWrapper
-      .remove('dragOrigin');
+    const appCell = ((e.target as Element).parentNode as Element)
+      .parentNode as Element;
+    ((((appCell.parentNode as Element).parentNode as Element)
+      .parentNode as Element).parentNode as Element).classList.remove(
+      'dragOrigin',
+    );
+
+    this.updateMovingId('');
   }
 
   public unshiftWholeColumn(target: HTMLElement) {
@@ -347,19 +365,51 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     if (changed) this.shiftsHash[day.id] = v4();
   }
 
-  // public checkForOverlaps() {
+  public checkForOverlaps(dayStamp: IMoment) {
+    const day = this.getDayByStamp(dayStamp);
 
-  // }
+    const checked: string[] = [];
+    const overlappingApps = day.appointments.reduce(
+      (acc: Appointment[], app) => {
+        const overlaps = day.appointments.reduce(
+          (secAcc: Appointment[], secApp) => {
+            const overlapping =
+              secApp.uniqueId !== app.uniqueId &&
+              secApp.position === app.position &&
+              !checked.includes(secApp.uniqueId) &&
+              secApp.dateRange.overlaps(app.dateRange);
+
+            if (overlapping) secAcc.push(secApp);
+
+            return secAcc;
+          },
+          [],
+        );
+
+        if (overlaps.length) acc.push(...overlaps.concat([app]));
+
+        checked.push(app.uniqueId);
+
+        return acc;
+      },
+      [],
+    );
+
+    day.appointments.forEach(app => {
+      const overlapping = !!overlappingApps.find(
+        secApp => secApp.uniqueId === app.uniqueId,
+      );
+
+      if (overlapping !== app.overlapping) app.update({ overlapping });
+    });
+  }
 
   public freePlaceToDrop(
     uniqueId: string,
     position: number,
     dateRange: DateRange,
   ) {
-    if (!this.shiftedIds.length) {
-      console.log('crear shifts');
-      this.clearShifts();
-    }
+    if (!this.shiftedIds.length) this.clearShifts();
 
     const day = this.getDayByStamp(dateRange.start);
     const filledColumn = new Array(this.props.positionCount)
@@ -408,8 +458,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       filledColumn,
     );
 
-    console.log(shiftDirection, collisingApps);
-
     if (shiftDirection === Direction.None || !collisingApps.length)
       return false;
 
@@ -430,7 +478,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         delta,
       );
 
-      console.log('process next');
       this.freePlaceToDrop(
         app.uniqueId,
         app.position + delta,
@@ -695,7 +742,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           ((): interact.DropZoneOptions => {
             const lastPosition = { x: 0, y: 0 };
             return {
-              accept: '.appointmentCell .container',
+              accept: '.appointmentCell .container .containerTempWidth',
               ondragenter: e => {
                 const {
                   target,
@@ -707,7 +754,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 }: {
                   relatedTarget: HTMLElement;
                 } = e;
-                relatedTarget = relatedTarget.parentNode as HTMLElement; // go up from .container to .appointmentCell
+                relatedTarget = (relatedTarget.parentNode as HTMLElement)
+                  .parentNode as HTMLElement; // go up from .containerTempWidth to .appointmentCell
 
                 target.classList.add('enter');
 
@@ -744,7 +792,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 }: {
                   relatedTarget: HTMLElement;
                 } = e;
-                relatedTarget = relatedTarget.parentNode as HTMLElement; // go up from .container to .appointmentCell
+                relatedTarget = (relatedTarget.parentNode as HTMLElement)
+                  .parentNode as HTMLElement; // go up from .containerTempWidth to .appointmentCell
 
                 target.classList.remove('enter', 'locked');
                 target.style.background = '';
@@ -762,13 +811,13 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 }: {
                   relatedTarget: HTMLElement;
                 } = e;
-                relatedTarget = relatedTarget.parentNode as HTMLElement; // go up from .container to .appointmentCell
+                relatedTarget = (relatedTarget.parentNode as HTMLElement)
+                  .parentNode as HTMLElement; // go up from .containerTempWidth to .appointmentCell
 
                 if (target.classList.contains('locked')) {
                   console.log('locked');
                   return;
                 }
-                console.log('drop');
 
                 const appointmentId = relatedTarget.id;
                 const app = Appointment.fromIdentifier(appointmentId);
@@ -794,6 +843,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 });
 
                 this.shiftedIds = [];
+
+                this.checkForOverlaps(stamp);
               },
               ondropactivate: e => {
                 const {
@@ -806,7 +857,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 }: {
                   relatedTarget: HTMLElement;
                 } = e;
-                relatedTarget = relatedTarget.parentNode as HTMLElement; // go up from .container to .appointmentCell
+                relatedTarget = (relatedTarget.parentNode as HTMLElement)
+                  .parentNode as HTMLElement; // go up from .containerTempWidth to .appointmentCell
 
                 // target.classList.add('dropzone', 'active');
                 target.classList.remove('locked');
@@ -825,7 +877,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 }: {
                   relatedTarget: HTMLElement;
                 } = e;
-                relatedTarget = relatedTarget.parentNode as HTMLElement; // go up from .container to .appointmentCell
+                relatedTarget = (relatedTarget.parentNode as HTMLElement)
+                  .parentNode as HTMLElement; // go up from .containerTempWidth to .appointmentCell
 
                 target.classList.remove(
                   'dropzone',
@@ -846,7 +899,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 }: {
                   relatedTarget: HTMLElement;
                 } = e;
-                relatedTarget = relatedTarget.parentNode as HTMLElement; // go up from .container to .appointmentCell
+                relatedTarget = (relatedTarget.parentNode as HTMLElement)
+                  .parentNode as HTMLElement; // go up from .containerTempWidth to .appointmentCell
 
                 const rect = relatedTarget.getBoundingClientRect();
                 lastPosition.x = rect.left;
@@ -1254,6 +1308,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 updateAppointment={this.props.updateAppointment}
                 subGridColumns={subGridColumns}
                 mainColumnStep={mainColumnStep}
+                movingId={this.movingId}
               />
             ))}
           </div>

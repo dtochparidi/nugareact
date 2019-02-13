@@ -54,7 +54,10 @@ export default class Appointment implements IAppointment {
   @observable
   public identifier: string;
   @observable
+  public overlapping: boolean = false;
+  @observable
   public stateHash: string;
+
   public uniqueId: string;
   public dateRange: DateRange;
 
@@ -77,18 +80,22 @@ export default class Appointment implements IAppointment {
     personId,
     personInstance,
     duration,
+    overlapping,
   }: {
     date?: IMoment;
     position?: number;
     personId?: string;
     personInstance?: IPerson | IPersonLoading;
     duration?: IDuration;
+    overlapping?: boolean;
   }) {
     if (date) this.date = date;
     if (position || position === 0) this.position = position;
     if (personId) this.personId = personId;
     if (personInstance) this.personInstance = personInstance;
     if (duration) this.duration = duration;
+    if (overlapping === true || overlapping === false)
+      this.overlapping = overlapping;
 
     this.endDate = this.date.clone().add(this.duration);
     this.dateRange = moment.range(this.date, this.endDate);

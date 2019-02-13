@@ -16,6 +16,7 @@ export interface IProps {
   appointment: Appointment;
   translateX?: number;
   translateY?: number;
+  moving: boolean;
   subGridColumns: number;
   gridColumnDuration: moment.Duration;
   updateAppointment: ({
@@ -66,13 +67,12 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
   public onMouseWheelHandler: (e: React.WheelEvent<any> | WheelEvent) => void;
   public mouseWheelStep: number = 150;
   private mouseDeltaBuffer: number = 0;
-  private widthDivRef: React.RefObject<HTMLDivElement>;
+  private widthDivRef: React.RefObject<HTMLDivElement> = React.createRef();
 
   constructor(props: IProps) {
     super(props);
 
     this.onMouseWheelHandler = this.onMouseWheel.bind(this);
-    this.widthDivRef = React.createRef();
 
     this.state = {
       tempWidth: '',
@@ -95,11 +95,11 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     const newWidthClass =
       width < MIN_CELL_WIDTH * 0.5
         ? WidthClass.Min
-        : width < MIN_CELL_WIDTH * 0.7
-        ? WidthClass.Slim
         : width < MIN_CELL_WIDTH * 0.8
-        ? WidthClass.Medium
+        ? WidthClass.Slim
         : width < MIN_CELL_WIDTH * 0.9
+        ? WidthClass.Medium
+        : width < MIN_CELL_WIDTH
         ? WidthClass.Wide
         : WidthClass.Max;
 
@@ -163,10 +163,15 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
   }
 
   public render() {
-    const { personInstance, identifier, duration } = this.props.appointment;
+    const {
+      personInstance,
+      identifier,
+      duration,
+      overlapping,
+    } = this.props.appointment;
 
     let { translateX, translateY } = this.props;
-    const { gridColumnDuration } = this.props;
+    const { gridColumnDuration, moving } = this.props;
 
     if (!personInstance) {
       console.warn('missing instance');
@@ -190,11 +195,13 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     const person = personInstance as IPerson;
     return (
       <div
-        className={`appointmentCell ${translated ? 'translated' : ''}`}
+        className={`appointmentCell ${translated ? 'translated' : ''} ${
+          moving ? 'moving' : ''
+        } ${overlapping ? 'overlapping' : ''}`}
         id={identifier}
         onWheel={this.onMouseWheelHandler}
         style={
-          translated
+          translated && !moving
             ? {
                 transform: `translate(calc(${translateX}% + ${offsetX}px), calc(${translateY}% + ${offsetY}px))`,
               }

@@ -24,8 +24,14 @@
   align-items: center;
   justify-content: center;
 
+  pointer-events: none;
+
   // transition: all 2s;
   z-index: 100;
+
+  &.overlapping > .container > .containerTempWidth {
+    background: rgb(255, 224, 224);
+  }
 
   &.moving {
     visibility: visible;
@@ -59,6 +65,8 @@
 
       background: white;
       outline: solid lightgrey 1px;
+
+      pointer-events: visible;
 
       .translated & & {
         outline: dotted lightgrey 2px;

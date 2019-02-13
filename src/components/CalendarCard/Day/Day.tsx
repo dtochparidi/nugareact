@@ -14,6 +14,7 @@ export interface IProps {
   mainColumnStep: moment.Duration;
   dayWidth: string;
   subGridColumns: number;
+  movingId: string;
   shifts: {
     [x: number]: {
       [x: number]: {
@@ -54,6 +55,7 @@ export default class Day extends React.Component<IProps> {
       shifts,
       shiftsHash,
       mainColumnStep,
+      movingId,
       updateAppointment,
     } = this.props;
 
@@ -70,6 +72,7 @@ export default class Day extends React.Component<IProps> {
           <Grid
             rows={rows}
             cols={cols}
+            movingId={movingId}
             appointments={dayData.appointments}
             stamps={stamps}
             shifts={shifts}

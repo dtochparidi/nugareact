@@ -14,6 +14,7 @@ export interface IProps {
   cols: number;
   apps: { [uniqueId: string]: Appointment };
   shift: { dx: number; dy: number };
+  movingIdObj: { id: string };
   updateAppointment: ({
     date,
     position,
@@ -55,6 +56,7 @@ export default class GridCell extends React.Component<IProps> {
       gridColumnDuration,
       updateAppointment,
       shift,
+      movingIdObj,
     } = this.props;
 
     // if (Object.keys(apps).length) console.log(Object.keys(apps).length, x, y);
@@ -64,7 +66,9 @@ export default class GridCell extends React.Component<IProps> {
 
       let coeffX = 0;
       let coeffY = 0;
-      if (!(this.mainRef.current as HTMLDivElement).querySelector('.moving')) {
+
+      const isMoving = appointment.identifier === movingIdObj.id;
+      if (!isMoving) {
         const { dx, dy } = shift;
         const d = appointment.date;
         const s = d
@@ -80,6 +84,7 @@ export default class GridCell extends React.Component<IProps> {
 
       return (
         <AppointmentCell
+          moving={isMoving}
           key={appointment.uniqueId}
           translateX={coeffX}
           translateY={coeffY}

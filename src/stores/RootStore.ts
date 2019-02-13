@@ -1,6 +1,12 @@
 import DomainStore from './DomainStore';
 import UIStore from './UI/UIStore';
 
+import { configure } from 'mobx';
+
+configure({
+  enforceActions: 'observed',
+});
+
 export class RootStore {
   public domainStore: DomainStore;
   public uiStore: UIStore;
