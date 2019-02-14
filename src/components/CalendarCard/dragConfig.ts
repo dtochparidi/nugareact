@@ -8,13 +8,13 @@ function createDragConfig(
   const pos = { x: 0, y: 0 };
   const clientPos = { x: 0, y: 0 };
   const size = { width: 0, height: 0 };
-  // let transformBeforeDragging = '';
+  let transformBeforeDragging = '';
 
   function startHandler(e: InteractEvent) {
     let { target }: { target: HTMLElement } = e;
     target = (target.parentNode as HTMLElement).parentNode as HTMLElement; // go up from .containerTempWidth to .appointmentCell
 
-    // transformBeforeDragging = target.style.transform || '';
+    transformBeforeDragging = target.style.transform || '';
 
     clientPos.x = e.clientX;
     clientPos.y = e.clientY;
@@ -58,13 +58,13 @@ function createDragConfig(
     let { target }: { target: HTMLElement } = e;
     target = (target.parentNode as HTMLElement).parentNode as HTMLElement; // go up from .containerTempWidth to .appointmentCell
 
-    // target.classList.remove('moving');
-    // target.style.left = '';
-    // target.style.top = '';
-    // target.style.width = '';
-    // target.style.height = '';
-    // // target.style.transform = '';
-    // target.style.transform = transformBeforeDragging;
+    target.classList.remove('moving');
+    target.style.left = '';
+    target.style.top = '';
+    target.style.width = '';
+    target.style.height = '';
+    // target.style.transform = '';
+    target.style.transform = transformBeforeDragging;
 
     onend(e);
   }

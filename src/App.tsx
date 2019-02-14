@@ -22,8 +22,7 @@ let needToShow: boolean = false;
 
 // do not do it while testing in jest
 if (clientSide) {
-  (window as any).recursiveDrop = false;
-  (window as any).lockedDirection = false;
+  (window as any).shiftsCaching = true;
 
   // checking for updates
   versionName = Cookies.get('version');

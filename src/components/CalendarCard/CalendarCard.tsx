@@ -72,7 +72,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     for (let i = movingApp.position; i > 0; i--) {
       const overlappingApps = fullColumn[i].filter(
         app =>
-          (app.position === movingApp.position &&
+          (i === movingApp.position &&
             app.dateRange.overlaps(movingApp.dateRange, params)) ||
           fullColumn[i + 1].every(prevApp =>
             app.dateRange.overlaps(prevApp.dateRange, params),
@@ -90,11 +90,12 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     for (let i = movingApp.position; i < fullColumn.length; i++) {
       const overlappingApps = fullColumn[i].filter(
         app =>
-          (app.position === movingApp.position &&
+          (i === movingApp.position &&
             app.dateRange.overlaps(movingApp.dateRange, params)) ||
-          fullColumn[i - 1].every(prevApp =>
-            app.dateRange.overlaps(prevApp.dateRange, params),
-          ),
+          (i - 1 >= 0 &&
+            fullColumn[i - 1].every(prevApp =>
+              app.dateRange.overlaps(prevApp.dateRange, params),
+            )),
       );
 
       collisions.push(...overlappingApps);
@@ -188,7 +189,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   private isScrolling: boolean = false;
   private pageTurnEmitter: Emitter;
   private clientRect: ClientRect;
-  private shiftedIds: string[] = [];
+  private shiftsCache: {
+    [dayId: number]: {
+      [shiftId: string]: { [uniqueId: string]: { dx: number; dy: number } };
+    };
+  } = {};
 
   constructor(props: IProps) {
     super(props);
@@ -319,6 +324,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     );
 
     this.updateMovingId(appCell.id);
+
+    this.shiftsCache = {};
+    console.log('clear cache');
   }
 
   public onAppointmentDraggingEnd(e: interact.InteractEvent) {
@@ -379,33 +387,84 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     });
   }
 
-  public freePlaceToDrop(
+  public freePlaceToDropAdvanced(
     uniqueId: string,
     position: number,
     dateRange: DateRange,
-  ) {
-    if (!this.shiftedIds.length) this.clearShifts();
+    positionsOffset: { [uniqueId: string]: { dx: number; dy: number } } = {},
+    root = true,
+  ): boolean {
+    const applyShifts = (offsets: {
+      [uniqueId: string]: { dx: number; dy: number };
+    }) => {
+      Object.entries(offsets).forEach(([id, deltas]) => {
+        const app = day.appointments[id];
+
+        this.shiftCell(
+          day.id,
+          this.getColumnIndex(app.date),
+          app.position,
+          0,
+          deltas.dy,
+        );
+      });
+    };
+
+    if (root) this.clearShifts();
 
     const day = this.getDayByStamp(dateRange.start);
+    const ordinateCollisingApps = Object.values(day.appointments).filter(
+      app =>
+        app.uniqueId !== uniqueId &&
+        dateRange.overlaps(moment.range(app.date, app.endDate)),
+    );
+
+    // const calcShiftCascadeIdentifier = () => {
+    //   return `${uniqueId}${position}${dateRange.start.format(
+    //     'mm-HH-DD-MM-YYYY',
+    //   )}${dateRange.end.format('mm-HH')}`;
+    // };
+    const calcShiftCascadeIdentifier = () => {
+      return (
+        position.toString() +
+        ordinateCollisingApps.reduce((acc, app) => {
+          return acc + app.uniqueId + app.position.toString();
+        }, '')
+      );
+    };
+
+    const currentShiftCascadeId = calcShiftCascadeIdentifier();
+
+    if (root && (window as any).shiftsCaching) {
+      this.shiftsCache[day.id] = this.shiftsCache[day.id] || {};
+      const cachedShiftsExist =
+        this.shiftsCache[day.id] &&
+        currentShiftCascadeId in this.shiftsCache[day.id];
+
+      if (cachedShiftsExist) {
+        const cachedShifts = this.shiftsCache[day.id][currentShiftCascadeId];
+        applyShifts(cachedShifts);
+
+        console.log('cached shifts restored');
+
+        return true;
+      }
+    }
+
+    // just no collisions
+    if (!ordinateCollisingApps.length) return true;
+
     const filledColumn = new Array(this.props.positionCount)
       .fill(null)
       .map(() => [] as Appointment[]);
 
-    const ordinateCollisingApps = Object.values(day.appointments).filter(
-      app =>
-        app.uniqueId !== uniqueId &&
-        !this.shiftedIds.includes(app.uniqueId) &&
-        dateRange.overlaps(moment.range(app.date, app.endDate)),
+    ordinateCollisingApps.forEach(app =>
+      filledColumn[
+        app.position + (positionsOffset[app.uniqueId] || { dy: 0 }).dy
+      ].push(app),
     );
 
-    if (
-      !ordinateCollisingApps.length ||
-      ordinateCollisingApps.every(app => app.position !== position)
-    )
-      return true;
-
-    ordinateCollisingApps.forEach(app => filledColumn[app.position].push(app));
-
+    // getting potential shifting direction
     const [
       shiftDirection,
       collisingApps,
@@ -414,64 +473,86 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       filledColumn,
     );
 
-    if (shiftDirection === Direction.None || !collisingApps.length)
-      return false;
+    // so we cannot shift anything anywhere
+    if (shiftDirection === Direction.None) return false;
 
+    // we have no collisions. place is free and safe to drop!
+    if (!collisingApps.length) return true;
+
+    // transforming enum to int delta
     const delta = shiftDirection === Direction.Top ? -1 : 1;
 
-    this.shiftedIds.push(uniqueId);
-    this.shiftedIds.push(...collisingApps.map(app => app.uniqueId));
-
-    // this.lockShifts();
-
+    // updating temp offsets
     collisingApps.forEach(app => {
-      this.shiftCell(
-        `day_${app.date.format('DD-MM-YYYY')}`,
-        this.getColumnIndex(app.date),
-        app.position,
-        // pos,
-        0,
-        delta,
-      );
+      if (!(app.uniqueId in positionsOffset))
+        positionsOffset[app.uniqueId] = { dx: 0, dy: 0 };
 
-      this.freePlaceToDrop(
-        app.uniqueId,
-        app.position + delta,
-        // pos,
-        moment.range(app.date, app.endDate),
-      );
+      positionsOffset[app.uniqueId].dy += delta;
     });
 
-    // step-by-step demonstration
-    // function iterator(context: any, apps: Appointment[], i = 0) {
-    //   const app = apps[i];
+    // recursive deep-shifting
+    const possibleConfigurations = [collisingApps, collisingApps.reverse()];
+    const [success] = possibleConfigurations.reduce(
+      (
+        accumulator: [
+          boolean,
+          { [uniqueId: string]: { dx: number; dy: number } }
+        ],
+        configuration,
+      ) => {
+        const [ableToShift, shifts] = accumulator;
 
-    //   context.shiftCell(
-    //     `day_${app.date.format('DD-MM-YYYY')}`,
-    //     context.getColumnIndex(app.date),
-    //     app.position,
-    //     // pos,
-    //     0,
-    //     delta,
-    //   );
+        if (ableToShift) return [true, shifts];
 
-    //   console.log('process next');
-    //   context.freePlaceToDrop(
-    //     app.uniqueId,
-    //     app.position + delta,
-    //     // pos,
-    //     moment.range(app.date, app.endDate),
-    //   );
+        // cloning shifts before trying to free place
+        const shiftsCopy = Object.entries(shifts).reduce(
+          (newObj, [id, deltas]) => {
+            newObj[id] = { dx: deltas.dx, dy: deltas.dy };
+            return newObj;
+          },
+          {},
+        );
 
-    //   i++;
+        // try to free up the place
+        const isAppropriateConfig = configuration.reduce((acc, app) => {
+          // if something goes wrong
+          if (!acc) return acc;
 
-    //   if (i <= apps.length - 1)
-    //     setTimeout(() => iterator(context, apps, i), 500);
-    // }
+          // check if this branch
+          const able = this.freePlaceToDropAdvanced(
+            app.uniqueId,
+            app.position + positionsOffset[app.uniqueId].dy,
+            app.dateRange,
+            shiftsCopy,
+            false,
+          );
 
-    // iterator(this, collisingApps);
+          return able;
+        }, true);
 
-    return true;
+        // if success then write new shifts to global shifts
+        if (isAppropriateConfig) Object.assign(shifts, shiftsCopy);
+
+        return [isAppropriateConfig, shifts];
+      },
+      [false, positionsOffset],
+    ) as [boolean, { [uniqueId: string]: { dx: number; dy: number } }];
+
+    // do shifting
+    if (root && success) {
+      applyShifts(positionsOffset);
+
+      // cache shifts
+      if ((window as any).shiftsCaching)
+        this.shiftsCache[day.id][currentShiftCascadeId] = positionsOffset;
+
+      console.log('just successs');
+
+      return true;
+    }
+
+    // move dataflow up
+    return success;
   }
 
   public getDayByStamp(stamp: IMoment) {
@@ -690,11 +771,13 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     ).forEach((child, index) => {
       const selector = `#${child.id} .gridCell`;
       let lastRange: DateRange | null = null;
+      let lastPosition: number | null = null;
 
       if (index >= minDay && index <= maxDay)
         interact(selector).dropzone(
           ((): interact.DropZoneOptions => {
-            const lastPosition = { x: 0, y: 0 };
+            const lastCoords = { x: 0, y: 0 };
+
             return {
               accept: '.appointmentCell .container .containerTempWidth',
               ondragenter: e => {
@@ -712,28 +795,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                   .parentNode as HTMLElement; // go up from .containerTempWidth to .appointmentCell
 
                 target.classList.add('enter');
-
-                const appointmentId = relatedTarget.id;
-                const app = Appointment.fromIdentifier(appointmentId);
-                const { stamp, position } = CalendarCard.getCellInfo(target);
-
-                // const isFree = this.freeCell(relatedTarget, target);
-                const dropStamp = getDropStamp(
-                  stamp,
-                  target,
-                  lastPosition,
-                  this.props.subGridColumns,
-                  this.props.mainColumnStep,
-                );
-                const isFree = this.freePlaceToDrop(
-                  app.uniqueId,
-                  position,
-                  moment.range(dropStamp, dropStamp.clone().add(app.duration)),
-                );
-
-                if (isFree || target.querySelector(`#${relatedTarget.id}`))
-                  target.classList.remove('locked');
-                else target.classList.add('locked');
               },
               ondragleave: e => {
                 const {
@@ -751,8 +812,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
                 target.classList.remove('enter', 'locked');
                 target.style.background = '';
-
-                this.shiftedIds = [];
               },
               ondrop: e => {
                 const {
@@ -768,34 +827,40 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 relatedTarget = (relatedTarget.parentNode as HTMLElement)
                   .parentNode as HTMLElement; // go up from .containerTempWidth to .appointmentCell
 
-                if (target.classList.contains('locked')) {
+                const appointmentId = relatedTarget.id;
+                const app = Appointment.fromIdentifier(appointmentId);
+                const { stamp, position } = CalendarCard.getCellInfo(target);
+
+                const dropStamp = getDropStamp(
+                  stamp,
+                  target,
+                  lastCoords,
+                  this.props.subGridColumns,
+                  this.props.mainColumnStep,
+                );
+                const isFree = this.freePlaceToDropAdvanced(
+                  app.uniqueId,
+                  position,
+                  moment.range(dropStamp, dropStamp.clone().add(app.duration)),
+                );
+
+                this.shiftsCache = {};
+                console.log('clear cache');
+
+                if (!isFree) {
                   console.log('locked');
                   return;
                 }
                 console.log('drop');
 
-                const appointmentId = relatedTarget.id;
-                const app = Appointment.fromIdentifier(appointmentId);
-                const { stamp, position } = CalendarCard.getCellInfo(target);
-
-                const targetStamp = getDropStamp(
-                  stamp,
-                  target,
-                  lastPosition,
-                  this.props.subGridColumns,
-                  this.props.mainColumnStep,
-                );
-
                 this.lockShifts();
 
                 this.props.updateAppointment({
                   date: app.date,
-                  targetDate: targetStamp,
+                  targetDate: dropStamp,
                   targetPosition: position,
                   uniqueId: app.uniqueId,
                 });
-
-                this.shiftedIds = [];
 
                 this.checkForOverlaps(stamp);
 
@@ -858,8 +923,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                   .parentNode as HTMLElement; // go up from .containerTempWidth to .appointmentCell
 
                 const rect = relatedTarget.getBoundingClientRect();
-                lastPosition.x = rect.left;
-                lastPosition.y = rect.top;
+                lastCoords.x = rect.left;
+                lastCoords.y = rect.top;
 
                 // const app = target.querySelector(`#${relatedTarget.id}`);
                 // if (app) target.classList.remove('locked');
@@ -872,7 +937,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 const dropStamp = getDropStamp(
                   stamp,
                   target,
-                  lastPosition,
+                  lastCoords,
                   this.props.subGridColumns,
                   this.props.mainColumnStep,
                 );
@@ -882,12 +947,23 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                   dropStamp.clone().add(app.duration),
                 );
 
-                if (lastRange && lastRange.isSame(range)) return;
+                if (
+                  lastRange &&
+                  lastRange.isSame(range) &&
+                  lastPosition &&
+                  lastPosition === position
+                )
+                  return;
 
                 lastRange = range;
-                this.shiftedIds = [];
+                lastPosition = position;
 
-                this.freePlaceToDrop(app.uniqueId, position, range);
+                const free = this.freePlaceToDropAdvanced(
+                  app.uniqueId,
+                  position,
+                  range,
+                );
+                console.log(free);
               },
               overlap: 'leftCenter',
             };
@@ -994,13 +1070,15 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           .add(1, 'day'),
       );
 
-    this.updateVisibility([
-      this.currentLeftColumnIndex,
-      Math.min(
-        Math.max(index, 0),
-        this.props.days.length * this.state.columnsPerDay - 1,
-      ),
-    ]);
+    setTimeout(() =>
+      this.updateVisibility([
+        this.currentLeftColumnIndex,
+        Math.min(
+          Math.max(index, 0),
+          this.props.days.length * this.state.columnsPerDay - 1,
+        ),
+      ]),
+    );
 
     this.currentLeftColumnIndex = Math.min(
       Math.max(

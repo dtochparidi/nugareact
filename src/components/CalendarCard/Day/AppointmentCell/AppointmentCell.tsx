@@ -35,24 +35,14 @@ enum WidthClass {
   Max = 'widthMax',
 }
 
-// const downgradeMap = {
-//   [WidthClass.Min]: WidthClass.Min,
-//   [WidthClass.Medium]: WidthClass.Min,
-//   [WidthClass.Max]: WidthClass.Medium,
-// };
-
-// const upgradeMap = {
-//   [WidthClass.Min]: WidthClass.Medium,
-//   [WidthClass.Medium]: WidthClass.Max,
-//   [WidthClass.Max]: WidthClass.Max,
-// };
-
 @observer
 export default class AppointmentCell extends React.Component<IProps, IState> {
   public onMouseWheelHandler: (e: React.WheelEvent<any> | WheelEvent) => void;
   public mouseWheelStep: number = 150;
   private mouseDeltaBuffer: number = 0;
   private widthDivRef: React.RefObject<HTMLDivElement> = React.createRef();
+  private rebuildLayoutTimeout: NodeJS.Timeout;
+  private unMounted = false;
 
   constructor(props: IProps) {
     super(props);
@@ -66,10 +56,15 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
   }
 
   public updateLayout = () => {
+    if (this.unMounted) return;
+
     const elem = this.widthDivRef.current;
     if (!elem) {
       console.log('null container');
-      setTimeout(this.updateLayout, 300 + Math.random() * 100);
+      this.rebuildLayoutTimeout = setTimeout(
+        () => this.updateLayout(),
+        300 + Math.random() * 100,
+      );
       return;
     }
 
@@ -79,8 +74,11 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     // BUG
     // 'display: none' is not taking into account - perfomance issue (not very big)
     if (width === 0) {
-      console.log('width zero');
-      setTimeout(this.updateLayout, 300 + Math.random() * 100);
+      // console.log('width zero');
+      this.rebuildLayoutTimeout = setTimeout(
+        () => this.updateLayout(),
+        300 + Math.random() * 100,
+      );
       return;
     }
 
@@ -149,6 +147,11 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
       targetDate: appointment.date.clone().add(duration),
       targetPosition: appointment.position,
     });
+  }
+
+  public componentWillUnmount() {
+    clearTimeout(this.rebuildLayoutTimeout);
+    this.unMounted = true;
   }
 
   public render() {
