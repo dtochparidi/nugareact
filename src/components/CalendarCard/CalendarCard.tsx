@@ -909,6 +909,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       }
     });
 
+    this.currentLeftColumnIndex =
+      Math.floor(this.state.requiredDays.length / 2) * this.state.columnsPerDay;
+
     this.startResizeHandling();
     this.startScrollHandling();
     this.updateColumnsCount();
