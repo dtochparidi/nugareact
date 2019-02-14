@@ -61,7 +61,11 @@ export function generateRandomDay(date: IMoment): ICalendarDay {
           return new Appointment(app);
         },
       )
-      .filter(app => app !== null) as Appointment[],
+      .filter(app => app !== null)
+      .reduce((acc, app: Appointment) => {
+        acc[app.uniqueId] = app;
+        return acc;
+      }, {}),
     date,
   };
 }

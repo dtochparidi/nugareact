@@ -1,3 +1,4 @@
+import IUpdateAppProps from 'interfaces/IUpdateAppProps';
 import { observer } from 'mobx-react';
 import { Duration as IDuration, Moment as IMoment } from 'moment';
 import * as React from 'react';
@@ -15,30 +16,7 @@ export interface IProps {
   apps: { [uniqueId: string]: Appointment };
   shift: { dx: number; dy: number };
   movingIdObj: { id: string };
-  updateAppointment: ({
-    date,
-    position,
-    personId,
-    targetDate,
-    targetPosition,
-    appointment,
-  }:
-    | {
-        date: IMoment;
-        position: number;
-        personId: string;
-        targetDate: IMoment;
-        appointment: undefined;
-        targetPosition: number;
-      }
-    | {
-        date: undefined;
-        position: undefined;
-        personId: undefined;
-        appointment: Appointment;
-        targetDate: IMoment;
-        targetPosition: number;
-      }) => void;
+  updateAppointment: (props: IUpdateAppProps) => void;
 }
 
 @observer
@@ -58,9 +36,6 @@ export default class GridCell extends React.Component<IProps> {
       shift,
       movingIdObj,
     } = this.props;
-
-    // if (Object.keys(apps).length) console.log(Object.keys(apps).length, x, y);
-
     const appNodes = Object.values(apps).map(app => {
       const appointment = app as Appointment;
 
@@ -94,8 +69,6 @@ export default class GridCell extends React.Component<IProps> {
           gridColumnDuration={gridColumnDuration}
         />
       );
-
-      return null;
     });
 
     return (

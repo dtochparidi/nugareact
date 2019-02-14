@@ -1,9 +1,9 @@
+import IUpdateAppProps from 'interfaces/IUpdateAppProps';
 import { observer } from 'mobx-react';
 import * as moment from 'moment';
-import { Duration as IDuration, Moment as IMoment } from 'moment';
 import * as React from 'react';
 import CalendarDay from 'structures/CalendarDay';
-import Appointment from '../../../structures/Appointment';
+
 import Grid from './Grid';
 
 export interface IProps {
@@ -24,22 +24,7 @@ export interface IProps {
     };
   };
   shiftsHash: string;
-  updateAppointment: ({
-    date,
-    position,
-    personId,
-    targetDate,
-    targetPosition,
-    appointment,
-  }: {
-    date: IMoment;
-    position: number;
-    personId: string;
-    targetDate: IMoment;
-    appointment?: Appointment;
-    targetPosition: number;
-    targetDuration?: IDuration;
-  }) => void;
+  updateAppointment: (props: IUpdateAppProps) => void;
 }
 
 @observer
@@ -68,7 +53,6 @@ export default class Day extends React.Component<IProps> {
         id={`${dayData.id}`}
       >
         <div className="day">
-          {/* <PositionRow positionCount={cols} /> */}
           <Grid
             rows={rows}
             cols={cols}

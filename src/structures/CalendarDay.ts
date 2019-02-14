@@ -11,19 +11,22 @@ export default class CalendarDay implements ICalendarDay {
   }
 
   @observable
-  public appointments: Appointment[];
+  public appointments: { [uniqueId: string]: Appointment };
 
   public date: IMoment;
   public id: string;
 
-  constructor(date: IMoment, appointments: Appointment[] = []) {
+  constructor(
+    date: IMoment,
+    appointments: { [uniqueId: string]: Appointment } = {},
+  ) {
     this.date = date;
     this.appointments = appointments;
     this.id = CalendarDay.calcId(date);
   }
 
   @action
-  public setAppointments(apps: Appointment[]) {
+  public setAppointments(apps: { [uniqueId: string]: Appointment }) {
     this.appointments = apps;
   }
 }

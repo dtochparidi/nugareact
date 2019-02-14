@@ -1,8 +1,9 @@
 import fetchDay from 'fetchers/DayFetcher';
 import IAppointment from 'interfaces/IAppointment';
 import ICalendarDay from 'interfaces/ICalendarDay';
+import IUpdateAppProps from 'interfaces/IUpdateAppProps';
 import { action, observable } from 'mobx';
-import { Duration as IDuration, Moment as IMoment } from 'moment';
+import { Moment as IMoment } from 'moment';
 import Appointment from 'structures/Appointment';
 import CalendarDay from 'structures/CalendarDay';
 
@@ -42,26 +43,15 @@ export default class CalendarDayStore {
 
   @action.bound
   public updateAppointment({
-    date,
-    position,
-    personId,
     targetDate,
     targetPosition,
     targetDuration,
     appointment,
-  }: {
-    date: IMoment;
-    position?: number;
-    personId?: string;
-    targetDate?: IMoment;
-    appointment?: Appointment;
-    targetPosition: number;
-    targetDuration?: IDuration;
-  }) {
+    uniqueId,
+    date,
+  }: IUpdateAppProps) {
     date = date || (appointment as Appointment).date;
-    personId = personId || (appointment as Appointment).personId;
     targetDate = targetDate || date;
-    if (appointment) position = (appointment as Appointment).position;
 
     const { dayTimeRangeActual } = this.rootStore.uiStore;
 
@@ -109,19 +99,7 @@ export default class CalendarDayStore {
           .diff((targetDate as IMoment).clone().startOf('day'), 'day') === 0,
     );
 
-    // OPTIMIZE
-    // get appointment by unique id
-    appointment =
-      appointment ||
-      currentDay.appointments.find(
-        app =>
-          app.date
-            .clone()
-            .startOf('day')
-            .diff((date as IMoment).clone().startOf('day'), 'day') === 0 &&
-          position === app.position &&
-          personId === app.personId,
-      );
+    appointment = appointment || currentDay.appointments[uniqueId as string];
 
     if (!appointment) throw Error('no such appointment');
 
@@ -151,20 +129,17 @@ export default class CalendarDayStore {
     console.log('change day');
 
     // remove from current day
-    currentDay.appointments.splice(
-      currentDay.appointments.indexOf(appointment),
-      1,
-    );
+    delete currentDay.appointments[appointment.uniqueId];
 
     // append to new day
-    newDay.appointments.push(appointment);
+    newDay.appointments[appointment.uniqueId] = appointment;
   }
 
   private async loadDayData(day: CalendarDay) {
     const data = await fetchDay(day.date);
     const { personStore } = this.rootStore.domainStore;
 
-    const promises = data.appointments.map(
+    const promises = Object.values(data.appointments).map(
       async (app: IAppointment): Promise<Appointment> => {
         if (!app) throw Error('app is undefined');
 
@@ -184,6 +159,11 @@ export default class CalendarDayStore {
 
     const appointments = await Promise.all(promises);
 
-    day.setAppointments(appointments);
+    day.setAppointments(
+      appointments.reduce((acc, app) => {
+        acc[app.uniqueId] = app;
+        return acc;
+      }, {}),
+    );
   }
 }

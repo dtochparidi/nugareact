@@ -1,13 +1,13 @@
+import * as CardVariables from 'components/CalendarCard/CalendarCard.scss';
 import { IPerson } from 'interfaces/IPerson';
+import IUpdateAppProps from 'interfaces/IUpdateAppProps';
 import { observer } from 'mobx-react';
-import { Duration as IDuration, Moment as IMoment } from 'moment';
 import * as moment from 'moment';
 import * as React from 'react';
 
 import * as StyleVariables from '../../../../common/variables.scss';
 import Appointment from '../../../../structures/Appointment';
 
-import * as CardVariables from 'components/CalendarCard/CalendarCard.scss';
 import './AppointmentCell.scss';
 
 const MIN_CELL_WIDTH = parseFloat(CardVariables.calendarCellWidthMin);
@@ -19,22 +19,7 @@ export interface IProps {
   moving: boolean;
   subGridColumns: number;
   gridColumnDuration: moment.Duration;
-  updateAppointment: ({
-    date,
-    position,
-    personId,
-    targetDate,
-    targetPosition,
-    appointment,
-  }: {
-    date?: IMoment;
-    position?: number;
-    personId?: string;
-    targetDate?: IMoment;
-    appointment?: Appointment;
-    targetPosition: number;
-    targetDuration?: IDuration;
-  }) => void;
+  updateAppointment: (props: IUpdateAppProps) => void;
 }
 
 export interface IState {
@@ -81,13 +66,20 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
   }
 
   public updateLayout = () => {
-    const elem = this.widthDivRef.current as HTMLElement;
+    const elem = this.widthDivRef.current;
+    if (!elem) {
+      console.log('null container');
+      setTimeout(this.updateLayout, 300 + Math.random() * 100);
+      return;
+    }
+
     const cellRect = elem.getBoundingClientRect();
     const { width } = cellRect;
 
     // BUG
     // 'display: none' is not taking into account - perfomance issue (not very big)
     if (width === 0) {
+      console.log('width zero');
       setTimeout(this.updateLayout, 300 + Math.random() * 100);
       return;
     }
@@ -108,7 +100,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
   };
 
   public componentDidUpdate() {
-    this.updateLayout();
+    setTimeout(() => this.updateLayout());
   }
 
   public componentDidMount() {
@@ -154,9 +146,6 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     );
     updateAppointment({
       appointment,
-      date: undefined,
-      personId: undefined,
-      position: undefined,
       targetDate: appointment.date.clone().add(duration),
       targetPosition: appointment.position,
     });

@@ -3,6 +3,6 @@ import Appointment from 'structures/Appointment';
 
 export default interface ICalendarDay {
   date: moment.Moment;
-  appointments: Appointment[];
+  appointments: { [uniqueId: string]: Appointment };
   loaded?: boolean;
 }

@@ -22,6 +22,7 @@ import createDragConfig from './dragConfig';
 import ToggleArea from './ToggleArea';
 
 import * as Emitter from 'events';
+import IUpdateAppProps from 'interfaces/IUpdateAppProps';
 import { action, observable } from 'mobx';
 import TopRow from './Day/TopRow';
 
@@ -39,22 +40,7 @@ export interface IProps {
   subGridColumns: number;
   requestCallback: (date: Moment.Moment) => void;
   mainColumnStep: IDuration;
-  updateAppointment: ({
-    date,
-    position,
-    personId,
-    targetDate,
-    targetPosition,
-    appointment,
-  }: {
-    date?: IMoment;
-    position?: number;
-    personId?: string;
-    targetDate?: IMoment;
-    appointment?: Appointment;
-    targetPosition?: number;
-    targetDuration?: IDuration;
-  }) => void;
+  updateAppointment: (props: IUpdateAppProps) => void;
 }
 
 export interface IState {
@@ -266,13 +252,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
                 widthNode.style.width = '';
                 this.props.updateAppointment({
-                  appointment: undefined,
                   date: app.date,
-                  personId: app.personId,
-                  position: app.position,
-                  targetDate: undefined,
                   targetDuration: duration,
-                  targetPosition: undefined,
+                  uniqueId: app.uniqueId,
                 });
               },
               onmove: (e: interact.InteractEvent & { rect: ClientRect }) => {
@@ -346,8 +328,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       .parentNode as Element).parentNode as Element).classList.remove(
       'dragOrigin',
     );
-
-    this.updateMovingId('');
   }
 
   public unshiftWholeColumn(target: HTMLElement) {
@@ -369,33 +349,28 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const day = this.getDayByStamp(dayStamp);
 
     const checked: string[] = [];
-    const overlappingApps = day.appointments.reduce(
-      (acc: Appointment[], app) => {
-        const overlaps = day.appointments.reduce(
-          (secAcc: Appointment[], secApp) => {
-            const overlapping =
-              secApp.uniqueId !== app.uniqueId &&
-              secApp.position === app.position &&
-              !checked.includes(secApp.uniqueId) &&
-              secApp.dateRange.overlaps(app.dateRange);
+    const apps = Object.values(day.appointments);
+    const overlappingApps = apps.reduce((acc: Appointment[], app) => {
+      const overlaps = apps.reduce((secAcc: Appointment[], secApp) => {
+        const overlapping =
+          secApp.uniqueId !== app.uniqueId &&
+          secApp.position === app.position &&
+          !checked.includes(secApp.uniqueId) &&
+          secApp.dateRange.overlaps(app.dateRange);
 
-            if (overlapping) secAcc.push(secApp);
+        if (overlapping) secAcc.push(secApp);
 
-            return secAcc;
-          },
-          [],
-        );
+        return secAcc;
+      }, []);
 
-        if (overlaps.length) acc.push(...overlaps.concat([app]));
+      if (overlaps.length) acc.push(...overlaps.concat([app]));
 
-        checked.push(app.uniqueId);
+      checked.push(app.uniqueId);
 
-        return acc;
-      },
-      [],
-    );
+      return acc;
+    }, []);
 
-    day.appointments.forEach(app => {
+    apps.forEach(app => {
       const overlapping = !!overlappingApps.find(
         secApp => secApp.uniqueId === app.uniqueId,
       );
@@ -416,20 +391,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       .fill(null)
       .map(() => [] as Appointment[]);
 
-    // const appPositions = day.appointments.reduce((acc, app) => {
-    //   const column = this.getColumnIndex(app.date);
-    //   acc[app.uniqueId] =
-    //     app.position +
-    //     (column in this.shifts[day.id]
-    //       ? app.position in this.shifts[day.id][column]
-    //         ? this.shifts[day.id][column][app.position].dy
-    //         : 0
-    //       : 0);
-
-    //   return acc;
-    // }, {});
-
-    const ordinateCollisingApps = day.appointments.filter(
+    const ordinateCollisingApps = Object.values(day.appointments).filter(
       app =>
         app.uniqueId !== uniqueId &&
         !this.shiftedIds.includes(app.uniqueId) &&
@@ -438,17 +400,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     if (
       !ordinateCollisingApps.length ||
-      ordinateCollisingApps.every(
-        // app => appPositions[app.uniqueId] !== position,
-        app => app.position !== position,
-      )
+      ordinateCollisingApps.every(app => app.position !== position)
     )
       return true;
 
-    ordinateCollisingApps.forEach(
-      // app => filledColumn[appPositions[app.uniqueId]].push(app),
-      app => filledColumn[app.position].push(app),
-    );
+    ordinateCollisingApps.forEach(app => filledColumn[app.position].push(app));
 
     const [
       shiftDirection,
@@ -560,7 +516,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       })
       .map(([stamp, index]) => index);
 
-    const appointments = day.appointments.filter(app =>
+    const appointments = Object.values(day.appointments).filter(app =>
       columnIndexes.includes(app.date),
     );
 
@@ -571,7 +527,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const day = calendarDay || this.getDayByStamp(stamp);
     const targetIndex = this.getColumnIndex(stamp);
 
-    const appointments = day.appointments.filter(
+    const appointments = Object.values(day.appointments).filter(
       app => this.getColumnIndex(app.date) === targetIndex,
     );
 
@@ -626,15 +582,13 @@ export default class CalendarCard extends React.Component<IProps, IState> {
             targetStamp.hour(app.date.hour()).minute(app.date.minute());
 
             this.props.updateAppointment({
-              appointment: undefined,
               date: app.date,
-              personId: app.personId,
-              position: app.position,
               targetDate: targetStamp.add(
                 this.props.mainColumnStep.asMinutes() * elem.dx,
                 'minute',
               ),
               targetPosition: position + elem.dy,
+              uniqueId: app.uniqueId,
             });
           });
         });
@@ -818,6 +772,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                   console.log('locked');
                   return;
                 }
+                console.log('drop');
 
                 const appointmentId = relatedTarget.id;
                 const app = Appointment.fromIdentifier(appointmentId);
@@ -834,17 +789,17 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 this.lockShifts();
 
                 this.props.updateAppointment({
-                  appointment: undefined,
                   date: app.date,
-                  personId: app.personId,
-                  position: app.position,
                   targetDate: targetStamp,
                   targetPosition: position,
+                  uniqueId: app.uniqueId,
                 });
 
                 this.shiftedIds = [];
 
                 this.checkForOverlaps(stamp);
+
+                this.updateMovingId('');
               },
               ondropactivate: e => {
                 const {
