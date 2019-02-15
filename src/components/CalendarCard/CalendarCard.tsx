@@ -327,6 +327,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     this.shiftsCache = {};
     console.log('clear cache');
+
+    this.clearShifts();
   }
 
   public onAppointmentDraggingEnd(e: interact.InteractEvent) {
@@ -387,7 +389,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     });
   }
 
-  public freePlaceToDropAdvanced(
+  public freePlaceToDrop(
     uniqueId: string,
     position: number,
     dateRange: DateRange,
@@ -397,20 +399,24 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const applyShifts = (offsets: {
       [uniqueId: string]: { dx: number; dy: number };
     }) => {
-      Object.entries(offsets).forEach(([id, deltas]) => {
+      const shifts = Object.entries(offsets).map(([id, deltas]) => {
         const app = day.appointments[id];
 
-        this.shiftCell(
-          day.id,
-          this.getColumnIndex(app.date),
-          app.position,
-          0,
-          deltas.dy,
-        );
+        console.log(deltas.dy);
+
+        return {
+          dx: 0,
+          dy: deltas.dy,
+          x: this.getColumnIndex(app.date),
+          y: app.position,
+        };
       });
+
+      // this.shiftMultipleCells(day.id, shifts);
+      this.mergeShifts(day.id, shifts);
     };
 
-    if (root) this.clearShifts();
+    // if (root) this.clearShifts();
 
     const day = this.getDayByStamp(dateRange.start);
     const ordinateCollisingApps = Object.values(day.appointments).filter(
@@ -452,7 +458,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     }
 
     // just no collisions
-    if (!ordinateCollisingApps.length) return true;
+    if (!ordinateCollisingApps.length) {
+      if (root) this.clearShifts();
+      return true;
+    }
 
     const filledColumn = new Array(this.props.positionCount)
       .fill(null)
@@ -474,10 +483,16 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     );
 
     // so we cannot shift anything anywhere
-    if (shiftDirection === Direction.None) return false;
+    if (shiftDirection === Direction.None) {
+      if (root) this.clearShifts();
+      return false;
+    }
 
     // we have no collisions. place is free and safe to drop!
-    if (!collisingApps.length) return true;
+    if (!collisingApps.length) {
+      if (root) this.clearShifts();
+      return true;
+    }
 
     // transforming enum to int delta
     const delta = shiftDirection === Direction.Top ? -1 : 1;
@@ -519,7 +534,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           if (!acc) return acc;
 
           // check if this branch
-          const able = this.freePlaceToDropAdvanced(
+          const able = this.freePlaceToDrop(
             app.uniqueId,
             app.position + positionsOffset[app.uniqueId].dy,
             app.dateRange,
@@ -613,6 +628,34 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     );
 
     return appointments;
+  }
+
+  @action
+  public mergeShifts(
+    dayId: string,
+    shifts: Array<{ x: number; y: number; dx: number; dy: number }>,
+  ) {
+    if (!(dayId in this.shifts)) this.shifts[dayId] = {};
+
+    Object.entries(this.shifts[dayId]).forEach(entrie0 => {
+      const [x, row] = entrie0;
+      const ix = parseInt(x, 10);
+      Object.keys(row).forEach(y => {
+        const iy = parseInt(y, 10);
+        if (!shifts.find(shift => shift.x === ix && shift.y === iy))
+          shifts.push({ x: ix, y: iy, dx: 0, dy: 0 });
+      });
+    });
+
+    shifts.forEach(({ x, y, dx, dy }) => {
+      if (!(x in this.shifts[dayId])) this.shifts[dayId][x] = {};
+
+      const shift = this.shifts[dayId][x][y];
+      if (!shift || shift.dx !== dx || shift.dy !== dy)
+        this.shifts[dayId][x][y] = { dx, dy };
+    });
+
+    this.shiftsHash[dayId] = v4();
   }
 
   @action
@@ -838,7 +881,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                   this.props.subGridColumns,
                   this.props.mainColumnStep,
                 );
-                const isFree = this.freePlaceToDropAdvanced(
+                const isFree = this.freePlaceToDrop(
                   app.uniqueId,
                   position,
                   moment.range(dropStamp, dropStamp.clone().add(app.duration)),
@@ -958,7 +1001,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 lastRange = range;
                 lastPosition = position;
 
-                const free = this.freePlaceToDropAdvanced(
+                const free = this.freePlaceToDrop(
                   app.uniqueId,
                   position,
                   range,
