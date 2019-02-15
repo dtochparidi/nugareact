@@ -719,6 +719,40 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   @action
+  public mergeShifts(
+    dayId: string,
+    shifts: Array<{ x: number; y: number; dx: number; dy: number }>,
+  ) {
+    if (!(dayId in this.shifts)) {
+      console.log('init day', dayId);
+      this.shifts[dayId] = {};
+    }
+
+    Object.entries(this.shifts[dayId]).forEach(entrie0 => {
+      const [x, row] = entrie0;
+      const ix = parseInt(x, 10);
+      console.log(ix);
+      Object.keys(row).forEach(y => {
+        const iy = parseInt(y, 10);
+        console.log(iy);
+        if (!shifts.find(shift => shift.x === ix && shift.y === iy))
+          shifts.push({ x: ix, y: iy, dx: 0, dy: 0 });
+      });
+    });
+
+    shifts.forEach(({ x, y, dx, dy }) => {
+      if (!(x in this.shifts[dayId])) this.shifts[dayId][x] = {};
+
+      const shift = this.shifts[dayId][x][y];
+      if (!shift || shift.dx !== dx || shift.dy !== dy)
+        this.shifts[dayId][x][y] = { dx, dy };
+      else console.log('already exists');
+    });
+
+    this.shiftsHash[dayId] = v4();
+  }
+
+  @action
   public shiftMultipleCells(
     dayId: string,
     shifts: Array<{ x: number; y: number; dx: number; dy: number }>,
