@@ -112,7 +112,7 @@ export default class Grid extends React.Component<IProps> {
         gridCells.push(
           <GridCell
             movingIdObj={this.movingId}
-            key={`${x}:dragga${y}`}
+            key={`${x}:${y}`}
             x={x}
             y={y}
             cols={cols}

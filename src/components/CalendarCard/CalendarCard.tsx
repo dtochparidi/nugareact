@@ -63,7 +63,7 @@ enum Direction {
 export default class CalendarCard extends React.Component<IProps, IState> {
   private static detectShiftDirectionAndCollisions(
     movingApp: { uniqueId: string; position: number; dateRange: DateRange },
-    fixedIds: string[],
+    fixedId: string,
     fullColumn: Appointment[][],
     priorityDirection: Direction,
   ): [Direction, Appointment[]] {
@@ -72,12 +72,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     const checkTop = (): [Direction, Appointment[]] | false => {
       for (let i = movingApp.position; i > 0; i--) {
-        if (
-          fullColumn[i].some(app =>
-            fixedIds.some(uniqueId => app.uniqueId === uniqueId),
-          )
-        )
-          break;
+        if (fullColumn[i].some(app => app.uniqueId === fixedId)) break;
 
         const overlappingApps = fullColumn[i].filter(
           app =>
@@ -98,14 +93,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     };
 
     const checkBottom = (): [Direction, Appointment[]] | false => {
-      console.log('asd');
       for (let i = movingApp.position; i < fullColumn.length; i++) {
-        if (
-          fullColumn[i].some(app =>
-            fixedIds.some(uniqueId => app.uniqueId === uniqueId),
-          )
-        )
-          break;
+        if (fullColumn[i].some(app => app.uniqueId === fixedId)) break;
 
         const overlappingApps = fullColumn[i].filter(
           app =>
@@ -129,31 +118,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       return checkTop() || checkBottom() || [Direction.None, []];
     else return checkBottom() || checkTop() || [Direction.None, []];
   }
-
-  // private static tryShiftToDirection(
-  //   startIndex: number,
-  //   fullColumn: boolean[],
-  //   direction: Direction,
-  // ): [Direction, number] {
-  //   // check top direction
-  //   switch (direction) {
-  //     case Direction.Top:
-  //       for (let i = startIndex - 1; i > 0; i--)
-  //         if (!fullColumn[i]) return [Direction.Top, startIndex - i];
-  //       break;
-
-  //     // check bottom direction
-  //     case Direction.Bottom:
-  //       for (let i = startIndex + 1; i < fullColumn.length; i++)
-  //         if (!fullColumn[i]) return [Direction.Bottom, i - startIndex];
-  //       break;
-
-  //     // column is totally filled :(
-  //     default:
-  //       return [Direction.None, 0];
-  //   }
-  //   return [Direction.None, 0];
-  // }
 
   private static calcDaySize(
     columnsPerPage: number,
@@ -413,9 +377,12 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public freePlaceToDrop(
-    uniqueId: string,
-    position: number,
-    dateRange: DateRange,
+    movingApp: {
+      uniqueId: string;
+      position: number;
+      dateRange: DateRange;
+    },
+    fixedId: string = '',
     positionsOffset: { [uniqueId: string]: { dx: number; dy: number } } = {},
     root = true,
     priorityDirection = Direction.Top,
@@ -435,28 +402,23 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       });
 
       // this.shiftMultipleCells(day.id, shifts);
+      console.log(shifts);
       this.mergeShifts(day.id, shifts);
     };
 
     // if (root) this.clearShifts();
 
-    const day = this.getDayByStamp(dateRange.start);
-    const {
-      uniqueId: movingUniqueId,
-      position: movingPosition,
-      dateRange: movingDateRange,
-    } = Appointment.fromIdentifier(this.movingId);
+    const day = this.getDayByStamp(movingApp.dateRange.start);
     const ordinateCollisingApps = Object.values(day.appointments).filter(
       app =>
-        app.uniqueId !== uniqueId &&
-        app.uniqueId !== movingUniqueId &&
-        dateRange.overlaps(moment.range(app.date, app.endDate)),
+        app.uniqueId !== movingApp.uniqueId &&
+        movingApp.dateRange.overlaps(moment.range(app.date, app.endDate)),
     );
 
     const calcShiftCascadeIdentifier = () => {
       return (
-        position.toString() +
-        uniqueId +
+        movingApp.position.toString() +
+        movingApp.uniqueId +
         ordinateCollisingApps.reduce((acc, app) => {
           return acc + app.uniqueId + app.position.toString();
         }, '')
@@ -475,7 +437,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         const cachedShifts = this.shiftsCache[day.id][currentShiftCascadeId];
         applyShifts(cachedShifts);
 
-        // console.log('cached shifts restored');
+        console.log('cached shifts restored');
 
         return true;
       }
@@ -502,12 +464,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       shiftDirection,
       collisingApps,
     ] = CalendarCard.detectShiftDirectionAndCollisions(
-      {
-        dateRange: movingDateRange,
-        position: movingPosition,
-        uniqueId: movingUniqueId,
-      },
-      root ? [] : [uniqueId],
+      movingApp,
+      fixedId,
       filledColumn,
       priorityDirection,
     );
@@ -579,12 +537,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
           // check if this branch
           const able = this.freePlaceToDrop(
+            movingApp,
             app.uniqueId,
-            app.position + positionsOffset[app.uniqueId].dy,
-            app.dateRange,
             shiftsCopy,
             false,
-            movingPosition - app.position >= 0
+            movingApp.position - app.position >= 0
               ? Direction.Top
               : Direction.Bottom,
           );
@@ -692,7 +649,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       }
     });
 
-    if (!shiftsIsEmpty && anyDayId) this.shiftsHash[anyDayId] = v4();
+    if (!shiftsIsEmpty && anyDayId) {
+      console.log('cleared shifts');
+      this.shiftsHash[anyDayId] = v4();
+    } else console.log('nothing to clear');
 
     return shiftsIsEmpty;
   }
@@ -745,7 +705,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         shiftsIsEmpty = false;
 
         this.shiftsHash[dayId] = v4();
-      }
+
+        console.log('locked');
+      } else console.log('nothing to lock');
     });
 
     // console.log('shift', JSON.stringify(this.shifts));
@@ -758,6 +720,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     dayId: string,
     shifts: Array<{ x: number; y: number; dx: number; dy: number }>,
   ) {
+    console.log(this.shifts[dayId]);
+
     if (!(dayId in this.shifts)) {
       console.log('init day', dayId);
       this.shifts[dayId] = {};
@@ -776,10 +740,15 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     shifts.forEach(({ x, y, dx, dy }) => {
       if (!(x in this.shifts[dayId])) this.shifts[dayId][x] = {};
 
+      if (!this.shifts[dayId][x][y])
+        this.shifts[dayId][x][y] = { dx: 0, dy: 0 };
       const shift = this.shifts[dayId][x][y];
+
       console.log(dy);
-      if (!shift || shift.dx !== dx || shift.dy !== dy)
-        this.shifts[dayId][x][y] = { dx, dy };
+      if (shift.dx !== dx || shift.dy !== dy) {
+        this.shifts[dayId][x][y].dx = dx;
+        this.shifts[dayId][x][y].dy = dy;
+      }
     });
 
     this.shiftsHash[dayId] = v4();
@@ -818,55 +787,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     this.shifts[dayId][x][y] = { dx, dy };
 
     // console.log('shift', JSON.stringify(this.shifts[dayId]));
-  }
-
-  @action
-  public mergeShifts(
-    dayId: string,
-    shifts: Array<{ x: number; y: number; dx: number; dy: number }>,
-  ) {
-    if (!(dayId in this.shifts)) {
-      console.log('init day', dayId);
-      this.shifts[dayId] = {};
-    }
-
-    Object.entries(this.shifts[dayId]).forEach(entrie0 => {
-      const [x, row] = entrie0;
-      const ix = parseInt(x, 10);
-      Object.keys(row).forEach(y => {
-        const iy = parseInt(y, 10);
-        if (!shifts.find(shift => shift.x === ix && shift.y === iy))
-          shifts.push({ x: ix, y: iy, dx: 0, dy: 0 });
-      });
-    });
-
-    shifts.forEach(({ x, y, dx, dy }) => {
-      if (!(x in this.shifts[dayId])) this.shifts[dayId][x] = {};
-
-      const shift = this.shifts[dayId][x][y];
-      if (!shift || shift.dx !== dx || shift.dy !== dy)
-        this.shifts[dayId][x][y] = { dx, dy };
-    });
-
-    this.shiftsHash[dayId] = v4();
-  }
-
-  @action
-  public shiftMultipleCells(
-    dayId: string,
-    shifts: Array<{ x: number; y: number; dx: number; dy: number }>,
-  ) {
-    if (!shifts.length) return;
-
-    if (!(dayId in this.shifts)) this.shifts[dayId] = {};
-
-    shifts.forEach(({ x, y, dx, dy }) => {
-      if (!(x in this.shifts[dayId])) this.shifts[dayId][x] = {};
-
-      this.shifts[dayId][x][y] = { dx, dy };
-    });
-
-    this.shiftsHash[dayId] = v4();
   }
 
   public unShiftCell(dayId: string, x: number, y: number, stack = false) {
@@ -1001,11 +921,14 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                   this.props.subGridColumns,
                   this.props.mainColumnStep,
                 );
-                const isFree = this.freePlaceToDrop(
-                  app.uniqueId,
+                const isFree = this.freePlaceToDrop({
+                  dateRange: moment.range(
+                    dropStamp,
+                    dropStamp.clone().add(app.duration),
+                  ),
                   position,
-                  moment.range(dropStamp, dropStamp.clone().add(app.duration)),
-                );
+                  uniqueId: app.uniqueId,
+                });
 
                 this.shiftsCache = {};
                 console.log('clear cache');
@@ -1121,7 +1044,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 lastRange = range;
                 lastPosition = position;
 
-                this.freePlaceToDrop(app.uniqueId, position, range);
+                this.freePlaceToDrop({
+                  dateRange: range,
+                  position,
+                  uniqueId: app.uniqueId,
+                });
               },
               overlap: 'leftCenter',
             };
