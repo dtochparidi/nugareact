@@ -12,7 +12,7 @@ const moment = extendMoment(Moment);
 export default class Appointment implements IAppointment {
   public static fromIdentifier(id: string) {
     const arr = id.split('_');
-    return {
+    const data = {
       date: moment(arr[1], 'mm-HH-DD-MM-YYYY'),
       duration: Moment.duration(parseFloat(arr[4]), 'minute'),
       identifier: id,
@@ -20,6 +20,10 @@ export default class Appointment implements IAppointment {
       position: parseInt(arr[2], 10),
       uniqueId: arr[5],
     };
+
+    return Object.assign(data, {
+      dateRange: moment.range(data.date, data.date.clone().add(data.duration)),
+    });
   }
 
   private static getStateHash() {
