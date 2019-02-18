@@ -63,48 +63,71 @@ enum Direction {
 export default class CalendarCard extends React.Component<IProps, IState> {
   private static detectShiftDirectionAndCollisions(
     movingApp: { uniqueId: string; position: number; dateRange: DateRange },
+    fixedIds: string[],
     fullColumn: Appointment[][],
+    priorityDirection: Direction,
   ): [Direction, Appointment[]] {
-    let collisions = [];
+    let collisions: Appointment[] = [];
     const params = { adjacent: false };
 
-    // check top direction
-    for (let i = movingApp.position; i > 0; i--) {
-      const overlappingApps = fullColumn[i].filter(
-        app =>
-          (i === movingApp.position &&
-            app.dateRange.overlaps(movingApp.dateRange, params)) ||
-          fullColumn[i + 1].every(prevApp =>
-            app.dateRange.overlaps(prevApp.dateRange, params),
-          ),
-      );
+    const checkTop = (): [Direction, Appointment[]] | false => {
+      for (let i = movingApp.position; i > 0; i--) {
+        if (
+          fullColumn[i].some(app =>
+            fixedIds.some(uniqueId => app.uniqueId === uniqueId),
+          )
+        )
+          break;
 
-      collisions.push(...overlappingApps);
-
-      if (!overlappingApps.length) return [Direction.Top, collisions];
-    }
-
-    collisions = [];
-
-    // check bottom direction
-    for (let i = movingApp.position; i < fullColumn.length; i++) {
-      const overlappingApps = fullColumn[i].filter(
-        app =>
-          (i === movingApp.position &&
-            app.dateRange.overlaps(movingApp.dateRange, params)) ||
-          (i - 1 >= 0 &&
-            fullColumn[i - 1].every(prevApp =>
+        const overlappingApps = fullColumn[i].filter(
+          app =>
+            (i === movingApp.position &&
+              app.dateRange.overlaps(movingApp.dateRange, params)) ||
+            fullColumn[i + 1].every(prevApp =>
               app.dateRange.overlaps(prevApp.dateRange, params),
-            )),
-      );
+            ),
+        );
 
-      collisions.push(...overlappingApps);
+        collisions.push(...overlappingApps);
 
-      if (!overlappingApps.length) return [Direction.Bottom, collisions];
-    }
+        if (!overlappingApps.length) return [Direction.Top, collisions];
+      }
 
-    // column is totally filled :(
-    return [Direction.None, []];
+      collisions = [];
+      return false;
+    };
+
+    const checkBottom = (): [Direction, Appointment[]] | false => {
+      console.log('asd');
+      for (let i = movingApp.position; i < fullColumn.length; i++) {
+        if (
+          fullColumn[i].some(app =>
+            fixedIds.some(uniqueId => app.uniqueId === uniqueId),
+          )
+        )
+          break;
+
+        const overlappingApps = fullColumn[i].filter(
+          app =>
+            (i === movingApp.position &&
+              app.dateRange.overlaps(movingApp.dateRange, params)) ||
+            (i - 1 >= 0 &&
+              fullColumn[i - 1].every(prevApp =>
+                app.dateRange.overlaps(prevApp.dateRange, params),
+              )),
+        );
+
+        collisions.push(...overlappingApps);
+
+        if (!overlappingApps.length) return [Direction.Bottom, collisions];
+      }
+      collisions = [];
+      return false;
+    };
+
+    if (priorityDirection === Direction.Top)
+      return checkTop() || checkBottom() || [Direction.None, []];
+    else return checkBottom() || checkTop() || [Direction.None, []];
   }
 
   // private static tryShiftToDirection(
@@ -395,6 +418,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     dateRange: DateRange,
     positionsOffset: { [uniqueId: string]: { dx: number; dy: number } } = {},
     root = true,
+    priorityDirection = Direction.Top,
   ): boolean {
     const applyShifts = (offsets: {
       [uniqueId: string]: { dx: number; dy: number };
@@ -417,15 +441,22 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     // if (root) this.clearShifts();
 
     const day = this.getDayByStamp(dateRange.start);
+    const {
+      uniqueId: movingUniqueId,
+      position: movingPosition,
+      dateRange: movingDateRange,
+    } = Appointment.fromIdentifier(this.movingId);
     const ordinateCollisingApps = Object.values(day.appointments).filter(
       app =>
         app.uniqueId !== uniqueId &&
+        app.uniqueId !== movingUniqueId &&
         dateRange.overlaps(moment.range(app.date, app.endDate)),
     );
 
     const calcShiftCascadeIdentifier = () => {
       return (
         position.toString() +
+        uniqueId +
         ordinateCollisingApps.reduce((acc, app) => {
           return acc + app.uniqueId + app.position.toString();
         }, '')
@@ -471,8 +502,14 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       shiftDirection,
       collisingApps,
     ] = CalendarCard.detectShiftDirectionAndCollisions(
-      { uniqueId, position, dateRange },
+      {
+        dateRange: movingDateRange,
+        position: movingPosition,
+        uniqueId: movingUniqueId,
+      },
+      root ? [] : [uniqueId],
       filledColumn,
+      priorityDirection,
     );
 
     // so we cannot shift anything anywhere
@@ -499,7 +536,21 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     });
 
     // recursive deep-shifting
-    const possibleConfigurations = [collisingApps, collisingApps.reverse()];
+    const possibleConfigurations = [
+      collisingApps,
+      collisingApps.reverse(),
+      // TODO: sort by distance from current app
+      // collisingApps.reduce((acc: Appointment[], app, i, arr) => {
+      //   const index =
+      //     i % 2 === 0 ? Math.floor(i / 2) : arr.length - 1 - Math.floor(i / 2);
+
+      //   console.log(i, index, arr.length);
+
+      //   acc[index] = app;
+      //   return acc;
+      // }, []),
+    ];
+
     const [success] = possibleConfigurations.reduce(
       (
         accumulator: [
@@ -533,6 +584,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
             app.dateRange,
             shiftsCopy,
             false,
+            movingPosition - app.position >= 0
+              ? Direction.Top
+              : Direction.Bottom,
           );
 
           return able;
@@ -697,6 +751,56 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     // console.log('shift', JSON.stringify(this.shifts));
 
     return shiftsIsEmpty;
+  }
+
+  @action
+  public mergeShifts(
+    dayId: string,
+    shifts: Array<{ x: number; y: number; dx: number; dy: number }>,
+  ) {
+    if (!(dayId in this.shifts)) {
+      console.log('init day', dayId);
+      this.shifts[dayId] = {};
+    }
+
+    Object.entries(this.shifts[dayId]).forEach(entrie0 => {
+      const [x, row] = entrie0;
+      const ix = parseInt(x, 10);
+      Object.keys(row).forEach(y => {
+        const iy = parseInt(y, 10);
+        if (!shifts.find(shift => shift.x === ix && shift.y === iy))
+          shifts.push({ x: ix, y: iy, dx: 0, dy: 0 });
+      });
+    });
+
+    shifts.forEach(({ x, y, dx, dy }) => {
+      if (!(x in this.shifts[dayId])) this.shifts[dayId][x] = {};
+
+      const shift = this.shifts[dayId][x][y];
+      console.log(dy);
+      if (!shift || shift.dx !== dx || shift.dy !== dy)
+        this.shifts[dayId][x][y] = { dx, dy };
+    });
+
+    this.shiftsHash[dayId] = v4();
+  }
+
+  @action
+  public shiftMultipleCells(
+    dayId: string,
+    shifts: Array<{ x: number; y: number; dx: number; dy: number }>,
+  ) {
+    if (!shifts.length) return;
+
+    if (!(dayId in this.shifts)) this.shifts[dayId] = {};
+
+    shifts.forEach(({ x, y, dx, dy }) => {
+      if (!(x in this.shifts[dayId])) this.shifts[dayId][x] = {};
+
+      this.shifts[dayId][x][y] = { dx, dy };
+    });
+
+    this.shiftsHash[dayId] = v4();
   }
 
   @action
@@ -1018,7 +1122,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 lastPosition = position;
 
                 this.freePlaceToDrop(app.uniqueId, position, range);
-                // console.log(free);
               },
               overlap: 'leftCenter',
             };
