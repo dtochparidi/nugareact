@@ -387,7 +387,269 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     });
   }
 
-  public freePlaceToDrop(
+  public freePlaceToDrop(movingApp: {
+    uniqueId: string;
+    position: number;
+    dateRange: DateRange;
+  }): boolean {
+    interface IOffsetMap {
+      [uniqueId: string]: { dx: number; dy: number };
+    }
+
+    const applyShifts = (currentDay: CalendarDay, offsets: IOffsetMap) => {
+      const shifts = Object.entries(offsets).map(([id, deltas]) => {
+        const app = currentDay.appointments[id];
+
+        return {
+          dx: 0,
+          dy: deltas.dy,
+          x: this.getColumnIndex(app.date),
+          y: app.position,
+        };
+      });
+
+      this.mergeShifts(currentDay.id, shifts);
+    };
+
+    console.log(' ------ free iteration ------');
+
+    const day = this.getDayByStamp(movingApp.dateRange.start);
+
+    const restoreShiftsFromCache = (id: string): IOffsetMap | false =>
+      day.id in this.shiftsCache && this.shiftsCache[day.id][id];
+
+    const calcShiftCascadeIdentifier = (
+      fixedApp: {
+        uniqueId: string;
+        position: number;
+        dateRange: DateRange;
+      },
+      ordinateApps: Appointment[],
+    ) =>
+      movingApp.position +
+      fixedApp.uniqueId +
+      ordinateApps.reduce((acc, app) => {
+        return acc + app.uniqueId + app.position.toString();
+      }, '');
+
+    // TODO:
+    // ordinate column for each app
+    const columnsMap = Object.entries(day.appointments)
+      .reduceObject.values(day.appointments)
+      .filter(
+        app =>
+          app.uniqueId !== movingApp.uniqueId &&
+          fixedApp.dateRange.overlaps(moment.range(app.date, app.endDate)),
+      );
+
+    // const counter = 0;
+    const calcOffsetMap = (
+      fixedApp: {
+        uniqueId: string;
+        position: number;
+        dateRange: DateRange;
+      },
+      positionsOffset: IOffsetMap,
+      fixedIds: string[] = [],
+    ): IOffsetMap | false => {
+      // console.log(
+      //   `--- calc offset map (${counter++}) for ${
+      //     fixedApp.uniqueId.split('-')[0]
+      //   }`,
+      // );
+
+      const ordinateCollisingApps = Object.values(day.appointments).filter(
+        app =>
+          app.uniqueId !== movingApp.uniqueId &&
+          fixedApp.dateRange.overlaps(moment.range(app.date, app.endDate)),
+      );
+
+      if (!ordinateCollisingApps.length) {
+        console.log('no ordinate apps');
+        return positionsOffset;
+      }
+
+      // try to restore cache
+      const shiftCascadeIdentifier = calcShiftCascadeIdentifier(
+        fixedApp,
+        ordinateCollisingApps,
+      );
+      const restoredShifts = restoreShiftsFromCache(shiftCascadeIdentifier);
+
+      if (restoredShifts) return restoredShifts;
+
+      // now let's calculate shifts
+      const filledColumn = new Array(this.props.positionCount)
+        .fill(null)
+        .map(() => [] as Appointment[]);
+
+      ordinateCollisingApps.forEach(app =>
+        filledColumn[
+          app.position + (positionsOffset[app.uniqueId] || { dy: 0 }).dy
+        ].push(app),
+      );
+
+      const fixedAppPosition =
+        fixedApp.position +
+        (positionsOffset[fixedApp.uniqueId] || { dy: 0 }).dy;
+      if (!filledColumn[fixedAppPosition].length) {
+        console.log('no inline collising apps');
+        return positionsOffset;
+      }
+
+      // function for finding collising apps
+      const getAppsToShift = (
+        originIndex: number,
+        delta: Direction,
+      ): [Appointment[], Direction] | false => {
+        const condition: (i: number) => boolean =
+          delta > 0 ? i => i < filledColumn.length : i => i >= 0;
+
+        const toShift: Appointment[] = [];
+        const toShiftColumn: Appointment[][] = filledColumn.map(() => []);
+        for (let i = originIndex; condition(i); i += delta) {
+          // check if collising with a fixed app
+          if (
+            fixedIds.length &&
+            filledColumn[i].length &&
+            filledColumn[i].some(app =>
+              fixedIds.some(fixedId => app.uniqueId === fixedId),
+            )
+          )
+            return false;
+
+          const apps = filledColumn[i].filter(
+            app =>
+              app.uniqueId !== fixedApp.uniqueId &&
+              (i === originIndex ||
+                (i === movingApp.position &&
+                  app.dateRange.overlaps(movingApp.dateRange, {
+                    adjacent: false,
+                  })) ||
+                toShiftColumn[i - delta].some(prevApp =>
+                  prevApp.dateRange.overlaps(app.dateRange, {
+                    adjacent: false,
+                  }),
+                )),
+          );
+
+          toShift.push(...apps);
+          toShiftColumn[i].push(...apps);
+
+          if (!apps.length) return [toShift, delta];
+        }
+
+        // if there no free space
+        return false;
+      };
+
+      // now get apps to shift
+      const [appsToShift, shiftDirection] =
+        // firstly try top
+        getAppsToShift(fixedAppPosition, Direction.Top) ||
+          // the bottom direction
+          getAppsToShift(fixedAppPosition, Direction.Bottom) || [
+            // no free direction :(
+            [],
+            Direction.None,
+          ];
+
+      fixedIds.push(fixedApp.uniqueId);
+
+      if (shiftDirection === Direction.None) {
+        console.log('cannot shift');
+        return false;
+      }
+
+      if (!appsToShift.length) {
+        console.log('no apps to shift');
+        return positionsOffset;
+      }
+
+      const currentOffsetMap = appsToShift.reduce(
+        (offsets: IOffsetMap, app) => {
+          if (!(app.uniqueId in offsets))
+            offsets[app.uniqueId] = {
+              dx: 0,
+              dy: 0,
+            };
+
+          offsets[app.uniqueId].dy += shiftDirection;
+
+          return offsets;
+        },
+        Object.entries(positionsOffset).reduce((newObj, [id, deltas]) => {
+          newObj[id] = { dx: deltas.dx, dy: deltas.dy };
+          return newObj;
+        }, {}),
+      );
+
+      // quite complex function just for... nothing?
+
+      // const mergeOffsetMaps = (map1: IOffsetMap, map2: IOffsetMap): IOffsetMap => {
+      //   const keysChecked: string[] = [];
+      //   const firstAccMap = Object.entries(map1).map(([uniqueId, deltas]) => {
+      //     const otherDeltas = uniqueId in map2 ? map2[uniqueId] : {dx: 0, dy: 0};
+      //     keysChecked.push(uniqueId);
+
+      //     return [uniqueId, {dx: deltas.dx + otherDeltas.dx, dy: deltas.dy + otherDeltas.dy}]
+      //   });
+
+      //   const secondAccMap = Object.entries(map2).filter(([uniqueId]) => !keysChecked.includes(uniqueId));
+
+      //   const finalMap = firstAccMap.concat(secondAccMap).reduce(
+      //     (acc: IOffsetMap, [uniqueId, deltas]: [string, {dx: number, dy: number}]) => acc[uniqueId] = deltas,
+      //     {}
+      //   )
+
+      //   return finalMap;
+      // }
+
+      const configurations = [
+        // sorted by distance from origin
+        appsToShift.sort((app1, app2) =>
+          Math.abs(app1.position - fixedAppPosition) >
+          Math.abs(app2.position - fixedAppPosition)
+            ? 1
+            : -1,
+        ),
+      ];
+      const finalOffsetMap: IOffsetMap | false = configurations.reduce(
+        (acc: IOffsetMap | false, config, i) => {
+          if (acc) return acc;
+
+          console.log('try config', i);
+
+          const map = config.reduce(
+            (offsets: IOffsetMap | false, app: Appointment) =>
+              !offsets ? false : calcOffsetMap(app, offsets, fixedIds),
+            // : calcOffsetMap(app, offsets, fixedIds.map(id => id)),
+            currentOffsetMap,
+          );
+
+          return map;
+        },
+        false,
+      );
+
+      // console.log('new offsets map', finalOffsetMap);
+
+      return finalOffsetMap;
+    };
+
+    const offsetMap = calcOffsetMap(movingApp, {});
+
+    if (!offsetMap) {
+      this.clearShifts();
+      return false;
+    }
+
+    applyShifts(day, offsetMap);
+
+    return true;
+  }
+
+  public freePlaceToDropDeprecated(
     movingApp: {
       uniqueId: string;
       position: number;
@@ -427,7 +689,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const ordinateCollisingApps = Object.values(day.appointments).filter(
       app =>
         app.uniqueId !== movingApp.uniqueId &&
-        // movingApp.dateRange.overlaps(moment.range(app.date, app.endDate)),dateRange
         ((fixedApp && fixedApp.dateRange) || movingApp.dateRange).overlaps(
           moment.range(app.date, app.endDate),
         ),
@@ -558,7 +819,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           if (!acc) return acc;
 
           // check if this branch
-          const able = this.freePlaceToDrop(
+          const able = this.freePlaceToDropDeprecated(
             movingApp,
             app,
             shiftsCopy,
