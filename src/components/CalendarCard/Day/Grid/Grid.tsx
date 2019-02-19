@@ -43,6 +43,11 @@ export default class Grid extends React.Component<IProps> {
   constructor(props: IProps) {
     super(props);
 
+    this.shifts = new Array(this.props.cols)
+      .fill(null)
+      .map(w =>
+        new Array(this.props.rows).fill(null).map(u => ({ dx: 0, dy: 0 })),
+      );
     this.updateApps();
     this.updateShifts();
     this.gridCells = this.generateGrid();
@@ -132,12 +137,6 @@ export default class Grid extends React.Component<IProps> {
   @action
   public updateShifts() {
     const { cols, rows, shifts } = this.props;
-
-    this.shifts =
-      this.shifts ||
-      new Array(cols)
-        .fill(null)
-        .map(w => new Array(rows).fill(null).map(u => ({ dx: 0, dy: 0 })));
 
     for (let x = 0; x < cols; x++)
       for (let y = 0; y < rows; y++) {
