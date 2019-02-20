@@ -430,7 +430,16 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         dateRange: DateRange;
       },
       fixedIds: string[],
-    ) => fixedApp.uniqueId + fixedApp.position + fixedIds.join('');
+      collisingApp: Appointment[],
+      priorityDirection: Direction,
+    ) =>
+      movingApp.dateRange.start.format('mm:HH') +
+      movingApp.position +
+      fixedApp.uniqueId +
+      fixedApp.position +
+      priorityDirection.toString() +
+      collisingApp.map(app => app.uniqueId).join('') +
+      fixedIds.join('');
 
     const calcOffsetMap = (
       fixedApp: {
@@ -442,18 +451,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       priorityDirection: Direction = Direction.Top,
       fixedIds: string[] = [],
     ): IOffsetMap | false => {
-      // try to restore cache
-      const shiftCascadeIdentifier = calcShiftCascadeIdentifier(
-        fixedApp,
-        fixedIds,
-      );
-      const restoredShifts = restoreShiftsFromCache(shiftCascadeIdentifier);
-
-      if (restoredShifts) {
-        console.log('restored from cache');
-        return restoredShifts;
-      }
-
       const filledColumn = new Array(this.props.positionCount).fill(null).map(
         () =>
           [] as Array<{
@@ -468,6 +465,20 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           app.uniqueId !== movingApp.uniqueId &&
           app.dateRange.overlaps(fixedApp.dateRange),
       );
+
+      // try to restore cache
+      const shiftCascadeIdentifier = calcShiftCascadeIdentifier(
+        fixedApp,
+        fixedIds,
+        nearCollisingApps,
+        priorityDirection,
+      );
+      const restoredShifts = restoreShiftsFromCache(shiftCascadeIdentifier);
+
+      if (restoredShifts) {
+        console.log('restored from cache');
+        return restoredShifts;
+      }
 
       nearCollisingApps.forEach(app =>
         filledColumn[
@@ -930,9 +941,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         shiftsIsEmpty = false;
 
         this.shiftsHash[dayId] = v4();
-
-        console.log('locked');
-      } else console.log('nothing to lock');
+      }
     });
 
     // console.log('shift', JSON.stringify(this.shifts));
