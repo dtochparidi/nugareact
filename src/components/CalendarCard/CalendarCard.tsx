@@ -1407,32 +1407,32 @@ export default class CalendarCard extends React.Component<IProps, IState> {
               />
             ))}
           </div>
-          <ToggleArea
-            id="leftToggleArea"
-            style={{
-              height: `${this.clientRect.height}px`,
-              left: `${this.clientRect.left}px`,
-              top: `${this.clientRect.top}px`,
-              width: `${calendarCellMinWidth / 2}px`,
-            }}
-            action={this.turnPageLeft}
-            delay={200}
-            controller={this.pageTurnEmitter}
-          />
-          <ToggleArea
-            id="rightToggleArea"
-            style={{
-              height: `${this.clientRect.height}px`,
-              left: `calc(${this.clientRect.left +
-                this.clientRect.width}px - ${calendarCellMinWidth / 2}px)`,
-              top: `${this.clientRect.top}px`,
-              width: `${calendarCellMinWidth / 2}px`,
-            }}
-            action={this.turnPageRight}
-            delay={200}
-            controller={this.pageTurnEmitter}
-          />
         </div>
+        <ToggleArea
+          id="leftToggleArea"
+          style={{
+            height: `${this.clientRect.height}px`,
+            left: '0px',
+            top: `${this.clientRect.top}px`,
+            width: `${calendarCellMinWidth / 2}px`,
+          }}
+          action={this.turnPageLeft}
+          delay={200}
+          controller={this.pageTurnEmitter}
+        />
+        <ToggleArea
+          id="rightToggleArea"
+          style={{
+            height: `${this.clientRect.height}px`,
+            left: '',
+            right: '0px',
+            top: `${this.clientRect.top}px`,
+            width: `${calendarCellMinWidth / 2}px`,
+          }}
+          action={this.turnPageRight}
+          delay={200}
+          controller={this.pageTurnEmitter}
+        />
       </Card>
     );
   }
