@@ -185,6 +185,24 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 );
 
                 widthNode.style.width = '';
+
+                const range = moment.range(
+                  app.date,
+                  app.date.clone().add(duration),
+                );
+                const day = this.getDayByStamp(app.date);
+
+                const overlapping = Object.values(day.appointments).some(
+                  otherApp =>
+                    otherApp.position === app.position &&
+                    otherApp.uniqueId !== app.uniqueId &&
+                    otherApp.dateRange.overlaps(range),
+                );
+                if (overlapping) {
+                  console.log('overlaps!');
+                  return;
+                }
+
                 this.props.updateAppointment({
                   date: app.date,
                   targetDuration: duration,
