@@ -22,7 +22,7 @@ let needToShow: boolean = false;
 
 // do not do it while testing in jest
 if (clientSide) {
-  (window as any).shiftsCaching = true;
+  (window as any).lockVisibility = false;
 
   // checking for updates
   versionName = Cookies.get('version');

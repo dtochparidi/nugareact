@@ -1108,7 +1108,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     if (this.isScrolling) return;
 
     const index =
-      this.currentLeftColumnIndex + this.state.columnsPerPage * 2 * delta;
+      this.currentLeftColumnIndex +
+      Math.min(this.state.columnsPerPage * 2, this.state.columnsPerDay) * delta;
     if (index < 0) {
       this.shouldUpdateVisibility = true;
       this.props.requestCallback(
@@ -1291,6 +1292,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public updateVisibility(indexes: number[]) {
+    if ((window as any).lockVisibility) return;
+
     const minColumn = Math.min(...indexes);
     const maxColumn = Math.max(...indexes);
     const minDay = Math.floor(minColumn / this.state.columnsPerDay) - 1;
@@ -1449,7 +1452,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         this.updateScroll(true);
         this.updateBoundingRect();
 
-        setTimeout(() => this.updateStickyElements(true));
+        setTimeout(() => this.updateStickyElements(), 500);
       }, boundTime);
     });
   }
