@@ -25,6 +25,7 @@ export interface IProps {
   };
   shiftsHash: string;
   updateAppointment: (props: IUpdateAppProps) => void;
+  instantRender: boolean;
 }
 
 @observer
@@ -42,6 +43,7 @@ export default class Day extends React.Component<IProps> {
       mainColumnStep,
       movingId,
       updateAppointment,
+      instantRender,
     } = this.props;
 
     return (
@@ -64,6 +66,7 @@ export default class Day extends React.Component<IProps> {
             updateAppointment={updateAppointment}
             subGridColumns={subGridStep}
             mainColumnStep={mainColumnStep}
+            instantRender={instantRender}
           />
         </div>
       </div>

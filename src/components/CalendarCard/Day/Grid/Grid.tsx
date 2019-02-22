@@ -25,6 +25,7 @@ export interface IProps {
   };
   subGridColumns: number;
   updateAppointment: (props: IUpdateAppProps) => void;
+  instantRender: boolean;
 }
 
 @observer
@@ -218,7 +219,14 @@ export default class Grid extends React.Component<IProps> {
 
   @action
   public updateApps() {
-    const { appointments, stamps, mainColumnStep, cols, rows } = this.props;
+    const {
+      appointments,
+      stamps,
+      mainColumnStep,
+      cols,
+      rows,
+      instantRender,
+    } = this.props;
 
     clearTimeout(this.iteratorTimeout);
 
@@ -266,7 +274,8 @@ export default class Grid extends React.Component<IProps> {
       }
 
       // if (!justCreated) console.log(justCreated);
-      if (!dropped) this.iteratorTimeout = setTimeout(() => iterator(), delay);
+      if (!dropped && !instantRender)
+        this.iteratorTimeout = setTimeout(() => iterator(), delay);
       else iterator();
     };
 

@@ -99,6 +99,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   private isScrolling: boolean = false;
   private pageTurnEmitter: Emitter;
   private clientRect: ClientRect;
+  private activatedDropzones: string[] = [];
 
   constructor(props: IProps) {
     super(props);
@@ -470,9 +471,21 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     ).forEach((child, index) => {
       const selector = `#${child.id} .gridCell`;
 
-      if (index >= minDay && index <= maxDay)
+      if (
+        index >= minDay &&
+        index <= maxDay &&
+        !this.activatedDropzones.includes(selector)
+      ) {
+        console.log(selector);
         interact(selector).dropzone(generateDropzoneConfig.bind(this)());
-      else interact(selector).dropzone({});
+        this.activatedDropzones.push(selector);
+      } else {
+        interact(selector).dropzone({});
+        this.activatedDropzones.splice(
+          this.activatedDropzones.indexOf(selector),
+          1,
+        );
+      }
     });
   }
 
@@ -644,6 +657,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         ]);
         gridsContainer.removeEventListener('scroll', callback);
 
+        this.updateDropzones();
+
         this.isScrolling = false;
         this.pageTurnEmitter.emit('resume');
       }, 50);
@@ -659,9 +674,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const maxColumn = Math.max(...indexes);
     const minDay = Math.floor(minColumn / this.state.columnsPerDay);
     const maxDay = Math.floor(maxColumn / this.state.columnsPerDay);
-
-    console.log('col1 col2', minColumn, maxColumn);
-    console.log('from to', minDay, maxDay);
 
     Array.from(
       (this.daysContainerRef.current as HTMLDivElement).querySelectorAll(
@@ -716,9 +728,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
   public render() {
     const { columnsPerDay, stamps, dayWidth } = this.state;
-    const { subGridColumns, positionCount, mainColumnStep } = this.props;
+    const { days, subGridColumns, positionCount, mainColumnStep } = this.props;
 
-    this.props.days.forEach(day => {
+    const instantRender = days.length < 4;
+
+    days.forEach(day => {
       const { id } = day;
       const dayId = `${id}`;
       if (!(dayId in this.shifts)) this.shifts[dayId] = {};
@@ -769,6 +783,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 subGridColumns={subGridColumns}
                 mainColumnStep={mainColumnStep}
                 movingId={this.movingId}
+                instantRender={instantRender}
               />
             ))}
           </div>
