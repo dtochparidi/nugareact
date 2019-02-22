@@ -18,13 +18,21 @@ import * as interact from 'levabala_interactjs';
 import CalendarDay from 'structures/CalendarDay';
 import { clientSide } from '../../dev/clientSide';
 import Appointment from '../../structures/Appointment';
-import createDragConfig from './dragConfig';
+import createDragConfig from './modules/dragConfig';
 import ToggleArea from './ToggleArea';
 
 import * as Emitter from 'events';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
 import { action, observable } from 'mobx';
 import TopRow from './Day/TopRow';
+import { generateDropzoneConfig } from './modules/dropzoneConfig';
+import { generateResizeConfig } from './modules/resizeConfig';
+import {
+  calcColumnsCount,
+  calcDaySize,
+  getCellInfo,
+  updateStickyElements,
+} from './modules/staticMethods';
 
 const calendarCellMinWidth = parseFloat(CardVariables.calendarCellWidthMin);
 const thinWidth = parseFloat(StyleVariables.thinWidth);
@@ -53,7 +61,7 @@ export interface IState {
   stamps: IMoment[];
 }
 
-enum Direction {
+export enum Direction {
   Top = -1,
   Bottom = 1,
   None = 0,
@@ -61,38 +69,6 @@ enum Direction {
 
 @observer
 export default class CalendarCard extends React.Component<IProps, IState> {
-  private static calcDaySize(
-    columnsPerPage: number,
-    columnsPerDay: number,
-    containerWidth: number,
-  ) {
-    const dayWidth =
-      (containerWidth / columnsPerPage) * columnsPerDay - thinWidth;
-    return dayWidth;
-  }
-
-  private static calcColumnsCount(
-    containerWidth: number,
-    calendarCellWidthMin: number,
-  ) {
-    const columnsCount = Math.floor(containerWidth / calendarCellWidthMin);
-    return columnsCount;
-  }
-
-  private static getCellInfo(target: HTMLElement) {
-    const targetDay = (((target.parentNode as HTMLElement) // Grid
-      .parentNode as HTMLElement) as HTMLElement).parentNode as HTMLElement; // Day // DayWrapper
-    const dayString = targetDay.id.split('_')[1];
-    const stamp = moment(dayString, 'DD-MM-YYYY');
-    const hour = parseInt(target.getAttribute('data-hour') || '-1', 10);
-    const minute = parseInt(target.getAttribute('data-minute') || '-1', 10);
-    const position = parseInt(target.getAttribute('data-y') || '-1', 10);
-
-    stamp.hour(hour);
-    stamp.minute(minute);
-    return { stamp, position };
-  }
-
   @observable
   public shiftsHash: { [dayId: string]: string } = {};
   @observable
@@ -110,6 +86,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   @observable
   public movingId: string = '';
   public currentLeftColumnIndex: number = 0;
+  public shiftsCache: {
+    [dayId: number]: {
+      [shiftId: string]: { [uniqueId: string]: { dx: number; dy: number } };
+    };
+  } = {};
   private daysContainerRef: React.RefObject<HTMLDivElement>;
   private containerScrollTimeout: NodeJS.Timeout;
   private shouldUpdateVisibility: boolean = false;
@@ -118,11 +99,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   private isScrolling: boolean = false;
   private pageTurnEmitter: Emitter;
   private clientRect: ClientRect;
-  private shiftsCache: {
-    [dayId: number]: {
-      [shiftId: string]: { [uniqueId: string]: { dx: number; dy: number } };
-    };
-  } = {};
 
   constructor(props: IProps) {
     super(props);
@@ -146,88 +122,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
             this.onAppointmentDraggingEnd.bind(this),
           ),
         )
-        .resizable(
-          ((): interact.ResizableOptions => {
-            return {
-              edges: {
-                right: true,
-              },
-              onend: (e: interact.InteractEvent) => {
-                let { target }: { target: HTMLElement } = e;
-                target = target.parentNode as HTMLElement;
-
-                const appCell = target.parentNode as HTMLElement;
-                const gridCell = appCell.parentNode as HTMLElement;
-                const cellRect = gridCell.getBoundingClientRect();
-
-                const appointmentId = appCell.id;
-                const app = Appointment.fromIdentifier(appointmentId);
-
-                const widthNode = target.querySelector(
-                  '.containerTempWidth',
-                ) as HTMLElement;
-
-                const rect = widthNode.getBoundingClientRect();
-                const step = cellRect.width / this.props.subGridColumns;
-                const subGridScale = Math.max(Math.ceil(rect.width / step), 1);
-
-                const minutes =
-                  (this.props.mainColumnStep.asMinutes() /
-                    this.props.subGridColumns) *
-                  subGridScale;
-                const duration = Moment.duration(
-                  Math.max(
-                    minutes,
-                    this.props.mainColumnStep.asMinutes() /
-                      this.props.subGridColumns,
-                  ),
-                  'minute',
-                );
-
-                widthNode.style.width = '';
-
-                const range = moment.range(
-                  app.date,
-                  app.date.clone().add(duration),
-                );
-                const day = this.getDayByStamp(app.date);
-
-                const overlapping = Object.values(day.appointments).some(
-                  otherApp =>
-                    otherApp.position === app.position &&
-                    otherApp.uniqueId !== app.uniqueId &&
-                    otherApp.dateRange.overlaps(range),
-                );
-                if (overlapping) {
-                  console.log('overlaps!');
-                  return;
-                }
-
-                this.props.updateAppointment({
-                  date: app.date,
-                  targetDuration: duration,
-                  uniqueId: app.uniqueId,
-                });
-              },
-              onmove: (e: interact.InteractEvent & { rect: ClientRect }) => {
-                let { target }: { target: HTMLElement } = e;
-                target = target.parentNode as HTMLElement;
-
-                const minWidth =
-                  (target.parentNode as HTMLElement).getBoundingClientRect()
-                    .width / this.props.subGridColumns;
-                if (e.rect.width < minWidth) return;
-
-                const widthNode = target.querySelector(
-                  '.containerTempWidth',
-                ) as HTMLElement;
-
-                widthNode.style.width = `${e.rect.width}px`;
-                widthNode.dispatchEvent(new Event('resize'));
-              },
-            };
-          })(),
-        );
+        .resizable(generateResizeConfig.bind(this)());
 
     this.state = {
       cellWidth: 0,
@@ -288,7 +183,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public unshiftWholeColumn(target: HTMLElement) {
-    const { stamp } = CalendarCard.getCellInfo(target);
+    const { stamp } = getCellInfo(target);
     const day = this.getDayByStamp(stamp);
     const column = this.getColumnByStamp(stamp, day);
 
@@ -334,227 +229,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
       if (overlapping !== app.overlapping) app.update({ overlapping });
     });
-  }
-
-  public freePlaceToDrop(movingApp: {
-    uniqueId: string;
-    position: number;
-    dateRange: DateRange;
-  }): boolean {
-    interface IOffsetMap {
-      [uniqueId: string]: { dx: number; dy: number };
-    }
-
-    const applyShifts = (currentDay: CalendarDay, offsets: IOffsetMap) => {
-      const shifts = Object.entries(offsets).map(([id, deltas]) => {
-        const app = currentDay.appointments[id];
-
-        return {
-          dx: 0,
-          dy: deltas.dy,
-          x: this.getColumnIndex(app.date),
-          y: app.position,
-        };
-      });
-
-      this.mergeShifts(currentDay.id, shifts);
-    };
-
-    const day = this.getDayByStamp(movingApp.dateRange.start);
-
-    const shiftsCache = this.shiftsCache;
-
-    const restoreShiftsFromCache = (id: string): IOffsetMap | false =>
-      day.id in shiftsCache && shiftsCache[day.id][id];
-
-    const cacheShifts = (id: string, offsets: IOffsetMap) => {
-      if (!(day.id in shiftsCache)) shiftsCache[day.id] = {};
-      shiftsCache[day.id][id] = offsets;
-    };
-
-    const calcShiftCascadeIdentifier = (
-      fixedApp: {
-        uniqueId: string;
-        position: number;
-        dateRange: DateRange;
-      },
-      fixedIds: string[],
-      collisingApp: Appointment[],
-      priorityDirection: Direction,
-    ) =>
-      movingApp.dateRange.start.format('mm:HH') +
-      movingApp.position +
-      fixedApp.uniqueId +
-      fixedApp.position +
-      priorityDirection.toString() +
-      collisingApp.map(app => app.uniqueId).join('') +
-      fixedIds.join('');
-
-    const calcOffsetMap = (
-      fixedApp: {
-        uniqueId: string;
-        position: number;
-        dateRange: DateRange;
-      },
-      positionsOffset: IOffsetMap,
-      priorityDirection: Direction = Direction.Top,
-      fixedIds: string[] = [],
-    ): IOffsetMap | false => {
-      const filledColumn = new Array(this.props.positionCount).fill(null).map(
-        () =>
-          [] as Array<{
-            uniqueId: string;
-            position: number;
-            dateRange: DateRange;
-          }>,
-      );
-      const nearCollisingApps = Object.values(day.appointments).filter(
-        app =>
-          app.uniqueId !== fixedApp.uniqueId &&
-          app.uniqueId !== movingApp.uniqueId &&
-          app.dateRange.overlaps(fixedApp.dateRange),
-      );
-
-      // try to restore cache
-      const shiftCascadeIdentifier = calcShiftCascadeIdentifier(
-        fixedApp,
-        fixedIds,
-        nearCollisingApps,
-        priorityDirection,
-      );
-      const restoredShifts = restoreShiftsFromCache(shiftCascadeIdentifier);
-
-      if (restoredShifts) {
-        console.log('restored from cache');
-        return restoredShifts;
-      }
-
-      nearCollisingApps.forEach(app =>
-        filledColumn[
-          app.position + (positionsOffset[app.uniqueId] || { dy: 0 }).dy
-        ].push(app),
-      );
-
-      const fixedAppPosition =
-        fixedApp.position +
-        (positionsOffset[fixedApp.uniqueId] || { dy: 0 }).dy;
-
-      // add moving app
-      if (movingApp.uniqueId !== fixedApp.uniqueId)
-        filledColumn[movingApp.position].push(movingApp);
-
-      if (!filledColumn[fixedAppPosition].length) return positionsOffset;
-
-      const getOvelaps = (
-        position: number,
-        app: {
-          uniqueId: string;
-          position: number;
-          dateRange: DateRange;
-        },
-        d: number,
-      ):
-        | [
-            Array<
-              | Appointment
-              | {
-                  uniqueId: string;
-                  position: number;
-                  dateRange: DateRange;
-                }
-            >,
-            number
-          ]
-        | false => {
-        const nextPosition = position + d;
-        const inBound = nextPosition >= 0 && nextPosition < filledColumn.length;
-
-        if (!inBound) return false;
-
-        const apps = filledColumn[position].filter(nextApp =>
-          nextApp.dateRange.overlaps(app.dateRange),
-        );
-
-        if (
-          apps.some(
-            a =>
-              a.uniqueId === movingApp.uniqueId ||
-              fixedIds.some(fixedId => a.uniqueId === fixedId),
-          )
-        )
-          return false;
-
-        return [apps, d];
-      };
-
-      const startDelta = priorityDirection === Direction.Top ? -1 : 1;
-      const possibleDeltas = [startDelta, startDelta * -1];
-
-      const finalOffsets = possibleDeltas.reduce((acc: IOffsetMap, delta) => {
-        if (acc) return acc;
-
-        const overlaps = getOvelaps(fixedAppPosition, fixedApp, delta);
-
-        if (!overlaps) return false;
-
-        const [overlappingApps, shiftDelta] = overlaps;
-
-        const newFixedIds = fixedIds.map(id => id);
-        if (fixedApp.uniqueId !== movingApp.uniqueId)
-          newFixedIds.push(fixedApp.uniqueId);
-
-        if (!overlappingApps) return false;
-
-        // copy of positionsOffset object
-        const newOffsets = Object.entries(positionsOffset).reduce(
-          (newObj, [id, deltas]) => {
-            newObj[id] = { dx: deltas.dx, dy: deltas.dy };
-            return newObj;
-          },
-          {},
-        );
-
-        // add offsets
-        overlappingApps.forEach(app => {
-          if (!(app.uniqueId in newOffsets))
-            newOffsets[app.uniqueId] = { dx: 0, dy: shiftDelta };
-          else newOffsets[app.uniqueId].dy += shiftDelta;
-        });
-
-        const currentOffsetMap = overlappingApps.reduce(
-          (offsets: IOffsetMap | false, app) => {
-            if (!offsets) return false;
-
-            const newOffsetMap = calcOffsetMap(
-              app,
-              offsets,
-              priorityDirection,
-              newFixedIds,
-            );
-
-            return newOffsetMap;
-          },
-          newOffsets,
-        );
-
-        return currentOffsetMap;
-      }, false);
-
-      if (finalOffsets) cacheShifts(shiftCascadeIdentifier, finalOffsets);
-
-      return finalOffsets;
-    };
-
-    const offsetMap = calcOffsetMap(movingApp, {});
-
-    if (!offsetMap) {
-      this.clearShifts();
-      return false;
-    }
-
-    applyShifts(day, offsetMap);
-
-    return true;
   }
 
   public getDayByStamp(stamp: IMoment) {
@@ -660,9 +334,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           appCells.forEach(appCell => {
             const appointmentId = appCell.id;
             const app = Appointment.fromIdentifier(appointmentId);
-            const { stamp: targetStamp, position } = CalendarCard.getCellInfo(
-              gridCell,
-            );
+            const { stamp: targetStamp, position } = getCellInfo(gridCell);
 
             targetStamp.hour(app.date.hour()).minute(app.date.minute());
 
@@ -790,32 +462,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public updateDropzones() {
-    function getDropStamp(
-      targetStamp: IMoment,
-      target: HTMLElement,
-      pos: { x: number; y: number },
-      subGridColumns: number,
-      mainColumnStep: Moment.Duration,
-    ) {
-      const cellRect = target.getBoundingClientRect();
-      const leftOffset = pos.x - cellRect.left;
-      const step = cellRect.width / subGridColumns;
-      let subGridScale = Math.floor(leftOffset / step);
-
-      if (subGridScale < 0) {
-        subGridScale += subGridColumns;
-        targetStamp.subtract(mainColumnStep);
-      }
-
-      const subGridDuration = Moment.duration(
-        (mainColumnStep.asSeconds() / subGridColumns) * subGridScale,
-        'second',
-      );
-
-      targetStamp.add(subGridDuration);
-      return targetStamp;
-    }
-
     const minColumn = this.currentLeftColumnIndex;
     const maxColumn = this.currentLeftColumnIndex + this.state.columnsPerPage;
     const minDay = Math.floor(minColumn / this.state.columnsPerDay);
@@ -827,207 +473,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       ),
     ).forEach((child, index) => {
       const selector = `#${child.id} .gridCell`;
-      let lastRange: DateRange | null = null;
-      let lastPosition: number | null = null;
 
       if (index >= minDay && index <= maxDay)
-        interact(selector).dropzone(
-          ((): interact.DropZoneOptions => {
-            const lastCoords = { x: 0, y: 0 };
-
-            return {
-              accept: '.appointmentCell .container .containerTempWidth',
-              ondragenter: e => {
-                const {
-                  target,
-                }: {
-                  target: HTMLElement;
-                } = e;
-                let {
-                  relatedTarget,
-                }: {
-                  relatedTarget: HTMLElement;
-                } = e;
-                relatedTarget = (relatedTarget.parentNode as HTMLElement)
-                  .parentNode as HTMLElement; // go up from .containerTempWidth to .appointmentCell
-
-                target.classList.add('enter');
-              },
-              ondragleave: e => {
-                const {
-                  target,
-                }: {
-                  target: HTMLElement;
-                } = e;
-                let {
-                  relatedTarget,
-                }: {
-                  relatedTarget: HTMLElement;
-                } = e;
-                relatedTarget = (relatedTarget.parentNode as HTMLElement)
-                  .parentNode as HTMLElement; // go up from .containerTempWidth to .appointmentCell
-
-                target.classList.remove('enter', 'locked');
-                target.style.background = '';
-              },
-              ondrop: e => {
-                const {
-                  target,
-                }: {
-                  target: HTMLElement;
-                } = e;
-                let {
-                  relatedTarget,
-                }: {
-                  relatedTarget: HTMLElement;
-                } = e;
-                relatedTarget = (relatedTarget.parentNode as HTMLElement)
-                  .parentNode as HTMLElement; // go up from .containerTempWidth to .appointmentCell
-
-                const appointmentId = relatedTarget.id;
-                const app = Appointment.fromIdentifier(appointmentId);
-                const { stamp, position } = CalendarCard.getCellInfo(target);
-
-                const dropStamp = getDropStamp(
-                  stamp,
-                  target,
-                  lastCoords,
-                  this.props.subGridColumns,
-                  this.props.mainColumnStep,
-                );
-                const isFree = this.freePlaceToDrop({
-                  dateRange: moment.range(
-                    dropStamp,
-                    dropStamp.clone().add(app.duration),
-                  ),
-                  position,
-                  uniqueId: app.uniqueId,
-                });
-
-                this.shiftsCache = {};
-                console.log('clear cache');
-
-                if (!isFree) {
-                  console.log('locked');
-                  return;
-                }
-                console.log('drop');
-
-                this.lockShifts();
-
-                this.props.updateAppointment({
-                  date: app.date,
-                  targetDate: dropStamp,
-                  targetPosition: position,
-                  uniqueId: app.uniqueId,
-                });
-
-                this.checkForOverlaps(stamp);
-
-                this.updateMovingId('');
-              },
-              ondropactivate: e => {
-                const {
-                  target,
-                }: {
-                  target: HTMLElement;
-                } = e;
-                let {
-                  relatedTarget,
-                }: {
-                  relatedTarget: HTMLElement;
-                } = e;
-                relatedTarget = (relatedTarget.parentNode as HTMLElement)
-                  .parentNode as HTMLElement; // go up from .containerTempWidth to .appointmentCell
-
-                // target.classList.add('dropzone', 'active');
-                target.classList.remove('locked');
-                // target.style.background = '';
-
-                // console.warn('activate');
-              },
-              ondropdeactivate: e => {
-                const {
-                  target,
-                }: {
-                  target: HTMLElement;
-                } = e;
-                let {
-                  relatedTarget,
-                }: {
-                  relatedTarget: HTMLElement;
-                } = e;
-                relatedTarget = (relatedTarget.parentNode as HTMLElement)
-                  .parentNode as HTMLElement; // go up from .containerTempWidth to .appointmentCell
-
-                target.classList.remove(
-                  'dropzone',
-                  'active',
-                  'enter',
-                  'locked',
-                );
-                target.style.background = '';
-              },
-              ondropmove: e => {
-                const {
-                  target,
-                }: {
-                  target: HTMLElement;
-                } = e;
-                let {
-                  relatedTarget,
-                }: {
-                  relatedTarget: HTMLElement;
-                } = e;
-                relatedTarget = (relatedTarget.parentNode as HTMLElement)
-                  .parentNode as HTMLElement; // go up from .containerTempWidth to .appointmentCell
-
-                const rect = relatedTarget.getBoundingClientRect();
-                lastCoords.x = rect.left;
-                lastCoords.y = rect.top;
-
-                // const app = target.querySelector(`#${relatedTarget.id}`);
-                // if (app) target.classList.remove('locked');
-
-                const appointmentId = relatedTarget.id;
-                const app = Appointment.fromIdentifier(appointmentId);
-                const { stamp, position } = CalendarCard.getCellInfo(target);
-
-                // const isFree = this.freeCell(relatedTarget, target);
-                const dropStamp = getDropStamp(
-                  stamp,
-                  target,
-                  lastCoords,
-                  this.props.subGridColumns,
-                  this.props.mainColumnStep,
-                );
-
-                const range = moment.range(
-                  dropStamp,
-                  dropStamp.clone().add(app.duration),
-                );
-
-                if (
-                  lastRange &&
-                  lastRange.isSame(range) &&
-                  lastPosition &&
-                  lastPosition === position
-                )
-                  return;
-
-                lastRange = range;
-                lastPosition = position;
-
-                this.freePlaceToDrop({
-                  dateRange: range,
-                  position,
-                  uniqueId: app.uniqueId,
-                });
-              },
-              overlap: 'leftCenter',
-            };
-          })(),
-        );
+        interact(selector).dropzone(generateDropzoneConfig.bind(this)());
       else interact(selector).dropzone({});
     });
   }
@@ -1159,67 +607,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     return true;
   }
 
-  public updateStickyElements(force = false) {
-    enum StringBoolean {
-      false = '',
-      true = 'true',
-    }
-
-    interface IStickyProps {
-      initialized?: StringBoolean;
-      isSticky?: StringBoolean;
-    }
-
-    interface IStickyHTMLElement extends HTMLElement {
-      dataset: DOMStringMap & IStickyProps;
-    }
-
-    function init(elem: IStickyHTMLElement) {
-      elem.dataset.isSticky = StringBoolean.false;
-      elem.dataset.initialized = StringBoolean.true;
-    }
-
-    function makeSticky(
-      elem: IStickyHTMLElement,
-      parentR: ClientRect,
-      f: boolean,
-    ) {
-      if (elem.dataset.isSticky && !f) return;
-
-      elem.style.position = 'fixed';
-      elem.style.top = '0px';
-      elem.style.zIndex = '1000';
-      elem.style.width = `${parentR.width}px`;
-
-      elem.dataset.isSticky = StringBoolean.true;
-    }
-
-    function makeUnSticky(elem: IStickyHTMLElement, f: boolean) {
-      if (!elem.dataset.isSticky && !f) return;
-
-      elem.style.position = '';
-      elem.style.top = '';
-
-      elem.dataset.isSticky = StringBoolean.false;
-    }
-
-    const stickyElement = document.querySelector(
-      '.viewPortContainer',
-    ) as IStickyHTMLElement;
-    const { dataset }: { dataset: IStickyProps } = stickyElement;
-    const { initialized } = dataset;
-
-    if (!initialized) init(stickyElement);
-
-    const rect = stickyElement.getBoundingClientRect();
-    const parentRect = (stickyElement.parentElement as HTMLElement).getBoundingClientRect();
-
-    const overflowTop = parentRect.top <= 0 && rect.top >= parentRect.top;
-
-    if (overflowTop || force) makeSticky(stickyElement, parentRect, force);
-    else makeUnSticky(stickyElement, force);
-  }
-
   public updateScroll(force = false) {
     const container = this.daysContainerRef.current as HTMLDivElement;
     const dayIndex = Math.floor(
@@ -1246,11 +633,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         gridsContainer.getBoundingClientRect().left +
         gridsContainer.scrollLeft,
     );
-
-    // container.scrollTo({
-    //   behavior: force ? 'auto' : 'smooth',
-    //   left,
-    // });
 
     gridsContainer.scrollTo({
       behavior: force ? 'auto' : 'smooth',
@@ -1326,10 +708,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   public updateColumnsCount() {
     const containerWidth = (this.daysContainerRef.current as HTMLDivElement)
       .offsetWidth;
-    const count = CalendarCard.calcColumnsCount(
-      containerWidth,
-      calendarCellMinWidth,
-    );
+    const count = calcColumnsCount(containerWidth, calendarCellMinWidth);
     this.setState({ columnsPerPage: count });
   }
 
@@ -1337,10 +716,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const { columnsPerDay, columnsPerPage } = this.state;
     const containerWidth = (this.daysContainerRef.current as HTMLDivElement)
       .offsetWidth;
-    const dayWidth = CalendarCard.calcDaySize(
+    const dayWidth = calcDaySize(
       columnsPerPage,
       columnsPerDay,
       containerWidth,
+      thinWidth,
     );
 
     return dayWidth <= 0 ? '100%' : `${dayWidth}px`;
@@ -1452,7 +832,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         this.updateScroll(true);
         this.updateBoundingRect();
 
-        setTimeout(() => this.updateStickyElements(), 500);
+        setTimeout(() => updateStickyElements(), 500);
       }, boundTime);
     });
   }
@@ -1462,7 +842,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   ) {
     // let scrollTimeout: NodeJS.Timeout;
     window.addEventListener('scroll', () => {
-      this.updateStickyElements();
+      updateStickyElements();
       // clearTimeout(scrollTimeout);
       // scrollTimeout = setTimeout(() => {
 
