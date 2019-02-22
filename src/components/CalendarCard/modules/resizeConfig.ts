@@ -54,7 +54,6 @@ export function generateResizeConfig(
       const gridCell = appCell.parentNode as HTMLElement;
       const cellRect = gridCell.getBoundingClientRect();
 
-      // const rect = widthNode.getBoundingClientRect();
       const step = cellRect.width / this.props.subGridColumns;
       const subGridScale = Math.max(Math.ceil(e.rect.width / step), 1);
 
@@ -75,15 +74,21 @@ export function generateResizeConfig(
       const range = moment.range(app.date, app.date.clone().add(duration));
       const day = this.getDayByStamp(app.date);
 
-      const overlapping = Object.values(day.appointments).some(
+      const overlapping = Object.values(day.appointments).find(
         otherApp =>
           otherApp.position === app.position &&
           otherApp.uniqueId !== app.uniqueId &&
           otherApp.dateRange.overlaps(range),
       );
 
-      console.log(e);
-      if (overlapping) return;
+      if (overlapping) {
+        const overlapRect = (document.getElementById(
+          overlapping.identifier,
+        ) as HTMLElement).getBoundingClientRect();
+        const maxWidth = overlapRect.left - e.rect.left;
+        widthNode.style.width = `${maxWidth}px`;
+        return;
+      }
 
       lastRange = range;
 
