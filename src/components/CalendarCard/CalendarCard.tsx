@@ -31,6 +31,8 @@ const thinWidth = parseFloat(StyleVariables.thinWidth);
 
 const moment = extendMoment(Moment);
 
+if (clientSide) (interact as any).dynamicDrop(true);
+
 export interface IProps {
   days: CalendarDay[];
   dayTimeRange: DateRange;
@@ -116,8 +118,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   private isScrolling: boolean = false;
   private pageTurnEmitter: Emitter;
   private clientRect: ClientRect;
-  private needRefreshDrops = false;
-  private needCloseRefreshDrops = false;
   private shiftsCache: {
     [dayId: number]: {
       [shiftId: string]: { [uniqueId: string]: { dx: number; dy: number } };
@@ -142,7 +142,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         .draggable(
           createDragConfig(
             this.onAppointmentDraggingStart.bind(this),
-            this.onAppointmentDraggingMove.bind(this),
+            () => null,
             this.onAppointmentDraggingEnd.bind(this),
           ),
         )
@@ -260,14 +260,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   @action
   public updateMovingId(movingId: string) {
     this.movingId = movingId;
-  }
-
-  public onAppointmentDraggingMove() {
-    if (this.needRefreshDrops) {
-      (interact as any).dynamicDrop(true);
-      this.needCloseRefreshDrops = true;
-      this.needRefreshDrops = false;
-    }
   }
 
   public onAppointmentDraggingStart(e: interact.InteractEvent) {
@@ -1157,7 +1149,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       this.props.days.length * this.state.columnsPerDay - 1,
     );
 
-    this.needRefreshDrops = true;
     this.updateScroll();
   }
 
@@ -1288,12 +1279,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
         this.isScrolling = false;
         this.pageTurnEmitter.emit('resume');
-
-        if (this.needCloseRefreshDrops) {
-          (interact as any).dynamicDrop(false);
-          this.needCloseRefreshDrops = false;
-          this.needRefreshDrops = false;
-        }
 
         // window.dispatchEvent(new Event('scroll'));
         // setTimeout(() => window.dispatchEvent(new Event('scroll')));
