@@ -359,8 +359,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       }
     });
 
-    // console.log('shift', JSON.stringify(this.shifts));
-
     return shiftsIsEmpty;
   }
 
@@ -431,8 +429,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     if (!(x in this.shifts[dayId])) this.shifts[dayId][x] = {};
 
     this.shifts[dayId][x][y] = { dx, dy };
-
-    // console.log('shift', JSON.stringify(this.shifts[dayId]));
   }
 
   public unShiftCell(dayId: string, x: number, y: number, stack = false) {
@@ -532,7 +528,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           this.currentLeftColumnIndex += this.state.columnsPerDay;
           this.updateScroll(true);
         }
-        // if (lastDayNowIndex !== 0) this.updateScroll(false);
       }
 
     // OPTIMIZE
@@ -540,8 +535,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       if (!this.props.days.find(d => d.date.diff(day, 'days') === 0))
         this.props.requestCallback(day);
     });
-
-    // if (prevProps.days.length !== this.props.days.length) this.updateScroll();
 
     if (this.shouldUpdateVisibility) {
       this.updateVisibility([
@@ -661,13 +654,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
         this.isScrolling = false;
         this.pageTurnEmitter.emit('resume');
-
-        // window.dispatchEvent(new Event('scroll'));
-        // setTimeout(() => window.dispatchEvent(new Event('scroll')));
       }, 50);
-
-      // too perfomance-heavy
-      // window.dispatchEvent(new Event('scroll'));
     };
 
     gridsContainer.addEventListener('scroll', callback);
@@ -840,13 +827,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   private startScrollHandling(
     { boundTime }: { boundTime: number } = { boundTime: 250 },
   ) {
-    // let scrollTimeout: NodeJS.Timeout;
     window.addEventListener('scroll', () => {
       updateStickyElements();
-      // clearTimeout(scrollTimeout);
-      // scrollTimeout = setTimeout(() => {
-
-      // }, boundTime);
     });
   }
 }
