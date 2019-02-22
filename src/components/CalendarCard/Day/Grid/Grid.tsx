@@ -161,14 +161,14 @@ export default class Grid extends React.Component<IProps> {
     positionedApps: Array<Array<{ [uniqueId: string]: Appointment }>>,
     x: number,
     y: number,
-  ): void {
+  ): boolean {
     const recordedApps = this.appointments[x][y];
     const inputApps = positionedApps[x][y];
 
     const recordEmpty = Object.keys(recordedApps).length === 0;
     const inputEmpty = Object.keys(inputApps).length === 0;
 
-    if (recordEmpty && inputEmpty) return;
+    if (recordEmpty && inputEmpty) return false;
 
     if (!recordEmpty && inputEmpty) {
       for (const i in this.appointments[x][y])
@@ -176,13 +176,13 @@ export default class Grid extends React.Component<IProps> {
 
       // console.log('remove all');
 
-      return;
+      return true;
     }
 
     if (recordEmpty && !inputEmpty) {
       Object.assign(this.appointments[x][y], inputApps);
 
-      return;
+      return true;
     }
 
     const updatedIds: string[] = [];
@@ -196,7 +196,7 @@ export default class Grid extends React.Component<IProps> {
       if (!recordedApp) {
         recordedApps[inputId] = inputApp;
 
-        return;
+        return true;
       }
 
       // if changed
@@ -204,6 +204,8 @@ export default class Grid extends React.Component<IProps> {
         Object.assign(recordedApps[inputId], inputApp);
         console.log('update');
       }
+
+      return true;
     });
 
     Object.entries(recordedApps).forEach(([recordedId, recordedApp]) => {
@@ -214,7 +216,7 @@ export default class Grid extends React.Component<IProps> {
       // console.log('remove');
     });
 
-    return;
+    return true;
   }
 
   @action
@@ -264,7 +266,7 @@ export default class Grid extends React.Component<IProps> {
     let xc = 0;
     let yc = 0;
     const iterator = () => {
-      this.iterationTick(positionedApps, xc, yc);
+      const changed = this.iterationTick(positionedApps, xc, yc);
 
       if (yc < rows - 1) yc++;
       else {
@@ -274,7 +276,7 @@ export default class Grid extends React.Component<IProps> {
       }
 
       // if (!justCreated) console.log(justCreated);
-      if (!dropped && !instantRender)
+      if (changed && !dropped && !instantRender)
         this.iteratorTimeout = setTimeout(() => iterator(), delay);
       else iterator();
     };

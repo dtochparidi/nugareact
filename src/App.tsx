@@ -1,4 +1,4 @@
-import ControlWindow from 'components/ControlWindow';
+// import ControlWindow from 'components/ControlWindow';
 import VersionChangelog from 'components/VersionChangelog';
 import * as Cookies from 'js-cookie';
 import { observer } from 'mobx-react';
@@ -18,7 +18,7 @@ const { uiStore } = rootStore;
 
 let versionName: string | undefined;
 let lastVersion: [string, string];
-let needToShow: boolean = false;
+let needToShowChangelog: boolean = false;
 
 // do not do it while testing in jest
 if (clientSide) {
@@ -27,7 +27,7 @@ if (clientSide) {
   // checking for updates
   versionName = Cookies.get('version');
   lastVersion = versions[versions.length - 1];
-  if (versionName && lastVersion[0] !== versionName) needToShow = true;
+  if (versionName && lastVersion[0] !== versionName) needToShowChangelog = true;
   Cookies.set('version', lastVersion[0]);
 
   // configuring mobX dev console
@@ -58,11 +58,11 @@ class App extends React.Component {
               process.env.NODE_ENV === 'development' ? (
                 <DevTools key="devTools" />
               ) : null,
-              <ControlWindow key="controlWindow" rootStore={rootStore} />,
-              needToShow ? (
+              // <ControlWindow key="controlWindow" rootStore={rootStore} />,
+              needToShowChangelog ? (
                 <VersionChangelog
                   key="versionChangelog"
-                  show={needToShow}
+                  show={needToShowChangelog}
                   versions={versions}
                 />
               ) : null,
@@ -72,6 +72,7 @@ class App extends React.Component {
           subGridColumns={uiStore.subGridColumns || 0}
           days={calendarDayStore.days}
           requestCallback={calendarDayStore.loadDay}
+          removeDays={calendarDayStore.removeDays}
           positionCount={uiStore.positionCount || 0}
           dayTimeRange={uiStore.dayTimeRange}
           updateAppointment={calendarDayStore.updateAppointment}

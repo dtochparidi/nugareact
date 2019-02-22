@@ -47,6 +47,7 @@ export interface IProps {
   positionCount: number;
   subGridColumns: number;
   requestCallback: (date: Moment.Moment) => void;
+  removeDays: (indexStart: number, indexEnd: number) => void;
   mainColumnStep: IDuration;
   updateAppointment: (props: IUpdateAppProps) => void;
 }
@@ -100,6 +101,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   private pageTurnEmitter: Emitter;
   private clientRect: ClientRect;
   private activatedDropzones: string[] = [];
+  private tooFarPagesTrigger = 2;
 
   constructor(props: IProps) {
     super(props);
@@ -169,7 +171,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     this.updateMovingId(appCell.id);
 
     this.shiftsCache = {};
-    console.log('clear cache');
 
     this.clearShifts();
   }
@@ -181,6 +182,56 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       .parentNode as Element).parentNode as Element).classList.remove(
       'dragOrigin',
     );
+  }
+
+  public removeTooFarDays() {
+    let from: number | null = null;
+    let to: number | null = null;
+    let reduceColumnIndexAmount = 0;
+    Object.values(this.props.days).forEach((day, i) => {
+      const dayLeftColumnIndex = i * this.state.columnsPerDay;
+      const dayRightColumnIndex = dayLeftColumnIndex + this.state.columnsPerDay;
+      const diffs = Math.min(
+        Math.abs(dayLeftColumnIndex - this.currentLeftColumnIndex),
+        Math.abs(
+          dayLeftColumnIndex +
+            dayRightColumnIndex -
+            this.currentLeftColumnIndex,
+        ),
+        Math.abs(
+          dayLeftColumnIndex -
+            this.currentLeftColumnIndex -
+            this.state.columnsPerDay,
+        ),
+        Math.abs(
+          dayLeftColumnIndex +
+            dayRightColumnIndex -
+            this.currentLeftColumnIndex -
+            this.state.columnsPerDay,
+        ),
+      );
+      const pagesDiff = diffs / this.state.columnsPerPage;
+
+      if (pagesDiff > this.tooFarPagesTrigger) {
+        if (from === null) {
+          from = i;
+          if (this.currentLeftColumnIndex > dayLeftColumnIndex)
+            reduceColumnIndexAmount += this.state.columnsPerDay;
+        }
+        to = i;
+
+        if (this.currentLeftColumnIndex > dayLeftColumnIndex)
+          reduceColumnIndexAmount += this.state.columnsPerDay;
+      }
+    });
+
+    console.log(from, to);
+
+    if (from !== null && to !== null) {
+      this.currentLeftColumnIndex -= reduceColumnIndexAmount;
+      this.props.removeDays(from, to);
+      this.updateScroll(true);
+    }
   }
 
   public unshiftWholeColumn(target: HTMLElement) {
@@ -656,13 +707,16 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         ]);
         gridsContainer.removeEventListener('scroll', callback);
 
-        this.updateDropzones();
-
         this.isScrolling = false;
+
+        this.updateDropzones();
+        this.removeTooFarDays();
+
         this.pageTurnEmitter.emit('resume');
       }, 50);
     };
 
+    callback();
     gridsContainer.addEventListener('scroll', callback);
   }
 

@@ -8,7 +8,7 @@ export default class UIStore {
   @observable
   public subGridColumns: number = 5;
   @observable
-  public positionCount: number = 15;
+  public positionCount: number = 25;
   @observable
   public dayTimeRange: DateRange = moment.range(
     moment()

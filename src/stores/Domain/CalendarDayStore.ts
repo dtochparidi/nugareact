@@ -41,6 +41,11 @@ export default class CalendarDayStore {
     return day;
   }
 
+  @action
+  public removeDays(indexStart: number, indexEnd: number) {
+    this.days.splice(indexStart, indexEnd - indexStart + 1);
+  }
+
   @action.bound
   public updateAppointment({
     targetDate,
@@ -126,7 +131,6 @@ export default class CalendarDayStore {
 
     // if day wasn't changed
     if (currentDay.date.diff(newDay.date, 'day') === 0) return;
-    console.log('change day');
 
     // remove from current day
     delete currentDay.appointments[appointment.uniqueId];

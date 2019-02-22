@@ -44,7 +44,7 @@ export function generateRandomDay(date: IMoment): ICalendarDay {
             personId: `${random(99)
               .toString()
               .padStart(3, '0')}`,
-            position: random(0, 14),
+            position: random(0, 24),
             // position: random(0, 4),
           };
 

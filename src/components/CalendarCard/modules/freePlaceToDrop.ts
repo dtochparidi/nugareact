@@ -94,10 +94,7 @@ export function freePlaceToDrop(
     );
     const restoredShifts = restoreShiftsFromCache(shiftCascadeIdentifier);
 
-    if (restoredShifts) {
-      console.log('restored from cache');
-      return restoredShifts;
-    }
+    if (restoredShifts) return restoredShifts;
 
     nearCollisingApps.forEach(app =>
       filledColumn[

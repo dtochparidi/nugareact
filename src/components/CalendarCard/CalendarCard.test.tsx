@@ -14,6 +14,10 @@ function requestDay(date: IMoment) {
   dates.push(date);
 }
 
+function removeDays() {
+  //
+}
+
 const dayTimeRange: DateRange = moment.range(
   moment()
     .startOf('day')
@@ -32,6 +36,7 @@ it('renders without crashing', () => {
       days={[]}
       requestCallback={requestDay}
       positionCount={6}
+      removeDays={removeDays}
       dayTimeRange={dayTimeRange}
       updateAppointment={ua}
       mainColumnStep={Moment.duration(45, 'minutes')}

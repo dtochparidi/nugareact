@@ -117,13 +117,8 @@ export function generateDropzoneConfig(this: CalendarCard) {
         );
 
         this.shiftsCache = {};
-        console.log('clear cache');
 
-        if (!isFree) {
-          console.log('locked');
-          return;
-        }
-        console.log('drop');
+        if (!isFree) return;
 
         this.lockShifts();
 
