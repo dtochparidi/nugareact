@@ -548,6 +548,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   public turnPage(delta: -1 | 1) {
     if (this.isScrolling) return;
 
+    const columnsPerTurn = Math.floor(this.state.columnsPerPage / 2);
     const index =
       this.currentLeftColumnIndex +
       Math.min(this.state.columnsPerPage * 2, this.state.columnsPerDay) * delta;
@@ -571,24 +572,15 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           .add(1, 'day'),
       );
 
-    setTimeout(() =>
-      this.updateVisibility([
-        this.currentLeftColumnIndex,
-        Math.min(
-          Math.max(index, 0),
-          this.props.days.length * this.state.columnsPerDay - 1,
-        ),
-      ]),
-    );
-
     this.currentLeftColumnIndex = Math.min(
-      Math.max(
-        this.currentLeftColumnIndex +
-          Math.floor((delta * this.state.columnsPerPage) / 2),
-        0,
-      ),
+      Math.max(this.currentLeftColumnIndex + columnsPerTurn * delta, 0),
       this.props.days.length * this.state.columnsPerDay - 1,
     );
+
+    this.updateVisibility([
+      this.currentLeftColumnIndex - this.state.columnsPerPage,
+      this.currentLeftColumnIndex + this.state.columnsPerPage * 2,
+    ]);
 
     this.updateScroll();
   }
@@ -665,8 +657,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     const minColumn = Math.min(...indexes);
     const maxColumn = Math.max(...indexes);
-    const minDay = Math.floor(minColumn / this.state.columnsPerDay) - 1;
-    const maxDay = Math.ceil(maxColumn / this.state.columnsPerDay) + 1;
+    const minDay = Math.floor(minColumn / this.state.columnsPerDay);
+    const maxDay = Math.floor(maxColumn / this.state.columnsPerDay);
+
+    console.log('col1 col2', minColumn, maxColumn);
+    console.log('from to', minDay, maxDay);
 
     Array.from(
       (this.daysContainerRef.current as HTMLDivElement).querySelectorAll(
