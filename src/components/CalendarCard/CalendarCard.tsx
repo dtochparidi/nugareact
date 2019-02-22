@@ -476,7 +476,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         index <= maxDay &&
         !this.activatedDropzones.includes(selector)
       ) {
-        console.log(selector);
         interact(selector).dropzone(generateDropzoneConfig.bind(this)());
         this.activatedDropzones.push(selector);
       } else {
