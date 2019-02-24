@@ -28,7 +28,7 @@ export default class DateRow extends React.Component<IProps> {
             <span className="name">
               {this.props.monthStartDate
                 .clone()
-                .date(i)
+                .date(i + 1)
                 .format('dd')}
             </span>
             <span
