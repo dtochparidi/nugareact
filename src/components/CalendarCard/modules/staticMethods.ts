@@ -40,6 +40,7 @@ export function updateStickyElements(force = false) {
 
     elem.style.position = '';
     elem.style.top = '';
+    elem.style.width = '';
 
     elem.dataset.isSticky = StringBoolean.false;
   }
@@ -57,7 +58,7 @@ export function updateStickyElements(force = false) {
 
   const overflowTop = parentRect.top <= 0 && rect.top >= parentRect.top;
 
-  if (overflowTop || force) makeSticky(stickyElement, parentRect, force);
+  if (overflowTop) makeSticky(stickyElement, parentRect, force);
   else makeUnSticky(stickyElement, force);
 }
 

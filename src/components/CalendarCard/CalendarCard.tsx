@@ -7,7 +7,7 @@ import { v4 } from 'uuid';
 
 import ICalendarDay from '../../interfaces/ICalendarDay';
 import Card from '../Card';
-import Day from './Day';
+import Day, { DateRow } from './Day';
 import LeftColumn from './LeftColumn';
 
 import * as StyleVariables from '../../common/variables.scss';
@@ -83,9 +83,13 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       };
     };
   } = {};
-
   @observable
   public movingId: string = '';
+  @observable
+  public currentDayIndex: number;
+  @observable
+  public monthStartDate: IMoment;
+
   public currentLeftColumnIndex: number = 0;
   public shiftsCache: {
     [dayId: number]: {
@@ -94,7 +98,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   } = {};
   private daysContainerRef: React.RefObject<HTMLDivElement>;
   private containerScrollTimeout: NodeJS.Timeout;
-  private shouldUpdateVisibility: boolean = false;
+  // private shouldUpdateVisibility: boolean = false;
   private currentFirstDay: ICalendarDay;
   private currentDaysCount: number = 0;
   private isScrolling: boolean = false;
@@ -601,17 +605,19 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         this.props.requestCallback(day);
     });
 
-    if (this.shouldUpdateVisibility) {
-      this.updateVisibility([
-        this.currentLeftColumnIndex,
-        this.currentLeftColumnIndex + this.state.columnsPerPage,
-      ]);
-      this.shouldUpdateVisibility = false;
-    }
+    // if (this.shouldUpdateVisibility) {
+    //   this.updateVisibility([
+    //     this.currentLeftColumnIndex,
+    //     this.currentLeftColumnIndex + this.state.columnsPerPage,
+    //   ]);
+    //   this.shouldUpdateVisibility = false;
+    // }
   }
 
   public turnPage(delta: -1 | 1) {
     if (this.isScrolling) return;
+
+    console.log('---');
 
     const columnsPerTurn = Math.floor(this.state.columnsPerPage / 2);
     const index =
@@ -619,7 +625,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       Math.min(this.state.columnsPerPage * 2, this.state.columnsPerDay) * delta;
 
     if (index < 0) {
-      this.shouldUpdateVisibility = true;
+      // this.shouldUpdateVisibility = true;
 
       const newDayDate = this.props.days[0].date.clone().subtract(1, 'day');
       this.state.requiredDays.unshift(newDayDate);
@@ -655,11 +661,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     this.updateScroll();
   }
 
-  public getSnapshotBeforeUpdate(prevProps: IProps) {
-    this.shouldUpdateVisibility =
-      this.props.days.length === prevProps.days.length;
-
-    return true;
+  @action
+  public updateCurrentDayData(dayIndex: number) {
+    this.monthStartDate = this.props.days[dayIndex].date.clone().date(0);
+    this.currentDayIndex = this.props.days[dayIndex].date.date();
   }
 
   public updateScroll(force = false) {
@@ -670,6 +675,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const day = container.querySelectorAll('.dayWrapper')[
       dayIndex
     ] as HTMLElement;
+
+    this.updateCurrentDayData(dayIndex);
 
     const gridsContainer = container.querySelector(
       '.gridsContainer',
@@ -734,6 +741,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const maxColumn = Math.max(...indexes);
     const minDay = Math.floor(minColumn / this.state.columnsPerDay);
     const maxDay = Math.floor(maxColumn / this.state.columnsPerDay);
+
+    console.log(minColumn, maxColumn, minDay, maxDay);
 
     Array.from(
       (this.daysContainerRef.current as HTMLDivElement).querySelectorAll(
@@ -815,6 +824,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         >
           <div className="topRowsContainer">
             <div className="viewPortContainer">
+              <DateRow
+                dayChosenIndex={this.currentDayIndex}
+                monthStartDate={this.monthStartDate}
+              />
               <div className="scrollingContainer">
                 <div className="stickyContainer">
                   {this.props.days.map(day => (
@@ -889,7 +902,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         this.updateScroll(true);
         this.updateBoundingRect();
 
-        setTimeout(() => updateStickyElements(), 500);
+        updateStickyElements(true);
       }, boundTime);
     });
   }

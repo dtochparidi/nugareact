@@ -1,0 +1,43 @@
+@import 'src/common/variables.scss';
+
+$dateRow-padding: $thin-width;
+$dateRow-height: 40px;
+
+.dateRow {
+  display: grid;
+  grid-auto-flow: column;
+
+  width: 100%;
+  height: $dateRow-height;
+  padding: $dateRow-padding;
+
+  border-top: solid lightgrey 1px;
+
+  background: #fcfcfc;
+
+  .day {
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+
+    justify-content: space-between;
+
+    height: 100%;
+
+    .index {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      height: $dateRow-height / 2;
+      width: $dateRow-height / 2;
+
+      border-radius: 50%;
+
+      &.chosen {
+        color: white;
+        background: rgb(71, 58, 255);
+      }
+    }
+  }
+}

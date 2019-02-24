@@ -1,8 +1,11 @@
 @import 'src/common/variables.scss';
+@import 'src/components/CalendarCard/Day/DateRow/DateRow.scss';
 
 $time-column-width: 50px;
 $calendar-cell-height: 60px;
 $calendar-cell-width-min: 220px;
+$top-row-height: $calendar-cell-height + $dateRow-height + $dateRow-padding * 2 +
+  $thin-width;
 
 :export {
   #{'calendarCellWidthMin'}: $calendar-cell-width-min;
@@ -51,17 +54,17 @@ $calendar-cell-width-min: 220px;
 
     // z-index: 102;
 
-    grid-template-rows: repeat(
-      calc(var(--rows-count) + 1),
-      $calendar-cell-height
-    );
+    grid-template-rows: $top-row-height repeat(
+        var(--rows-count),
+        $calendar-cell-height
+      );
   }
 
   .daysContainer {
     position: relative;
 
     display: grid;
-    grid-template-rows: $calendar-cell-height auto;
+    grid-template-rows: $top-row-height auto;
     grid-template-columns: 100%;
 
     grid-area: daysContainer;
