@@ -136,11 +136,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       requiredDays: [
         moment()
           .startOf('day')
-          .add(1, 'day'),
+          .subtract(1, 'day'),
         moment().startOf('day'),
         moment()
           .startOf('day')
-          .subtract(1, 'day'),
+          .add(1, 'day'),
       ],
       stamps,
     };
@@ -225,11 +225,13 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       }
     });
 
-    console.log(from, to);
-
     if (from !== null && to !== null) {
       this.currentLeftColumnIndex -= reduceColumnIndexAmount;
+      this.state.requiredDays.splice(from, to - from + 1);
+      this.setState({ requiredDays: this.state.requiredDays });
+
       this.props.removeDays(from, to);
+
       this.updateScroll(true);
     }
   }
@@ -615,25 +617,30 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const index =
       this.currentLeftColumnIndex +
       Math.min(this.state.columnsPerPage * 2, this.state.columnsPerDay) * delta;
+
     if (index < 0) {
       this.shouldUpdateVisibility = true;
-      this.props.requestCallback(
-        this.props.days[0].date.clone().subtract(1, 'day'),
-      );
+
+      const newDayDate = this.props.days[0].date.clone().subtract(1, 'day');
+      this.state.requiredDays.unshift(newDayDate);
+
+      this.setState({ requiredDays: this.state.requiredDays });
 
       this.turnPage(delta);
       return;
     } else if (
       index + this.state.columnsPerPage * 2 >
       this.props.days.length * this.state.columnsPerDay - 1
-    )
-      this.props.requestCallback(
-        this.props.days[
-          this.props.days.length === 0 ? 0 : this.props.days.length - 1
-        ].date
-          .clone()
-          .add(1, 'day'),
-      );
+    ) {
+      const newDayDate = this.props.days[
+        this.props.days.length === 0 ? 0 : this.props.days.length - 1
+      ].date
+        .clone()
+        .add(1, 'day');
+      this.state.requiredDays.push(newDayDate);
+
+      this.setState({ requiredDays: this.state.requiredDays });
+    }
 
     this.currentLeftColumnIndex = Math.min(
       Math.max(this.currentLeftColumnIndex + columnsPerTurn * delta, 0),

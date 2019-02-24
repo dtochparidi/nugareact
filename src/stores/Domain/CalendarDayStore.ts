@@ -41,9 +41,10 @@ export default class CalendarDayStore {
     return day;
   }
 
-  @action
+  @action.bound
   public removeDays(indexStart: number, indexEnd: number) {
-    this.days.splice(indexStart, indexEnd - indexStart + 1);
+    const days = this.days.splice(indexStart, indexEnd - indexStart + 1);
+    days.forEach(day => delete this.daysMap[day.id]);
   }
 
   @action.bound
