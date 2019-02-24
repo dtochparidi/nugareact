@@ -33,7 +33,7 @@ export default class DateRow extends React.Component<IProps> {
             </span>
             <span
               className={`index ${
-                i === this.props.dayChosenIndex ? 'chosen' : ''
+                i + 1 === this.props.dayChosenIndex ? 'chosen' : ''
               }`}
             >
               {i + 1}
