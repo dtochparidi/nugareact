@@ -13,7 +13,12 @@ function random(to: number, from: number = 0) {
   return Math.floor(Math.random() * (to - from)) + from;
 }
 
+const daysCache = {};
+
 export function generateRandomDay(date: IMoment): ICalendarDay {
+  const key = date.format('DD:MM:YYYY');
+  if (key in daysCache) return daysCache[key];
+
   const littleStepMinutes = 9;
   const largeStepMinutes = 45;
   const hours = 9;
@@ -25,7 +30,7 @@ export function generateRandomDay(date: IMoment): ICalendarDay {
 
   const ranges: Array<[number, DateRange]> = [];
 
-  return {
+  const data = {
     appointments: new Array(random(55, 10))
       .fill(null)
       .map(
@@ -68,6 +73,10 @@ export function generateRandomDay(date: IMoment): ICalendarDay {
       }, {}),
     date,
   };
+
+  daysCache[key] = data;
+
+  return data;
 }
 
 const fetchDay: IFetcher<IMoment, ICalendarDay> = async function DayFetcher(
