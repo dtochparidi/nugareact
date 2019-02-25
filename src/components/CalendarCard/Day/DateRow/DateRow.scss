@@ -3,53 +3,74 @@
 $dateRow-padding: $thin-width;
 $dateRow-height: 40px;
 
-.dateRow {
-  display: grid;
-  grid-auto-flow: column;
-
-  width: 100%;
-  height: $dateRow-height;
-  padding: $dateRow-padding;
+.dateRowWrapper {
+  display: flex;
 
   border: solid lightgrey 1px;
   border-bottom: none;
 
   background: #fcfcfc;
 
-  .day {
+  .arrowWrapper {
     display: flex;
-    flex-flow: column;
+    justify-content: center;
     align-items: center;
 
-    justify-content: space-between;
+    width: $dateRow-height;
 
-    height: 100%;
-
-    .index {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      height: $dateRow-height / 2;
-      width: $dateRow-height / 2;
-
+    svg {
       border-radius: 50%;
+      transition: background 0.2s;
+    }
 
-      transition-duration: 0.2s;
-      transition-property: color background;
+    svg:hover {
+      background: lightgray;
+    }
+  }
 
-      cursor: default;
+  .dateRow {
+    display: grid;
+    grid-auto-flow: column;
 
-      &.chosen {
-        color: white;
-        background: rgb(71, 58, 255);
-      }
+    width: 100%;
+    height: $dateRow-height;
+    padding: $dateRow-padding;
 
-      &:not(.chosen):hover {
-        color: white;
-        background: rgb(132, 123, 255);
+    .day {
+      display: flex;
+      flex-flow: column;
+      align-items: center;
+
+      justify-content: space-between;
+
+      height: 100%;
+
+      .index {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        height: $dateRow-height / 2;
+        width: $dateRow-height / 2;
+
+        border-radius: 50%;
+
+        transition-duration: 0.2s;
+        transition-property: color background;
 
         cursor: default;
+
+        &.chosen {
+          color: white;
+          background: rgb(71, 58, 255);
+        }
+
+        &:not(.chosen):hover {
+          color: white;
+          background: rgb(132, 123, 255);
+
+          cursor: default;
+        }
       }
     }
   }

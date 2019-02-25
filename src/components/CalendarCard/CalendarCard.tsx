@@ -667,8 +667,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       .startOf('month');
     this.currentDayNumber = this.props.days[dayIndex].date.date();
     this.currentDayIndex = dayIndex;
-
-    console.log(this.monthStartDate.month());
   }
 
   public updateScroll(force = false) {
@@ -757,7 +755,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public jumpToDay(dayIndex: number) {
-    const targetDate = this.monthStartDate.clone().date(dayIndex + 1);
+    const targetDate = this.monthStartDate.clone().date(dayIndex);
     this.currentLeftColumnIndex = 0;
     this.props.removeDays(0, this.props.days.length);
 
