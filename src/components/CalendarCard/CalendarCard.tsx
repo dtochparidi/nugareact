@@ -86,9 +86,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   @observable
   public movingId: string = '';
   @observable
-  public currentDayIndex: number;
+  public currentDayNumber: number;
   @observable
   public monthStartDate: IMoment;
+  public currentDayIndex: number = 0;
 
   public currentLeftColumnIndex: number = 0;
   public shiftsCache: {
@@ -106,12 +107,15 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   private clientRect: ClientRect;
   private activatedDropzones: string[] = [];
   private tooFarPagesTrigger = 2;
+  private jumpToDayHandler: (index: number) => void;
 
   constructor(props: IProps) {
     super(props);
 
     this.daysContainerRef = React.createRef();
     this.pageTurnEmitter = new Emitter();
+
+    this.jumpToDayHandler = this.jumpToDay.bind(this);
 
     const mainColumnStep = Moment.duration(45, 'minutes');
     const stamps = Array.from(
@@ -661,7 +665,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     this.monthStartDate = this.props.days[dayIndex].date
       .clone()
       .startOf('month');
-    this.currentDayIndex = this.props.days[dayIndex].date.date();
+    this.currentDayNumber = this.props.days[dayIndex].date.date();
+    this.currentDayIndex = dayIndex;
+
+    console.log(this.monthStartDate.month());
   }
 
   public updateScroll(force = false) {
@@ -749,6 +756,20 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     });
   }
 
+  public jumpToDay(dayIndex: number) {
+    const targetDate = this.monthStartDate.clone().date(dayIndex + 1);
+    this.currentLeftColumnIndex = 0;
+    this.props.removeDays(0, this.props.days.length);
+
+    this.setState({
+      requiredDays: [
+        targetDate,
+        targetDate.clone().subtract(1, 'day'),
+        targetDate.clone().subtract(2, 'day'),
+      ],
+    });
+  }
+
   public updateDaysWidth() {
     const dayWidth = this.calcDaysWidth();
     const state = { dayWidth };
@@ -820,8 +841,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           <div className="topRowsContainer">
             <div className="viewPortContainer">
               <DateRow
-                dayChosenIndex={this.currentDayIndex}
+                dayChosenIndex={this.currentDayNumber}
                 monthStartDate={this.monthStartDate}
+                dayJumpCallback={this.jumpToDayHandler}
               />
               <div className="scrollingContainer">
                 <div className="stickyContainer">

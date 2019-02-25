@@ -8,6 +8,7 @@ import './DateRow.scss';
 export interface IProps {
   dayChosenIndex: number;
   monthStartDate: IMoment;
+  dayJumpCallback: (index: number) => void;
 }
 
 @observer
@@ -19,6 +20,12 @@ export default class DateRow extends React.Component<IProps> {
       0
     );
   }
+
+  public indexClickHandler = (e: React.MouseEvent) => {
+    this.props.dayJumpCallback(
+      parseInt(e.currentTarget.textContent || '0', 10),
+    );
+  };
 
   public render() {
     return (
@@ -32,6 +39,7 @@ export default class DateRow extends React.Component<IProps> {
                 .format('dd')}
             </span>
             <span
+              onClick={this.indexClickHandler}
               className={`index ${
                 i + 1 === this.props.dayChosenIndex ? 'chosen' : ''
               }`}

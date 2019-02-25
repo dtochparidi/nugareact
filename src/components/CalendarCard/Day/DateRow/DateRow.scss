@@ -35,9 +35,21 @@ $dateRow-height: 40px;
 
       border-radius: 50%;
 
+      transition-duration: 0.2s;
+      transition-property: color background;
+
+      cursor: default;
+
       &.chosen {
         color: white;
         background: rgb(71, 58, 255);
+      }
+
+      &:not(.chosen):hover {
+        color: white;
+        background: rgb(132, 123, 255);
+
+        cursor: default;
       }
     }
   }
