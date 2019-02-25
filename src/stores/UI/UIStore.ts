@@ -35,7 +35,8 @@ export default class UIStore {
   public get dayTimeRangeActual(): DateRange {
     const actualDuration =
       Math.ceil(
-        this.dayTimeRange.duration('minute') / this.mainColumnStep.asMinutes(),
+        this.dayTimeRange.duration('minute') / this.mainColumnStep.asMinutes() +
+          1,
       ) * this.mainColumnStep.asMinutes();
 
     return moment.range(

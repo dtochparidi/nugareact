@@ -4,6 +4,7 @@ import ICalendarDay from 'interfaces/ICalendarDay';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
 import { action, observable } from 'mobx';
 import { Moment as IMoment } from 'moment';
+import * as moment from 'moment';
 import Appointment from 'structures/Appointment';
 import CalendarDay from 'structures/CalendarDay';
 
@@ -114,6 +115,21 @@ export default class CalendarDayStore {
       this.loadDay(targetDate.clone().startOf('day'));
       return;
     }
+
+    // check duration not overlap the day's end
+    const possibleDuration = moment.duration(
+      targetDate
+        .clone()
+        .hour(dayTimeRangeActual.end.hour())
+        .minute(dayTimeRangeActual.end.minute())
+        .diff(targetDate, 'minute'),
+      'minute',
+    );
+    if (
+      (targetDuration || appointment.duration).asMinutes() >
+      possibleDuration.asMinutes()
+    )
+      targetDuration = possibleDuration;
 
     // change the appointment
     appointment.update(
