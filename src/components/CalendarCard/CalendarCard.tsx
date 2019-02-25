@@ -662,11 +662,18 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
   @action
   public updateCurrentDayData(dayIndex: number) {
-    this.monthStartDate = this.props.days[dayIndex].date
+    const newMonthStartDate = this.props.days[dayIndex].date
       .clone()
       .startOf('month');
     this.currentDayNumber = this.props.days[dayIndex].date.date();
     this.currentDayIndex = dayIndex;
+
+    if (
+      !this.monthStartDate ||
+      newMonthStartDate.format('DD:MM:YYYY') !==
+        this.monthStartDate.format('DD:MM:YYYY')
+    )
+      this.monthStartDate = newMonthStartDate;
   }
 
   public updateScroll(force = false) {
@@ -813,7 +820,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const { columnsPerDay, stamps, dayWidth } = this.state;
     const { days, subGridColumns, positionCount, mainColumnStep } = this.props;
 
-    const instantRender = days.length < 4;
+    const instantRender = false;
 
     days.forEach(day => {
       const { id } = day;
