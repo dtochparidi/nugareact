@@ -1,0 +1,19 @@
+@import 'src/common/variables.scss';
+@import 'src/common/fonts.scss';
+
+$monthRow-height: 30px;
+
+.monthRowWrapper {
+  @extend .font-primary;
+
+  display: flex;
+
+  border-top: solid lightgrey 1px;
+
+  background: #fcfcfc;
+
+  align-items: center;
+
+  height: $monthRow-height;
+  padding-left: $medium-width;
+}

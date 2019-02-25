@@ -24,6 +24,7 @@ import ToggleArea from './ToggleArea';
 import * as Emitter from 'events';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
 import { action, observable } from 'mobx';
+import MonthRow from './Day/MonthRow';
 import TopRow from './Day/TopRow';
 import { generateDropzoneConfig } from './modules/dropzoneConfig';
 import { generateResizeConfig } from './modules/resizeConfig';
@@ -88,7 +89,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   @observable
   public currentDayNumber: number;
   @observable
-  public monthStartDate: IMoment;
+  public monthStartDate: IMoment = moment();
   public currentDayIndex: number = 0;
 
   public currentLeftColumnIndex: number = 0;
@@ -566,16 +567,20 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     this.updateColumnsCount();
     this.updateBoundingRect();
 
-    setTimeout(() => {
-      this.updateDaysWidth();
+    // setTimeout(() => {
+    this.updateDaysWidth();
+    this.setState({ loading: false });
+    // });
 
-      this.updateScroll(true);
-
-      this.setState({ loading: false });
+    this.state.requiredDays.forEach(day => {
+      if (!this.props.days.find(d => d.date.diff(day, 'days') === 0))
+        this.props.requestCallback(day);
     });
   }
 
   public componentDidUpdate(prevProps: IProps) {
+    console.log(this.props.days);
+
     if (this.props.days.length !== this.currentDaysCount) {
       this.updateDropzones();
       this.currentDaysCount = this.props.days.length;
@@ -595,24 +600,33 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         this.currentFirstDay = this.props.days[0];
 
         if (lastDayNowIndex !== 0) {
-          this.currentLeftColumnIndex += this.state.columnsPerDay;
+          if (this.props.days.length > 1)
+            this.currentLeftColumnIndex += this.state.columnsPerDay;
           this.updateScroll(true);
         }
       }
 
-    // OPTIMIZE
-    this.state.requiredDays.forEach(day => {
-      if (!this.props.days.find(d => d.date.diff(day, 'days') === 0))
-        this.props.requestCallback(day);
-    });
+    // step-by-step
+    const medianDay = this.state.requiredDays.sort((a, b) =>
+      a.diff(b) > 0 ? 1 : -1,
+    )[Math.floor(this.state.requiredDays.length / 2)];
+    const sorted = this.state.requiredDays.sort((a, b) =>
+      Math.abs(medianDay.diff(a)) - Math.abs(medianDay.diff(b)) > 0 ? 1 : -1,
+    );
+    const unloadedDay = sorted.find(
+      day => !this.props.days.find(d => d.date.diff(day, 'days') === 0),
+    );
+    if (unloadedDay)
+      if (!this.props.days.length) {
+        this.props.requestCallback(unloadedDay);
+        this.updateCurrentDayData(0);
+      } else setTimeout(() => this.props.requestCallback(unloadedDay));
+    else this.updateScroll(true);
 
-    // if (this.shouldUpdateVisibility) {
-    //   this.updateVisibility([
-    //     this.currentLeftColumnIndex,
-    //     this.currentLeftColumnIndex + this.state.columnsPerPage,
-    //   ]);
-    //   this.shouldUpdateVisibility = false;
-    // }
+    // this.state.requiredDays.forEach(day => {
+    //   if (!this.props.days.find(d => d.date.diff(day, 'days') === 0))
+    //     this.props.requestCallback(day);
+    // });
   }
 
   public turnPage(delta: -1 | 1) {
@@ -845,6 +859,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         >
           <div className="topRowsContainer">
             <div className="viewPortContainer">
+              <MonthRow monthDate={this.monthStartDate} />
               <DateRow
                 dayChosenIndex={this.currentDayNumber}
                 monthStartDate={this.monthStartDate}

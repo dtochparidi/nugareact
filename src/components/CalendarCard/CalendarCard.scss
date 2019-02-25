@@ -1,11 +1,12 @@
 @import 'src/common/variables.scss';
 @import 'src/components/CalendarCard/Day/DateRow/DateRow.scss';
+@import 'src/components/CalendarCard/Day/MonthRow/MonthRow.scss';
 
 $time-column-width: 50px;
 $calendar-cell-height: 60px;
 $calendar-cell-width-min: 220px;
-$top-row-height: $calendar-cell-height + $dateRow-height + $dateRow-padding * 2 +
-  $thin-width;
+$top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
+  $dateRow-padding * 2 + $thin-width * 2;
 
 :export {
   #{'calendarCellWidthMin'}: $calendar-cell-width-min;
