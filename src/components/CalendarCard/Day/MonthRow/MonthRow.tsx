@@ -7,12 +7,14 @@ import './MonthRow.scss';
 export interface IProps {
   monthDate: IMoment;
 }
-
 @observer
 export default class MonthRow extends React.Component<IProps> {
   public render() {
     return (
-      <div className="monthRowWrapper">
+      <div
+        className="monthRowWrapper"
+        key={this.props.monthDate.format('MMMM')}
+      >
         {this.props.monthDate.format('MMMM')}
       </div>
     );

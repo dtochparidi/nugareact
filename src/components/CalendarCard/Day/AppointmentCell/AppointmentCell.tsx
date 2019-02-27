@@ -107,6 +107,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     elem.onresize = this.updateLayout;
 
     this.updateLayout();
+    setTimeout(() => this.updateLayout());
   }
 
   public onMouseWheel(e: React.WheelEvent<any> | WheelEvent) {

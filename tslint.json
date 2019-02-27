@@ -11,11 +11,13 @@
   "rules": {
     "no-console": false,
     "curly": [true, "as-needed"],
-    "no-debugger": false
+    "no-debugger": false,
+    "jsx-boolean-value": false
   },
   "jsRules": {
     "no-console": false,
     "curly": [true, "as-needed"],
-    "no-debugger": false
+    "no-debugger": false,
+    "jsx-boolean-value": false
   }
 }

@@ -38,13 +38,18 @@ export default class DateRow extends React.Component<IProps> {
     this.props.dayJumpCallback(this.monthLength + 2);
   };
 
+  public animationEnded = () => {
+    console.log('ended!');
+  };
+
   public render() {
     return (
       <div className="dateRowWrapper">
         <div className="arrowWrapper">
           <ArrowLeft onClick={this.goPreviousMonth} />
         </div>
-        <div className="dateRow">
+
+        <div className="dateRow" key={this.props.monthStartDate.format('MM')}>
           {new Array(this.monthLength).fill(null).map((v, i) => (
             <div key={i} className="day">
               <span className="name">
