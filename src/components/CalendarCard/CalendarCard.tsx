@@ -46,6 +46,7 @@ if (clientSide) (interact as any).dynamicDrop(true);
 export interface IProps {
   days: CalendarDay[];
   dayTimeRange: DateRange;
+  dayTimeRangeActual: DateRange;
   positionCount: number;
   subGridColumns: number;
   requestCallback: (date: Moment.Moment) => void;
@@ -528,7 +529,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         '.dayWrapper',
       ),
     ).forEach((child, index) => {
-      const selector = `#${child.id} .gridCell`;
+      const selector = `#${child.id} .grid`;
 
       if (
         index >= minDay &&

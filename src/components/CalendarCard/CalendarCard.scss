@@ -180,6 +180,10 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
 
                 .subGridElem {
                   border: dotted lightgrey 1px;
+
+                  &.enter {
+                    background: rgb(255, 249, 216);
+                  }
                 }
               }
 

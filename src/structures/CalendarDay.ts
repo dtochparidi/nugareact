@@ -2,9 +2,17 @@ import ICalendarDay from 'interfaces/ICalendarDay';
 import { action, observable } from 'mobx';
 import { Moment as IMoment } from 'moment';
 
+import * as moment from 'moment';
 import Appointment from './Appointment';
 
 export default class CalendarDay implements ICalendarDay {
+  public static fromId(id: string) {
+    const arr = id.split('_');
+    return {
+      date: moment(arr, 'DD-MM-YYYY'),
+    };
+  }
+
   private static calcId(date: IMoment) {
     const id = `day_${date.format('DD-MM-YYYY')}`;
     return id;

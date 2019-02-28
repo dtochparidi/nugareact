@@ -75,6 +75,7 @@ class App extends React.Component {
           removeDays={calendarDayStore.removeDays}
           positionCount={uiStore.positionCount || 0}
           dayTimeRange={uiStore.dayTimeRange}
+          dayTimeRangeActual={uiStore.dayTimeRangeActual}
           updateAppointment={calendarDayStore.updateAppointment}
           mainColumnStep={uiStore.mainColumnStep}
         />
