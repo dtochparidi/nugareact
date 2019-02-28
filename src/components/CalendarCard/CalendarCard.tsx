@@ -705,7 +705,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const dayIndex = Math.floor(
       this.currentLeftColumnIndex / this.state.columnsPerDay,
     );
-    console.log(this.currentLeftColumnIndex, dayIndex);
     const day = container.querySelectorAll('.dayWrapper')[
       dayIndex
     ] as HTMLElement;
