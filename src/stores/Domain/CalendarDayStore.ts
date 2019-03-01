@@ -32,12 +32,17 @@ export default class CalendarDayStore {
     if (day.id in this.daysMap) return day;
 
     this.daysMap[day.id] = day;
-    if (
-      this.days.length === 0 ||
-      day.date.diff(this.days[this.days.length - 1].date, 'hour') > 0
-    )
-      this.days.push(day);
-    else this.days.unshift(day);
+
+    if (this.days.length === 0) this.days.push(day);
+    else {
+      let i = -1;
+      let insertIndex = null;
+      while (++i < this.days.length && insertIndex === null)
+        if (this.days[i].date.diff(day.date) > 0) insertIndex = i;
+
+      if (insertIndex !== null) this.days.splice(insertIndex, 0, day);
+      else this.days.push(day);
+    }
 
     return day;
   }

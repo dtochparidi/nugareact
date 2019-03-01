@@ -40,8 +40,7 @@ function getInfo(
   const gridRect = gridElement.getBoundingClientRect();
   const x = appRect.left - gridRect.left;
   const y = appRect.top - gridRect.top + appRect.height / 2;
-
-  const { offsetWidth: width, offsetHeight: height } = gridElement;
+  const { width, height } = gridRect;
 
   const stamp = getStampByRelativePosition(x, width, dateRange);
   const position = getPositionByRelativePosition(y, height, 0, positions);
@@ -82,32 +81,32 @@ export function generateDropzoneConfig(this: CalendarCard) {
           .parentNode as HTMLElement;
 
         appInfo = Appointment.fromIdentifier(appCell.id);
-
-        console.log('enter');
       },
       ondragleave: (e: IDragEvent) => {
         if (lastLittleGridChunk) lastLittleGridChunk.classList.remove('enter');
+
         this.clearShifts();
-        console.log('clear shifts');
       },
       ondrop: (e: IDragEvent) => {
-        if (!placeIsFree || !appInfo) return;
+        if (placeIsFree && appInfo) {
+          this.lockShifts();
 
-        this.lockShifts();
+          this.props.updateAppointment({
+            date: appInfo.date,
+            targetDate: lastStamp,
+            targetPosition: lastPosition,
+            uniqueId: appInfo.uniqueId,
+          });
 
-        this.props.updateAppointment({
-          date: appInfo.date,
-          targetDate: lastStamp,
-          targetPosition: lastPosition,
-          uniqueId: appInfo.uniqueId,
-        });
+          this.checkForOverlaps(lastStamp);
 
-        this.checkForOverlaps(lastStamp);
+          if (lastLittleGridChunk)
+            lastLittleGridChunk.classList.remove('enter');
+          appInfo = null;
+        }
 
-        this.updateMovingId('');
-
-        if (lastLittleGridChunk) lastLittleGridChunk.classList.remove('enter');
-        appInfo = null;
+        // this.updateMovingId('');
+        setTimeout(() => this.updateMovingId(''), 500);
       },
       ondropactivate: (e: IDragEvent) => {
         //
@@ -142,7 +141,7 @@ export function generateDropzoneConfig(this: CalendarCard) {
           positionCount,
         );
 
-        const position = Math.min(absPosition, positionCount - 1);
+        const position = Math.max(Math.min(absPosition, positionCount - 1), 0);
 
         const dayStart = dayDate
           .hour(dayTimeRangeActual.start.hour())
@@ -152,7 +151,8 @@ export function generateDropzoneConfig(this: CalendarCard) {
           .hour(abstractStamp.hour())
           .minute(abstractStamp.minute());
 
-        const largeStep = this.props.mainColumnStep.asMilliseconds();
+        const { mainColumnStep } = this.props;
+        const largeStep = mainColumnStep.asMilliseconds();
         const littleStep = largeStep / this.props.subGridColumns;
         const offset = stamp.valueOf() - dayStart.valueOf();
         const roundedOffset = Math.round(offset / littleStep) * littleStep;
@@ -188,22 +188,18 @@ export function generateDropzoneConfig(this: CalendarCard) {
           this,
         );
 
-        const currentDay = this.getDayByStamp(roundedStamp);
-
-        const newOffset =
-          roundedStamp.valueOf() -
-          roundedStamp
-            .clone()
-            .hour(dayTimeRangeActual.start.hour())
-            .minute(dayTimeRangeActual.start.minute())
-            .valueOf();
-        const x = newOffset / largeStep;
+        // const newOffset =
+        //   roundedStamp.valueOf() -
+        //   roundedStamp
+        //     .clone()
+        //     .hour(dayTimeRangeActual.start.hour())
+        //     .minute(dayTimeRangeActual.start.minute())
+        //     .valueOf();
+        const x = roundedOffset / largeStep;
         const gridX = Math.floor(x);
         const gridY = position;
-        const selector = `#${
-          currentDay.id
-        } [data-x="${gridX}"][data-y="${gridY}"]`;
-        const gridCell = document.querySelector(selector) as HTMLElement;
+        const selector = `[data-x="${gridX}"][data-y="${gridY}"]`;
+        const gridCell = gridElement.querySelector(selector) as HTMLElement;
 
         // console.log(selector);
         if (!gridCell) return;

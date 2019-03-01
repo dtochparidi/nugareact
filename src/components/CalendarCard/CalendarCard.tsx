@@ -121,8 +121,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     this.jumpToDayHandler = this.jumpToDay.bind(this);
 
     const mainColumnStep = Moment.duration(45, 'minutes');
+    const actualRange = this.props.dayTimeRangeActual.clone();
+    actualRange.end.subtract(mainColumnStep);
+
     const stamps = Array.from(
-      this.props.dayTimeRange.by('seconds', {
+      actualRange.by('seconds', {
         step: mainColumnStep.asSeconds(),
       }),
     );
@@ -535,8 +538,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         );
       }
     });
-
-    console.log(this.activatedDropzones, minDay, maxDay);
   }
 
   public updateRequiredDays(compensate = true, pendingOffset = 0) {
@@ -549,7 +550,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const firstDayRect = firstDayElem.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
 
-    const buffer = containerRect.width;
+    const buffer = Math.max(containerRect.width, firstDayRect.width);
 
     const leftBorderOffset =
       firstDayRect.left + buffer - (containerRect.left + pendingOffset);
@@ -569,12 +570,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     if (compensate)
       this.currentLeftColumnIndex += leftAddCount * this.state.columnsPerDay;
-
-    console.log('---');
-    console.log('width:', firstDayRect.width);
-    console.log('pendingOffset:', pendingOffset);
-    console.log(leftBorderOffset, rightBorderOffset);
-    console.log(leftAddCount, rightAddCount);
 
     while (leftAddCount--)
       this.state.requiredDays.unshift(
@@ -605,58 +600,35 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       }
     });
 
-    this.currentLeftColumnIndex =
-      Math.floor(this.state.requiredDays.length / 2) * this.state.columnsPerDay;
-
     this.startResizeHandling();
     this.startScrollHandling();
     this.updateColumnsCount();
     this.updateBoundingRect();
-
-    this.state.requiredDays.forEach(day => {
-      if (!this.props.days.find(d => d.date.diff(day, 'days') === 0))
-        this.props.requestCallback(day);
-    });
 
     setTimeout(() => {
       this.setState({ loading: false });
       this.updateDaysWidth();
       this.updateScroll(true);
 
+      this.updateRequiredDays(false);
+
+      this.currentLeftColumnIndex =
+        Math.floor((this.state.requiredDays.length - 1) / 2) *
+        this.state.columnsPerDay;
+
       this.updateVisibility([
         this.currentLeftColumnIndex,
         this.currentLeftColumnIndex + this.state.columnsPerPage,
       ]);
 
-      this.updateRequiredDays(false);
-
       setTimeout(() => this.updateDaysWidth());
+      this.updateScroll(true);
     });
   }
 
   public componentDidUpdate(prevProps: IProps) {
     if (this.props.days.length !== this.currentDaysCount)
       this.currentDaysCount = this.props.days.length;
-
-    // if (this.props.days.length)
-    //   if (!this.currentFirstDay) this.currentFirstDay = this.props.days[0];
-    //   else {
-    //     const lastDayNowIndex = this.props.days.findIndex(
-    //       d =>
-    //         d.date
-    //           .clone()
-    //           .startOf('day')
-    //           .diff(this.currentFirstDay.date.clone().startOf('day'), 'day') ===
-    //         0,
-    //     );
-    //     this.currentFirstDay = this.props.days[0];
-
-    //     if (lastDayNowIndex !== 0) {
-    //       if (this.props.days.length > 1)
-    //         this.currentLeftColumnIndex += this.state.columnsPerDay;
-    //       this.updateScroll(true);
-    //     }
-    //   }
 
     this.state.requiredDays
       .filter(day => !this.lazyLoadDays.includes(day))
@@ -666,9 +638,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       });
 
     // step-by-step
-    const medianDay = this.state.requiredDays.sort((a, b) =>
-      a.diff(b) > 0 ? 1 : -1,
-    )[Math.floor(this.state.requiredDays.length / 2)];
+    const medianDay = this.state.requiredDays
+      .map(m => m.clone())
+      .sort((a, b) => (a.diff(b) > 0 ? 1 : -1))[
+      Math.floor(this.state.requiredDays.length / 2)
+    ];
     const sorted = this.state.requiredDays
       .filter(day => this.lazyLoadDays.includes(day))
       .sort((a, b) =>
@@ -822,15 +796,25 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     this.currentLeftColumnIndex = 0;
     this.props.removeDays(0, this.props.days.length);
 
-    const requiredDays = [
-      targetDate,
-      targetDate.clone().subtract(1, 'day'),
-      targetDate.clone().subtract(2, 'day'),
-    ];
-    this.lazyLoadDays = requiredDays;
+    const requiredDays = [targetDate.subtract(1, 'day')];
+    this.lazyLoadDays = requiredDays.map(m => m);
 
+    this.currentLeftColumnIndex = 0;
     this.setState({
+      loading: true,
       requiredDays,
+    });
+
+    setTimeout(() => {
+      this.updateScroll(true);
+      this.updateRequiredDays();
+
+      this.setState({ loading: false });
+
+      this.updateVisibility([
+        this.currentLeftColumnIndex,
+        this.currentLeftColumnIndex + this.state.columnsPerPage,
+      ]);
     });
   }
 
@@ -997,6 +981,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         this.updateDaysWidth();
         this.updateScroll(true);
         this.updateBoundingRect();
+        this.updateVisibility([
+          this.currentLeftColumnIndex,
+          this.currentLeftColumnIndex + this.state.columnsPerPage,
+        ]);
 
         updateStickyElements(true);
       }, boundTime);
