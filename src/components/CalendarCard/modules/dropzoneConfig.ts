@@ -82,9 +82,13 @@ export function generateDropzoneConfig(this: CalendarCard) {
           .parentNode as HTMLElement;
 
         appInfo = Appointment.fromIdentifier(appCell.id);
+
+        console.log('enter');
       },
       ondragleave: (e: IDragEvent) => {
         if (lastLittleGridChunk) lastLittleGridChunk.classList.remove('enter');
+        this.clearShifts();
+        console.log('clear shifts');
       },
       ondrop: (e: IDragEvent) => {
         if (!placeIsFree || !appInfo) return;
@@ -131,12 +135,14 @@ export function generateDropzoneConfig(this: CalendarCard) {
 
         const { dayTimeRangeActual, positionCount } = this.props;
 
-        const { position, stamp: abstractStamp } = getInfo(
+        const { position: absPosition, stamp: abstractStamp } = getInfo(
           appCell,
           gridElement,
           dayTimeRangeActual,
           positionCount,
         );
+
+        const position = Math.min(absPosition, positionCount - 1);
 
         const dayStart = dayDate
           .hour(dayTimeRangeActual.start.hour())
@@ -151,6 +157,18 @@ export function generateDropzoneConfig(this: CalendarCard) {
         const offset = stamp.valueOf() - dayStart.valueOf();
         const roundedOffset = Math.round(offset / littleStep) * littleStep;
         const roundedStamp = dayStart.clone().add(roundedOffset);
+
+        const dayEnd = dayStart.clone().add(dayTimeRangeActual.duration());
+        if (dayEnd.diff(roundedStamp) <= 0)
+          roundedStamp
+            .hour(dayTimeRangeActual.start.hour())
+            .minute(dayTimeRangeActual.start.minute())
+            .add(1, 'day');
+        else if (dayStart.diff(roundedStamp) > 0)
+          roundedStamp
+            .hour(dayTimeRangeActual.end.hour())
+            .minute(dayTimeRangeActual.end.minute())
+            .subtract(1, 'day');
 
         if (
           Math.abs(roundedStamp.diff(lastStamp, 'ms')) < littleStep &&
@@ -170,12 +188,25 @@ export function generateDropzoneConfig(this: CalendarCard) {
           this,
         );
 
-        const x = roundedOffset / largeStep;
+        const currentDay = this.getDayByStamp(roundedStamp);
+
+        const newOffset =
+          roundedStamp.valueOf() -
+          roundedStamp
+            .clone()
+            .hour(dayTimeRangeActual.start.hour())
+            .minute(dayTimeRangeActual.start.minute())
+            .valueOf();
+        const x = newOffset / largeStep;
         const gridX = Math.floor(x);
         const gridY = position;
-        const gridCell = gridElement.querySelector(
-          `[data-x="${gridX}"][data-y="${gridY}"]`,
-        ) as HTMLElement;
+        const selector = `#${
+          currentDay.id
+        } [data-x="${gridX}"][data-y="${gridY}"]`;
+        const gridCell = document.querySelector(selector) as HTMLElement;
+
+        // console.log(selector);
+        if (!gridCell) return;
 
         const littleChunkIndex = Math.round(
           (x - gridX) / (1 / this.props.subGridColumns),

@@ -21,7 +21,7 @@ export function generateRandomDay(date: IMoment): ICalendarDay {
 
   const littleStepMinutes = 9;
   const largeStepMinutes = 45;
-  const hours = 9;
+  const hours = 2;
   const stepsPerColumn = Math.floor(largeStepMinutes / littleStepMinutes);
   const maxStepsCount = Math.floor(
     (Math.floor((hours * 60) / largeStepMinutes) * largeStepMinutes) /
