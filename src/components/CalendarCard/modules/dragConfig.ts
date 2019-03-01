@@ -59,10 +59,10 @@ function createDragConfig(
     target = (target.parentNode as HTMLElement).parentNode as HTMLElement; // go up from .containerTempWidth to .appointmentCell
 
     target.classList.remove('moving');
-    target.style.left = '';
-    target.style.top = '';
-    target.style.width = '';
-    target.style.height = '';
+    // target.style.left = '';
+    // target.style.top = '';
+    // target.style.width = '';
+    // target.style.height = '';
     // target.style.transform = '';
     target.style.transform = transformBeforeDragging;
 

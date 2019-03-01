@@ -38,6 +38,7 @@ it('renders without crashing', () => {
       positionCount={6}
       removeDays={removeDays}
       dayTimeRange={dayTimeRange}
+      dayTimeRangeActual={dayTimeRange}
       updateAppointment={ua}
       mainColumnStep={Moment.duration(45, 'minutes')}
     />,

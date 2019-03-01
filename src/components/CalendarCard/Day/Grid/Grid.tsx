@@ -117,7 +117,8 @@ export default class Grid extends React.Component<IProps> {
 
         gridCells.push(
           <GridCell
-            movingIdObj={this.movingId}
+            // movingIdObj={this.movingId}
+            movingId={this.props.movingId}
             key={`${x}:${y}`}
             x={x}
             y={y}
@@ -174,14 +175,14 @@ export default class Grid extends React.Component<IProps> {
       for (const i in this.appointments[x][y])
         delete this.appointments[x][y][i];
 
-      // console.log('remove all');
-
-      return true;
+      // console.log('remove all', this.hash);
+      return false;
     }
 
     if (recordEmpty && !inputEmpty) {
       Object.assign(this.appointments[x][y], inputApps);
 
+      // console.log('assign all', this.hash);
       return true;
     }
 
@@ -196,6 +197,7 @@ export default class Grid extends React.Component<IProps> {
       if (!recordedApp) {
         recordedApps[inputId] = inputApp;
 
+        // console.log('add new');
         return true;
       }
 
@@ -216,7 +218,7 @@ export default class Grid extends React.Component<IProps> {
       // console.log('remove');
     });
 
-    return true;
+    return false;
   }
 
   @action
@@ -275,9 +277,8 @@ export default class Grid extends React.Component<IProps> {
         else return;
       }
 
-      // if (!justCreated) console.log(justCreated);
       if (changed && !dropped && !instantRender)
-        this.iteratorTimeout = setTimeout(() => iterator(), delay);
+        this.iteratorTimeout = setTimeout(iterator.bind(this), delay);
       else iterator();
     };
 

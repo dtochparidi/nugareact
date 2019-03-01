@@ -15,7 +15,8 @@ export interface IProps {
   cols: number;
   apps: { [uniqueId: string]: Appointment };
   shift: { dx: number; dy: number };
-  movingIdObj: { id: string };
+  // movingIdObj: { id: string };
+  movingId: string;
   updateAppointment: (props: IUpdateAppProps) => void;
 }
 
@@ -34,7 +35,8 @@ export default class GridCell extends React.Component<IProps> {
       gridColumnDuration,
       updateAppointment,
       shift,
-      movingIdObj,
+      // movingIdObj,
+      movingId,
     } = this.props;
     const appNodes = Object.values(apps).map(app => {
       const appointment = app as Appointment;
@@ -42,7 +44,9 @@ export default class GridCell extends React.Component<IProps> {
       let coeffX = 0;
       let coeffY = 0;
 
-      const isMoving = appointment.identifier === movingIdObj.id;
+      // const isMoving = appointment.identifier === movingIdObj.id;
+      const isMoving = appointment.identifier === movingId;
+      if (isMoving) console.log(isMoving);
       if (!isMoving) {
         const { dx, dy } = shift;
         const d = appointment.date;
