@@ -4,6 +4,7 @@ import * as Moment from 'moment';
 import { DateRange, extendMoment } from 'moment-range';
 import Appointment from 'structures/Appointment';
 import CalendarDay from 'structures/CalendarDay';
+
 import CalendarCard from '..';
 import { freePlaceToDrop } from './freePlaceToDrop';
 
@@ -59,8 +60,6 @@ interface IDragEvent extends InteractEvent {
 }
 
 export function generateDropzoneConfig(this: CalendarCard) {
-  // let lastRange: DateRange | null = null;
-
   return ((): interact.DropZoneOptions => {
     let lastLittleGridChunk: HTMLElement | null = null;
     let placeIsFree: boolean = true;

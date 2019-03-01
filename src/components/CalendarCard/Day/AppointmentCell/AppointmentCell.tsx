@@ -179,7 +179,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     const offsetX = Math.floor((translateX / 100) * 2) * borderWidth;
     const offsetY = Math.floor((translateY / 100) * 2) * borderWidth;
 
-    const translated = translateX || translateY;
+    const translated = true;
 
     const widthScale = duration.asMinutes() / gridColumnDuration.asMinutes();
     const widthCorrect = Math.floor(widthScale) * 2;
