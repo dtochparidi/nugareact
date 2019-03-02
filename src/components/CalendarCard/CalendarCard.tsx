@@ -728,11 +728,13 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       this.currentLeftColumnIndex - dayIndex * this.state.columnsPerDay;
     const appointmentCell = grid.children[dayColumnIndex];
 
-    const left = Math.round(
+    const left =
       appointmentCell.getBoundingClientRect().left -
-        gridsContainer.getBoundingClientRect().left +
-        gridsContainer.scrollLeft,
-    );
+      gridsContainer.getBoundingClientRect().left +
+      gridsContainer.scrollLeft +
+      0.5;
+
+    console.log(left);
 
     gridsContainer.scrollTo({
       behavior: force ? 'auto' : 'smooth',
@@ -799,17 +801,28 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const requiredDays = [targetDate.subtract(1, 'day')];
     this.lazyLoadDays = requiredDays.map(m => m);
 
-    this.currentLeftColumnIndex = 0;
     this.setState({
-      loading: true,
+      // loading: true,
       requiredDays,
     });
+
+    const container = this.daysContainerRef.current as HTMLDivElement;
+
+    const gridsContainer = container.querySelector(
+      '.gridsContainer',
+    ) as HTMLElement;
+    const topRowsContainer = container.querySelector(
+      '.topRowsContainer .scrollingContainer',
+    ) as HTMLElement;
+
+    gridsContainer.scrollLeft = 0;
+    topRowsContainer.scrollLeft = 0;
 
     setTimeout(() => {
       this.updateScroll(true);
       this.updateRequiredDays();
 
-      this.setState({ loading: false });
+      // this.setState({ loading: false });
 
       this.updateVisibility([
         this.currentLeftColumnIndex,
