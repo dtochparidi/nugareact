@@ -734,7 +734,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       gridsContainer.scrollLeft +
       0.5;
 
-    console.log(left);
 
     gridsContainer.scrollTo({
       behavior: force ? 'auto' : 'smooth',

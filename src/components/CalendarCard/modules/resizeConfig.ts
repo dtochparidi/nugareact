@@ -93,7 +93,7 @@ export function generateResizeConfig(
       lastRange = range;
 
       widthNode.style.width = `${e.rect.width}px`;
-      widthNode.dispatchEvent(new Event('resize'));
+      widthNode.dispatchEvent(new CustomEvent('resize', { detail: e }));
     },
   };
 }

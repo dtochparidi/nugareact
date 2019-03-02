@@ -1,4 +1,3 @@
-import * as CardVariables from 'components/CalendarCard/CalendarCard.scss';
 import { IPerson } from 'interfaces/IPerson';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
 import { observer } from 'mobx-react';
@@ -9,8 +8,6 @@ import * as StyleVariables from '../../../../common/variables.scss';
 import Appointment from '../../../../structures/Appointment';
 
 import './AppointmentCell.scss';
-
-const MIN_CELL_WIDTH = parseFloat(CardVariables.calendarCellWidthMin);
 
 export interface IProps {
   appointment: Appointment;
@@ -35,6 +32,22 @@ enum WidthClass {
   Max = 'widthMax',
 }
 
+const upgradeWidthMap = {
+  [WidthClass.Min]: WidthClass.Slim,
+  [WidthClass.Slim]: WidthClass.Medium,
+  [WidthClass.Medium]: WidthClass.Wide,
+  [WidthClass.Wide]: WidthClass.Max,
+  [WidthClass.Max]: WidthClass.Max,
+};
+
+const downgradeWidthMap = {
+  [WidthClass.Min]: WidthClass.Min,
+  [WidthClass.Slim]: WidthClass.Min,
+  [WidthClass.Medium]: WidthClass.Slim,
+  [WidthClass.Wide]: WidthClass.Medium,
+  [WidthClass.Max]: WidthClass.Wide,
+};
+
 @observer
 export default class AppointmentCell extends React.Component<IProps, IState> {
   public onMouseWheelHandler: (e: React.WheelEvent<any> | WheelEvent) => void;
@@ -43,6 +56,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
   private widthDivRef: React.RefObject<HTMLDivElement> = React.createRef();
   private rebuildLayoutTimeout: NodeJS.Timeout;
   private unMounted = false;
+  private isTryingToUpgrade = false;
 
   constructor(props: IProps) {
     super(props);
@@ -51,11 +65,11 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
 
     this.state = {
       tempWidth: '',
-      widthClass: WidthClass.Max,
+      widthClass: WidthClass.Min,
     };
   }
 
-  public updateLayout = () => {
+  public updateLayout = (positiveResizing = false) => {
     if (this.unMounted) return;
 
     const elem = this.widthDivRef.current;
@@ -82,19 +96,63 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
       return;
     }
 
-    const newWidthClass =
-      width < MIN_CELL_WIDTH * 0.5
-        ? WidthClass.Min
-        : width < MIN_CELL_WIDTH * 0.8
-        ? WidthClass.Slim
-        : width < MIN_CELL_WIDTH * 0.9
-        ? WidthClass.Medium
-        : width < MIN_CELL_WIDTH
-        ? WidthClass.Wide
-        : WidthClass.Max;
+    const innerContainer = elem.querySelector('.subWrapper') as HTMLElement;
+    const innerRect = innerContainer.getBoundingClientRect();
 
-    if (newWidthClass !== this.state.widthClass)
-      this.setState({ widthClass: newWidthClass });
+    console.log(innerRect.right, cellRect.right);
+    if (innerRect.height >= cellRect.height || innerRect.right > cellRect.right)
+      this.setState({ widthClass: downgradeWidthMap[this.state.widthClass] });
+    else if (positiveResizing && !this.isTryingToUpgrade) {
+      const topElem = (elem.parentNode as HTMLElement)
+        .parentNode as HTMLElement;
+      const virtualNode = topElem.cloneNode(true) as HTMLElement;
+      virtualNode.style.height = topElem.getBoundingClientRect().height + 'px';
+      virtualNode.style.visibility = 'hidden';
+
+      const upgradedClass = upgradeWidthMap[this.state.widthClass];
+      const layoutController = virtualNode.querySelector(
+        '.layoutController',
+      ) as HTMLElement;
+      layoutController.classList.remove(this.state.widthClass);
+      layoutController.classList.add(upgradedClass);
+
+      const virtualInnerContainer = virtualNode.querySelector(
+        '.subWrapper',
+      ) as HTMLElement;
+
+      document.body.appendChild(virtualNode);
+      this.isTryingToUpgrade = true;
+
+      setTimeout(() => {
+        // const virtualRect = virtualNode.getBoundingClientRect();
+        const virtualInnerRect = virtualInnerContainer.getBoundingClientRect();
+        const newHeight = virtualInnerRect.height;
+        const reducer = (children: Element[]) =>
+          children.reduce(
+            (acc: number, child: Element): number =>
+              child.children.length
+                ? reducer(Array.from(child.children))
+                : Math.max(acc, child.getBoundingClientRect().right),
+            0,
+          );
+        // const newRight = reducer(Array.from(virtualInnerContainer.children));
+
+        document.body.removeChild(virtualNode);
+        this.isTryingToUpgrade = false;
+
+        if (newHeight < cellRect.height) {
+          // && newRight < virtualRect.right) {
+          this.setState({
+            widthClass: upgradeWidthMap[this.state.widthClass],
+          });
+
+          console.log('upgrade');
+
+          if (this.state.widthClass !== WidthClass.Max)
+            this.updateLayout(positiveResizing);
+        } else console.log('bound');
+      });
+    }
   };
 
   public componentDidUpdate() {
@@ -104,10 +162,10 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
   public componentDidMount() {
     const elem = this.widthDivRef.current as HTMLElement;
 
-    elem.onresize = this.updateLayout;
+    elem.onresize = (e: UIEvent) => this.updateLayout((e.detail as any).dx > 0);
 
     this.updateLayout();
-    setTimeout(() => this.updateLayout());
+    setTimeout(() => this.updateLayout(true));
   }
 
   public onMouseWheel(e: React.WheelEvent<any> | WheelEvent) {
