@@ -31,6 +31,13 @@ const versions: Array<[string, string]> = [
 
 Раздвижение ячеек происходит с учётом их продолжительности`,
   ],
+  [
+    'Update1.1',
+    `
+# Update
+> v1.1
+  `,
+  ],
 ];
 
 export default versions;

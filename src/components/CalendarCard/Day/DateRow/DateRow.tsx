@@ -51,19 +51,19 @@ export default class DateRow extends React.Component<IProps> {
 
         <div className="dateRow" key={this.props.monthStartDate.format('MM')}>
           {new Array(this.monthLength).fill(null).map((v, i) => (
-            <div key={i} className="day">
+            <div
+              key={i}
+              className={`day ${
+                i + 1 === this.props.dayChosenIndex ? 'chosen' : ''
+              }`}
+            >
               <span className="name">
                 {this.props.monthStartDate
                   .clone()
                   .date(i + 1)
                   .format('dd')}
               </span>
-              <span
-                onClick={this.indexClickHandler}
-                className={`index ${
-                  i + 1 === this.props.dayChosenIndex ? 'chosen' : ''
-                }`}
-              >
+              <span onClick={this.indexClickHandler} className="index">
                 {i + 1}
               </span>
             </div>

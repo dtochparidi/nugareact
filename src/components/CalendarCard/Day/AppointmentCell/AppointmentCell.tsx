@@ -111,7 +111,6 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     const innerRect = innerContainer.getBoundingClientRect();
     const maxRight = maxRightReducer(Array.from(innerContainer.children));
 
-    console.log(maxRight, cellRect.right);
     if (innerRect.height >= cellRect.height || maxRight > cellRect.right)
       this.setState({ widthClass: downgradeWidthMap[this.state.widthClass] });
     else if (positiveResizing && !this.isTryingToUpgrade) {
