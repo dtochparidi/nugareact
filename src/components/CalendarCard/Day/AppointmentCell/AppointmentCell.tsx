@@ -84,19 +84,18 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
       return;
     }
 
-    const cellRect = elem.getBoundingClientRect();
-    const { width } = cellRect;
-
     // BUG
     // 'display: none' is not taking into account - perfomance issue (not very big)
-    if (width === 0) {
-      // console.log('width zero');
+    if (!elem.offsetWidth) {
+      clearTimeout(this.rebuildLayoutTimeout);
       this.rebuildLayoutTimeout = setTimeout(
         () => this.updateLayout(),
         300 + Math.random() * 100,
       );
       return;
     }
+
+    const cellRect = elem.getBoundingClientRect();
 
     const maxRightReducer = (children: Element[], max = 0) =>
       children.reduce((acc: number, child: Element): number => {
@@ -111,7 +110,10 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     const innerRect = innerContainer.getBoundingClientRect();
     const maxRight = maxRightReducer(Array.from(innerContainer.children));
 
-    if (innerRect.height >= cellRect.height || maxRight > cellRect.right)
+    if (
+      innerRect.height >= cellRect.height ||
+      maxRight > Math.max(cellRect.right, 0)
+    )
       this.setState({ widthClass: downgradeWidthMap[this.state.widthClass] });
     else if (positiveResizing && !this.isTryingToUpgrade) {
       const topElem = (elem.parentNode as HTMLElement)
@@ -148,9 +150,6 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
           this.setState({
             widthClass: upgradeWidthMap[this.state.widthClass],
           });
-
-          console.log('upgrade');
-
           if (this.state.widthClass !== WidthClass.Max)
             this.updateLayout(positiveResizing);
         }
@@ -169,8 +168,8 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
 
     elem.onresize = (e: UIEvent) => this.updateLayout((e.detail as any).dx > 0);
 
-    this.updateLayout();
-    // setTimeout(() => this.updateLayout());
+    this.updateLayout(true);
+    setTimeout(() => this.updateLayout(true));
   }
 
   public onMouseWheel(e: React.WheelEvent<any> | WheelEvent) {
