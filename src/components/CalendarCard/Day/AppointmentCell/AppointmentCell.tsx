@@ -48,6 +48,8 @@ const downgradeWidthMap = {
   [WidthClass.Max]: WidthClass.Wide,
 };
 
+const widthCache: { [uniqueId: string]: WidthClass } = {};
+
 @observer
 export default class AppointmentCell extends React.Component<IProps, IState> {
   public onMouseWheelHandler: (e: React.WheelEvent<any> | WheelEvent) => void;
@@ -65,7 +67,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
 
     this.state = {
       tempWidth: '',
-      widthClass: WidthClass.Min,
+      widthClass: widthCache[this.props.appointment.uniqueId] || WidthClass.Max,
     };
   }
 
@@ -96,11 +98,21 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
       return;
     }
 
+    const maxRightReducer = (children: Element[], max = 0) =>
+      children.reduce((acc: number, child: Element): number => {
+        if (child.children.length)
+          return maxRightReducer(Array.from(child.children), acc);
+
+        const right = child.getBoundingClientRect().right;
+        return Math.max(acc, right);
+      }, max);
+
     const innerContainer = elem.querySelector('.subWrapper') as HTMLElement;
     const innerRect = innerContainer.getBoundingClientRect();
+    const maxRight = maxRightReducer(Array.from(innerContainer.children));
 
-    console.log(innerRect.right, cellRect.right);
-    if (innerRect.height >= cellRect.height || innerRect.right > cellRect.right)
+    console.log(maxRight, cellRect.right);
+    if (innerRect.height >= cellRect.height || maxRight > cellRect.right)
       this.setState({ widthClass: downgradeWidthMap[this.state.widthClass] });
     else if (positiveResizing && !this.isTryingToUpgrade) {
       const topElem = (elem.parentNode as HTMLElement)
@@ -127,14 +139,6 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
         // const virtualRect = virtualNode.getBoundingClientRect();
         const virtualInnerRect = virtualInnerContainer.getBoundingClientRect();
         const newHeight = virtualInnerRect.height;
-        const reducer = (children: Element[]) =>
-          children.reduce(
-            (acc: number, child: Element): number =>
-              child.children.length
-                ? reducer(Array.from(child.children))
-                : Math.max(acc, child.getBoundingClientRect().right),
-            0,
-          );
         // const newRight = reducer(Array.from(virtualInnerContainer.children));
 
         document.body.removeChild(virtualNode);
@@ -150,12 +154,14 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
 
           if (this.state.widthClass !== WidthClass.Max)
             this.updateLayout(positiveResizing);
-        } else console.log('bound');
+        }
       });
     }
   };
 
   public componentDidUpdate() {
+    widthCache[this.props.appointment.uniqueId] = this.state.widthClass;
+
     setTimeout(() => this.updateLayout());
   }
 
@@ -165,7 +171,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     elem.onresize = (e: UIEvent) => this.updateLayout((e.detail as any).dx > 0);
 
     this.updateLayout();
-    setTimeout(() => this.updateLayout(true));
+    // setTimeout(() => this.updateLayout());
   }
 
   public onMouseWheel(e: React.WheelEvent<any> | WheelEvent) {
