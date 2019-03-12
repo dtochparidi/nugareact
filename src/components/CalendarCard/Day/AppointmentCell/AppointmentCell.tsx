@@ -110,6 +110,8 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     const innerRect = innerContainer.getBoundingClientRect();
     const maxRight = maxRightReducer(Array.from(innerContainer.children));
 
+    // console.log('rebuild');
+
     if (
       innerRect.height >= cellRect.height ||
       maxRight > Math.max(cellRect.right, 0)
@@ -150,6 +152,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
           this.setState({
             widthClass: upgradeWidthMap[this.state.widthClass],
           });
+
           if (this.state.widthClass !== WidthClass.Max)
             this.updateLayout(positiveResizing);
         }
@@ -168,8 +171,8 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
 
     elem.onresize = (e: UIEvent) => this.updateLayout((e.detail as any).dx > 0);
 
-    this.updateLayout(true);
-    setTimeout(() => this.updateLayout(true));
+    this.updateLayout(false);
+    // setTimeout(() => this.updateLayout(true), Math.random() * 1000 + 1000);
   }
 
   public onMouseWheel(e: React.WheelEvent<any> | WheelEvent) {

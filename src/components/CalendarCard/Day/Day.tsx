@@ -46,6 +46,8 @@ export default class Day extends React.Component<IProps> {
       instantRender,
     } = this.props;
 
+    // console.log('day render', dayData.date.format('DD:MM'));
+
     return (
       <div
         className="dayWrapper"
