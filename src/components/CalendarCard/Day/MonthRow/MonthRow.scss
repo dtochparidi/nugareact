@@ -12,8 +12,26 @@ $monthRow-height: 30px;
 
   background: #fcfcfc;
 
-  align-items: center;
-
   height: $monthRow-height;
   padding-left: $medium-width;
+
+  justify-content: space-between;
+  align-items: center;
+
+  .arrowWrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    width: $monthRow-height;
+
+    svg {
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+
+    svg:hover {
+      background: lightgray;
+    }
+  }
 }

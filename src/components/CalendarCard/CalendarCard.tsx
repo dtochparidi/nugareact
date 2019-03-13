@@ -734,7 +734,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       gridsContainer.scrollLeft +
       0.5;
 
-
     gridsContainer.scrollTo({
       behavior: force ? 'auto' : 'smooth',
       left,
@@ -909,7 +908,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
               style={{ width: '100%' }}
             >
               <div key={this.monthStartDate.format('MM')}>
-                <MonthRow monthDate={this.monthStartDate} />
+                <MonthRow
+                  monthDate={this.monthStartDate}
+                  dayJumpCallback={this.jumpToDayHandler}
+                />
                 <DateRow
                   dayChosenIndex={this.currentDayNumber}
                   monthStartDate={this.monthStartDate}

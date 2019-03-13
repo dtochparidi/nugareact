@@ -1,6 +1,3 @@
-import ArrowLeft from '@material-ui/icons/KeyboardArrowLeft';
-import ArrowRight from '@material-ui/icons/KeyboardArrowRight';
-
 import { computed } from 'mobx';
 import { observer } from 'mobx-react';
 import { Moment as IMoment } from 'moment';
@@ -45,10 +42,6 @@ export default class DateRow extends React.Component<IProps> {
   public render() {
     return (
       <div className="dateRowWrapper">
-        <div className="arrowWrapper">
-          <ArrowLeft onClick={this.goPreviousMonth} />
-        </div>
-
         <div className="dateRow" key={this.props.monthStartDate.format('MM')}>
           {new Array(this.monthLength).fill(null).map((v, i) => (
             <div
@@ -68,9 +61,6 @@ export default class DateRow extends React.Component<IProps> {
               </span>
             </div>
           ))}
-        </div>
-        <div className="arrowWrapper">
-          <ArrowRight onClick={this.goNextMonth} />
         </div>
       </div>
     );
