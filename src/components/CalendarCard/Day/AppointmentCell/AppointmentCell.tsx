@@ -123,6 +123,9 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
       const virtualNode = topElem.cloneNode(true) as HTMLElement;
       virtualNode.style.height = topElem.getBoundingClientRect().height + 'px';
       virtualNode.style.visibility = 'hidden';
+      virtualNode.style.left = '0px';
+      virtualNode.style.top = '0px';
+      virtualNode.style.position = 'fixed';
 
       const upgradedClass = upgradeWidthMap[this.state.widthClass];
       const layoutController = virtualNode.querySelector(
