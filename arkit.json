@@ -1,0 +1,43 @@
+{
+  "$schema": "https://arkit.js.org/schema.json",
+  "components": [
+    {
+      "type": "Entry",
+      "patterns": ["*.tsx"]
+    },
+    {
+      "type": "Store",
+      "patterns": ["src/*Store.ts"]
+    },
+    {
+      "type": "Component",
+      "patterns": ["src/**/*.tsx", "src/**/*.ts"],
+      "excludePatterns": ["**/__tests__/**", "**/*-test.js"]
+    }
+  ],
+  "output": {
+    "path": "arkit.svg",
+    "groups": [
+      {
+        "first": true,
+        "components": ["Entry"],
+        "patterns": ["src/index.tsx"]
+      },
+      {
+        "type": "Components",
+        "patterns": ["src/components/**"]
+      },
+      {
+        "type": "Interfaces",
+        "patterns": ["src/interfaces/**"]
+      },
+      {
+        "type": "Stores",
+        "patterns": ["src/stores/**"]
+      },
+      {
+        "components": ["Component", "Entry", "Store"]
+      }
+    ]
+  }
+}

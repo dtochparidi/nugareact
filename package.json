@@ -84,6 +84,7 @@
     "@types/react-sticky": "^6.0.2",
     "@types/uuid": "^3.4.4",
     "@types/validatorjs": "^3.15.0",
+    "arkit": "^1.3.14",
     "enzyme": "^3.8.0",
     "enzyme-adapter-react-16": "^1.9.1",
     "jest": "20.0.4",

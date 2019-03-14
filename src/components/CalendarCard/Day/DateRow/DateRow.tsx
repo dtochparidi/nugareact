@@ -23,7 +23,11 @@ export default class DateRow extends React.Component<IProps> {
 
   public indexClickHandler = (e: React.MouseEvent) => {
     this.props.dayJumpCallback(
-      parseInt(e.currentTarget.textContent || '0', 10) + 1,
+      parseInt(
+        (e.currentTarget.querySelector('.index') as HTMLElement).textContent ||
+          '0',
+        10,
+      ) + 1,
     );
   };
 
@@ -49,6 +53,7 @@ export default class DateRow extends React.Component<IProps> {
               className={`day ${
                 i + 1 === this.props.dayChosenIndex ? 'chosen' : ''
               }`}
+              onClick={this.indexClickHandler}
             >
               <span className="name">
                 {this.props.monthStartDate
@@ -56,9 +61,7 @@ export default class DateRow extends React.Component<IProps> {
                   .date(i + 1)
                   .format('dd')}
               </span>
-              <span onClick={this.indexClickHandler} className="index">
-                {i + 1}
-              </span>
+              <span className="index">{i + 1}</span>
             </div>
           ))}
         </div>

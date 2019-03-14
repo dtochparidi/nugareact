@@ -61,6 +61,7 @@ export interface IState {
   columnsPerDay: number;
   dayWidth: string;
   cellWidth: number;
+  leftColumnWidth: number;
   loading: boolean;
   stamps: IMoment[];
 }
@@ -146,6 +147,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       columnsPerDay: stamps.length,
       columnsPerPage: 4,
       dayWidth: '100%',
+      leftColumnWidth: 30,
       loading: true,
       requiredDays: [moment().startOf('day')],
       stamps,
@@ -728,10 +730,12 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       this.currentLeftColumnIndex - dayIndex * this.state.columnsPerDay;
     const appointmentCell = grid.children[dayColumnIndex];
 
+    console.log(this.state.leftColumnWidth);
     const left =
       appointmentCell.getBoundingClientRect().left -
       gridsContainer.getBoundingClientRect().left +
-      gridsContainer.scrollLeft +
+      gridsContainer.scrollLeft -
+      this.state.leftColumnWidth +
       0.5;
 
     gridsContainer.scrollTo({
@@ -835,10 +839,14 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
   public updateDaysWidth() {
     const dayWidth = this.calcDaysWidth();
-    const state = { dayWidth };
+    const leftColumn = document.querySelector('.leftColumn') as HTMLElement;
+    const state = {
+      dayWidth,
+      leftColumnWidth: leftColumn.getBoundingClientRect().width,
+    };
 
-    const justACell = document.querySelector('.appointmentCell') as HTMLElement;
-    if (justACell)
+    const justACell = document.querySelector('.appointmentCell');
+    if (justACell && leftColumn)
       Object.assign(state, {
         cellWidth: justACell.getBoundingClientRect().width,
       });
@@ -895,7 +903,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           } as React.CSSProperties
         }
       >
-        <LeftColumn positionCount={positionCount} />
         <div
           className={`daysContainer ${this.state.loading ? 'loading' : ''}`}
           ref={this.daysContainerRef}
@@ -955,6 +962,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
             ))}
           </div>
         </div>
+        <LeftColumn positionCount={positionCount} />
         <ToggleArea
           id="leftToggleArea"
           style={{

@@ -21,13 +21,11 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
   --rows-count: 5;
   --sub-columns-count: 5;
 
-  display: grid;
+  display: block;
   width: auto !important;
   padding: 0;
 
-  grid-template-areas: 'leftColumn daysContainer';
-  grid-template-columns: $time-column-width auto;
-  grid-template-rows: auto;
+  position: relative;
 
   .item {
     @extend .borders;
@@ -48,18 +46,24 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
   }
 
   .leftColumn {
-    // @extend .borders;
-    // border-right: none;
+    position: absolute;
+    top: 0;
+
+    z-index: 101;
 
     display: grid;
     grid-area: leftColumn;
 
-    // z-index: 102;
+    width: $time-column-width;
 
     grid-template-rows: $top-row-height repeat(
         var(--rows-count),
         $calendar-cell-height
       );
+
+    :first-child {
+      visibility: hidden;
+    }
   }
 
   .daysContainer {

@@ -244,7 +244,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     translateX = translateX || 0;
     translateY = translateY || 0;
 
-    const offsetX = Math.floor((translateX / 100) * 2) * borderWidth;
+    const offsetX = (Math.floor((translateX / 100) * 2) - 1) * borderWidth;
     const offsetY = Math.floor((translateY / 100) * 2) * borderWidth;
 
     const translated = true;
