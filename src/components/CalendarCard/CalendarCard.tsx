@@ -727,9 +727,12 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       '.topRowsContainer .scrollingContainer',
     ) as HTMLElement;
 
+    const gridWidth = gridsContainer.scrollWidth;
+    const cellWidth =
+      gridWidth / this.state.columnsPerDay / this.state.requiredDays.length;
+
     const left =
-      this.currentLeftColumnIndex * this.state.cellWidth -
-      this.state.leftColumnWidth;
+      this.currentLeftColumnIndex * cellWidth - this.state.leftColumnWidth;
 
     gridsContainer.scrollTo({
       behavior: force ? 'auto' : 'smooth',
@@ -839,7 +842,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     };
 
     const justACell = document.querySelector(
-      '.dayWrapper:not(.hidden) .appointmentCell',
+      '.dayWrapper:not(.hidden) .gridCell.item',
     );
     if (justACell)
       Object.assign(state, {
