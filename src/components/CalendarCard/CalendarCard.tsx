@@ -570,6 +570,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       0,
     );
 
+    const changeDeltaAbs = leftAddCount + rightAddCount;
+
     if (compensate)
       this.currentLeftColumnIndex += leftAddCount * this.state.columnsPerDay;
 
@@ -587,7 +589,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     this.setState({ requiredDays: this.state.requiredDays });
 
-    if (compensate) this.updateScroll(true);
+    // if (compensate) this.updateScroll(true);
+    if (compensate && changeDeltaAbs > 0) this.updateScroll(true);
   }
 
   public componentDidMount() {
@@ -623,8 +626,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         this.currentLeftColumnIndex + this.state.columnsPerPage,
       ]);
 
-      setTimeout(() => this.updateDaysWidth());
-      this.updateScroll(true);
+      setTimeout(() => {
+        this.updateDaysWidth();
+        this.updateScroll(true);
+      });
     });
   }
 
@@ -668,7 +673,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   public turnPage(delta: -1 | 1) {
     if (this.isScrolling) return;
 
-    const columnsPerTurn = Math.floor(this.state.columnsPerPage / 3);
+    const columnsPerTurn = Math.ceil(this.state.columnsPerPage / 3);
     const pendingOffset = columnsPerTurn * this.state.cellWidth * delta;
 
     this.updateRequiredDays(true, pendingOffset);
@@ -712,9 +717,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const dayIndex = Math.floor(
       this.currentLeftColumnIndex / this.state.columnsPerDay,
     );
-    const day = container.querySelectorAll('.dayWrapper')[
-      dayIndex
-    ] as HTMLElement;
 
     this.updateCurrentDayData(dayIndex);
 
@@ -725,18 +727,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       '.topRowsContainer .scrollingContainer',
     ) as HTMLElement;
 
-    const grid = day.querySelector('.grid') as HTMLElement;
-    const dayColumnIndex =
-      this.currentLeftColumnIndex - dayIndex * this.state.columnsPerDay;
-    const appointmentCell = grid.children[dayColumnIndex];
-
-    console.log(this.state.leftColumnWidth);
     const left =
-      appointmentCell.getBoundingClientRect().left -
-      gridsContainer.getBoundingClientRect().left +
-      gridsContainer.scrollLeft -
-      this.state.leftColumnWidth +
-      0.5;
+      this.currentLeftColumnIndex * this.state.cellWidth -
+      this.state.leftColumnWidth;
 
     gridsContainer.scrollTo({
       behavior: force ? 'auto' : 'smooth',
@@ -845,8 +838,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       leftColumnWidth: leftColumn.getBoundingClientRect().width,
     };
 
-    const justACell = document.querySelector('.appointmentCell');
-    if (justACell && leftColumn)
+    const justACell = document.querySelector(
+      '.dayWrapper:not(.hidden) .appointmentCell',
+    );
+    if (justACell)
       Object.assign(state, {
         cellWidth: justACell.getBoundingClientRect().width,
       });
@@ -862,7 +857,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public calcDaysWidth() {
-    const { columnsPerDay, columnsPerPage } = this.state;
+    const { columnsPerDay, columnsPerPage, leftColumnWidth } = this.state;
     const containerWidth = (this.daysContainerRef.current as HTMLDivElement)
       .offsetWidth;
     const dayWidth = calcDaySize(
@@ -870,6 +865,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       columnsPerDay,
       containerWidth,
       thinWidth,
+      leftColumnWidth,
     );
 
     return dayWidth <= 0 ? '100%' : `${dayWidth}px`;

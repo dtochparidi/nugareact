@@ -67,9 +67,11 @@ export function calcDaySize(
   columnsPerDay: number,
   containerWidth: number,
   thinWidth: number,
+  leftColumnWidth: number,
 ) {
   const dayWidth =
-    (containerWidth / columnsPerPage) * columnsPerDay - thinWidth;
+    ((containerWidth - leftColumnWidth) / columnsPerPage) * columnsPerDay -
+    thinWidth;
   return dayWidth;
 }
 
