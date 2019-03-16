@@ -27,6 +27,8 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
 
   position: relative;
 
+  background: #fcfcfc;
+
   .item {
     @extend .borders;
 
@@ -36,13 +38,13 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
 
     background: #fcfcfc;
 
-    &.first {
-      border-left: none;
-    }
+    // &.first {
+    //   border-left: none;
+    // }
 
     &.last {
       border-right-style: dashed;
-      border-right-width: $thin-width * 2;
+      border-right-width: $thin-width;
     }
   }
 
@@ -122,10 +124,6 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
               grid-auto-flow: column;
 
               will-change: left, width;
-
-              // .item {
-              //   background: white;
-              // }
             }
           }
         }
