@@ -37,11 +37,12 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
     background: #fcfcfc;
 
     &.first {
-      border-left-style: dashed;
+      border-left: none;
     }
 
     &.last {
       border-right-style: dashed;
+      border-right-width: $thin-width * 2;
     }
   }
 
@@ -192,6 +193,14 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
 
                   &.enter {
                     background: rgb(255, 249, 216);
+                  }
+
+                  &:first-child {
+                    border-left: none;
+                  }
+
+                  &:last-child {
+                    border-right: none;
                   }
                 }
               }

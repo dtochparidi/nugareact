@@ -206,8 +206,6 @@ export function generateDropzoneConfig(this: CalendarCard) {
         const endX = roundedEndOffset / largeStep;
         const chunks: HTMLElement[] = [];
 
-        console.log(x, endX);
-
         let currentX = x;
         let index = 0;
         while (currentX < endX) {
@@ -218,7 +216,6 @@ export function generateDropzoneConfig(this: CalendarCard) {
           const selector = `[data-x="${gridX}"][data-y="${gridY}"]`;
           const gridCell = gridElement.querySelector(selector) as HTMLElement;
 
-          // console.log(selector);
           if (!gridCell) return;
 
           const littleChunkIndex = Math.round(
@@ -232,12 +229,7 @@ export function generateDropzoneConfig(this: CalendarCard) {
 
           index++;
           currentX = x + (1 / this.props.subGridColumns) * index;
-
-          console.log(currentX, selector, littleChunkIndex);
-          console.log(littleGridChunk);
         }
-
-        console.log(chunks);
 
         if (lastLittleGridChunk)
           lastLittleGridChunk.forEach(chunk => chunk.classList.remove('enter'));
