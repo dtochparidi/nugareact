@@ -52,12 +52,13 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
     position: absolute;
     top: 0;
 
-    z-index: 101;
+    z-index: 1001;
 
     display: grid;
     grid-area: leftColumn;
 
     width: $time-column-width;
+    pointer-events: none;
 
     grid-template-rows: $top-row-height repeat(
         var(--rows-count),

@@ -32,6 +32,7 @@ const ua = () => null;
 it('renders without crashing', () => {
   const component = enzyme.render(
     <CalendarCard
+      fastMode={false}
       subGridColumns={4}
       days={[]}
       requestCallback={requestDay}

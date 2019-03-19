@@ -23,6 +23,7 @@ let needToShowChangelog: boolean = false;
 // do not do it while testing in jest
 if (clientSide) {
   (window as any).lockVisibility = false;
+  (window as any).rootStore = rootStore;
 
   // checking for updates
   versionName = Cookies.get('version');
@@ -69,6 +70,7 @@ class App extends React.Component {
             ]
           : null}
         <CalendarCard
+          fastMode={uiStore.fastMode}
           subGridColumns={uiStore.subGridColumns || 0}
           days={calendarDayStore.days}
           requestCallback={calendarDayStore.loadDay}

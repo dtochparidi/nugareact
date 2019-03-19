@@ -44,6 +44,7 @@ const moment = extendMoment(Moment);
 if (clientSide) (interact as any).dynamicDrop(true);
 
 export interface IProps {
+  fastMode: boolean;
   days: CalendarDay[];
   dayTimeRange: DateRange;
   dayTimeRangeActual: DateRange;
@@ -107,7 +108,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   private currentDaysCount: number = 0;
   private isScrolling: boolean = false;
   private pageTurnEmitter: Emitter;
-  private clientRect: ClientRect;
+  // private clientRect: ClientRect;
   private activatedDropzones: string[] = [];
   private tooFarPagesTrigger = 2;
   private jumpToDayHandler: (index: number) => void;
@@ -153,7 +154,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       stamps,
     };
 
-    this.updateBoundingRect();
+    // this.updateBoundingRect();
   }
   public turnPageRight = () => {
     this.turnPage(1);
@@ -589,8 +590,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     this.setState({ requiredDays: this.state.requiredDays });
 
-    // if (compensate) this.updateScroll(true);
-    if (compensate && changeDeltaAbs > 0) this.updateScroll(true);
+    return compensate && changeDeltaAbs > 0;
   }
 
   public componentDidMount() {
@@ -608,7 +608,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     this.startResizeHandling();
     this.startScrollHandling();
     this.updateColumnsCount();
-    this.updateBoundingRect();
+    // this.updateBoundingRect();
 
     setTimeout(() => {
       this.setState({ loading: false });
@@ -676,7 +676,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const columnsPerTurn = Math.ceil(this.state.columnsPerPage / 3);
     const pendingOffset = columnsPerTurn * this.state.cellWidth * delta;
 
-    this.updateRequiredDays(true, pendingOffset);
+    const needUpdateScroll = this.updateRequiredDays(true, pendingOffset);
+    if (needUpdateScroll) this.updateScroll(true);
 
     if (delta > 0)
       this.updateVisibility([
@@ -734,13 +735,15 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const left =
       this.currentLeftColumnIndex * cellWidth - this.state.leftColumnWidth;
 
+    const instantScroll = this.props.fastMode;
+
     gridsContainer.scrollTo({
-      behavior: force ? 'auto' : 'smooth',
+      behavior: force || instantScroll ? 'auto' : 'smooth',
       left,
     });
 
     topRowsContainer.scrollTo({
-      behavior: force ? 'auto' : 'smooth',
+      behavior: force || instantScroll ? 'auto' : 'smooth',
       left,
     });
 
@@ -874,11 +877,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     return dayWidth <= 0 ? '100%' : `${dayWidth}px`;
   }
 
-  public updateBoundingRect() {
-    this.clientRect = this.daysContainerRef.current
-      ? (this.daysContainerRef.current as HTMLElement).getBoundingClientRect()
-      : { top: 0, right: 0, left: 0, bottom: 0, width: 0, height: 0 };
-  }
+  // public updateBoundingRect() {
+  //   this.clientRect = this.daysContainerRef.current
+  //     ? (this.daysContainerRef.current as HTMLElement).getBoundingClientRect()
+  //     : { top: 0, right: 0, left: 0, bottom: 0, width: 0, height: 0 };
+  // }
 
   public render() {
     const { columnsPerDay, stamps, dayWidth } = this.state;
@@ -965,9 +968,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         <ToggleArea
           id="leftToggleArea"
           style={{
-            height: `${this.clientRect.height}px`,
+            bottom: `0px`,
             left: '0px',
-            top: `${this.clientRect.top}px`,
+            right: ``,
+            top: `0px`,
             width: `${calendarCellMinWidth / 2}px`,
           }}
           action={this.turnPageLeft}
@@ -977,10 +981,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         <ToggleArea
           id="rightToggleArea"
           style={{
-            height: `${this.clientRect.height}px`,
+            bottom: `0px`,
             left: '',
             right: '0px',
-            top: `${this.clientRect.top}px`,
+            top: `0px`,
             width: `${calendarCellMinWidth / 2}px`,
           }}
           action={this.turnPageRight}
@@ -1001,7 +1005,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         this.updateColumnsCount();
         this.updateDaysWidth();
         this.updateScroll(true);
-        this.updateBoundingRect();
+        // this.updateBoundingRect();
         this.updateVisibility([
           this.currentLeftColumnIndex,
           this.currentLeftColumnIndex + this.state.columnsPerPage,

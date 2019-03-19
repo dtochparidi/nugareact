@@ -1,5 +1,6 @@
 import { IPerson } from 'interfaces/IPerson';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
+import { reaction } from 'mobx';
 import { observer } from 'mobx-react';
 import * as moment from 'moment';
 import * as React from 'react';
@@ -22,6 +23,7 @@ export interface IProps {
 export interface IState {
   widthClass: WidthClass;
   tempWidth: string;
+  initialized: boolean;
 }
 
 enum WidthClass {
@@ -66,13 +68,25 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     this.onMouseWheelHandler = this.onMouseWheel.bind(this);
 
     this.state = {
+      initialized: false,
       tempWidth: '',
       widthClass: widthCache[this.props.appointment.uniqueId] || WidthClass.Max,
     };
+
+    reaction(
+      () =>
+        this.props.appointment.personInstance &&
+        this.props.appointment.personInstance.loaded,
+      loaded => {
+        this.appLoadedHandler();
+      },
+    );
   }
 
   public updateLayout = (positiveResizing = false) => {
     if (this.unMounted) return;
+
+    // console.log('updateLayout');
 
     const elem = this.widthDivRef.current;
     if (!elem) {
@@ -117,56 +131,61 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
       maxRight > Math.max(cellRect.right, 0)
     )
       this.setState({ widthClass: downgradeWidthMap[this.state.widthClass] });
-    else if (positiveResizing && !this.isTryingToUpgrade) {
-      const topElem = (elem.parentNode as HTMLElement)
-        .parentNode as HTMLElement;
-      const virtualNode = topElem.cloneNode(true) as HTMLElement;
-      virtualNode.style.height = topElem.getBoundingClientRect().height + 'px';
-      virtualNode.style.visibility = 'hidden';
-      virtualNode.style.left = '0px';
-      virtualNode.style.top = '0px';
-      virtualNode.style.position = 'fixed';
+    else {
+      if (positiveResizing && !this.isTryingToUpgrade) {
+        const topElem = (elem.parentNode as HTMLElement)
+          .parentNode as HTMLElement;
+        const virtualNode = topElem.cloneNode(true) as HTMLElement;
+        virtualNode.style.height =
+          topElem.getBoundingClientRect().height + 'px';
+        virtualNode.style.visibility = 'hidden';
+        virtualNode.style.left = '0px';
+        virtualNode.style.top = '0px';
+        virtualNode.style.position = 'fixed';
 
-      const upgradedClass = upgradeWidthMap[this.state.widthClass];
-      const layoutController = virtualNode.querySelector(
-        '.layoutController',
-      ) as HTMLElement;
-      layoutController.classList.remove(this.state.widthClass);
-      layoutController.classList.add(upgradedClass);
+        const upgradedClass = upgradeWidthMap[this.state.widthClass];
+        const layoutController = virtualNode.querySelector(
+          '.layoutController',
+        ) as HTMLElement;
+        layoutController.classList.remove(this.state.widthClass);
+        layoutController.classList.add(upgradedClass);
 
-      const virtualInnerContainer = virtualNode.querySelector(
-        '.subWrapper',
-      ) as HTMLElement;
+        const virtualInnerContainer = virtualNode.querySelector(
+          '.subWrapper',
+        ) as HTMLElement;
 
-      document.body.appendChild(virtualNode);
-      this.isTryingToUpgrade = true;
+        document.body.appendChild(virtualNode);
+        this.isTryingToUpgrade = true;
 
-      setTimeout(() => {
-        // const virtualRect = virtualNode.getBoundingClientRect();
-        const virtualInnerRect = virtualInnerContainer.getBoundingClientRect();
-        const newHeight = virtualInnerRect.height;
-        // const newRight = reducer(Array.from(virtualInnerContainer.children));
+        setTimeout(() => {
+          // const virtualRect = virtualNode.getBoundingClientRect();
+          const virtualInnerRect = virtualInnerContainer.getBoundingClientRect();
+          const newHeight = virtualInnerRect.height;
+          // const newRight = reducer(Array.from(virtualInnerContainer.children));
 
-        document.body.removeChild(virtualNode);
-        this.isTryingToUpgrade = false;
+          document.body.removeChild(virtualNode);
+          this.isTryingToUpgrade = false;
 
-        if (newHeight < cellRect.height) {
-          // && newRight < virtualRect.right) {
-          this.setState({
-            widthClass: upgradeWidthMap[this.state.widthClass],
-          });
+          if (newHeight < cellRect.height) {
+            // && newRight < virtualRect.right) {
+            this.setState({
+              widthClass: upgradeWidthMap[this.state.widthClass],
+            });
 
-          if (this.state.widthClass !== WidthClass.Max)
-            this.updateLayout(positiveResizing);
-        }
-      });
+            if (this.state.widthClass !== WidthClass.Max)
+              this.updateLayout(positiveResizing);
+          }
+        });
+      }
+
+      if (!this.state.initialized) this.setState({ initialized: true });
     }
   };
 
   public componentDidUpdate() {
     widthCache[this.props.appointment.uniqueId] = this.state.widthClass;
 
-    setTimeout(() => this.updateLayout());
+    this.appLoadedHandler();
   }
 
   public componentDidMount() {
@@ -174,8 +193,20 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
 
     elem.onresize = (e: UIEvent) => this.updateLayout((e.detail as any).dx > 0);
 
-    this.updateLayout(false);
+    this.appLoadedHandler();
+
+    // this.updateLayout(false);
     // setTimeout(() => this.updateLayout(true), Math.random() * 1000 + 1000);
+  }
+
+  public appLoadedHandler() {
+    const { appointment } = this.props;
+    if (
+      appointment &&
+      appointment.personInstance &&
+      appointment.personInstance.loaded
+    )
+      this.updateLayout(false);
   }
 
   public onMouseWheel(e: React.WheelEvent<any> | WheelEvent) {
@@ -277,7 +308,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
         >
           <div className="containerTempWidth" ref={this.widthDivRef}>
             <div className={`layoutController ${this.state.widthClass}`}>
-              {!personInstance.loaded
+              {!this.state.initialized
                 ? [
                     <div className="marker loading" key="marker" />,
                     <div className="avatar loading" key="avatar" />,

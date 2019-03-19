@@ -10,6 +10,8 @@ export default class UIStore {
   @observable
   public positionCount: number = 25;
   @observable
+  public fastMode: boolean = false;
+  @observable
   public dayTimeRange: DateRange = moment.range(
     moment()
       .startOf('day')
@@ -20,6 +22,11 @@ export default class UIStore {
   );
   @observable
   public mainColumnStep: Moment.Duration = Moment.duration(45, 'minutes');
+
+  @action
+  public setFastMode(enabled: boolean) {
+    this.fastMode = enabled;
+  }
 
   @action
   public updatePositionCount(count: number) {
