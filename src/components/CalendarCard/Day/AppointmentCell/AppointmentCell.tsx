@@ -83,7 +83,10 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
           this.props.appointment.personInstance &&
           this.props.appointment.personInstance.loaded,
         loaded => {
-          setTimeout(() => this.appLoadedHandler());
+          setTimeout(
+            () => this.appLoadedHandler(),
+            1000 + Math.random() * 1000,
+          );
         },
       );
   }
@@ -101,13 +104,13 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
       return;
     }
 
-    // BUG
-    // 'display: none' is not taking into account - perfomance issue (not very big)
+    // BUG BUG BUG
+    // 'display: none' is not taking into account - perfomance issue (VERY BIG)
     if (!elem.offsetWidth) {
       clearTimeout(this.rebuildLayoutTimeout);
       this.rebuildLayoutTimeout = setTimeout(
         () => this.updateLayout(false),
-        300 + Math.random() * 100,
+        1000 + Math.random() * 1000,
       );
       return;
     }
@@ -199,14 +202,12 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
 
     elem.onresize = (e: UIEvent) => this.updateLayout((e.detail as any).dx > 0);
 
-    if (
-      widthCache[this.props.appointment.uniqueId] ||
-      (this.props.appointment.personInstance &&
-        this.props.appointment.personInstance.loaded)
-    ) {
-      this.setState({ initialized: true });
-      setTimeout(() => this.appLoadedHandler());
-    }
+    if (widthCache[this.props.appointment.uniqueId]) this.appLoadedHandler();
+    else if (
+      this.props.appointment.personInstance &&
+      this.props.appointment.personInstance.loaded
+    )
+      setTimeout(() => this.appLoadedHandler(), 1000 + Math.random() * 1000);
     // this.updateLayout(false);
     // setTimeout(() => this.updateLayout(true), Math.random() * 1000 + 1000);
   }
@@ -338,7 +339,12 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
                 </div>
               ) : null}
               {person && person.loaded ? (
-                <div className="realContainer">
+                <div
+                  className="realContainer"
+                  style={{
+                    visibility: this.state.initialized ? 'visible' : 'hidden',
+                  }}
+                >
                   <div className="marker" key="marker" />
                   <div className="avatar" key="avatar" />
                   <div className="mainInfoWrapper" key="mainInfoWrapper">
