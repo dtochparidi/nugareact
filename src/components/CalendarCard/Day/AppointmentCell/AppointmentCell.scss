@@ -80,43 +80,51 @@
 
       .layoutController {
         &.widthMin {
-          > .pointsWrapper {
+          > .realContainer .pointsWrapper {
             display: none;
           }
 
-          > .mainInfoWrapper {
+          > .realContainer .mainInfoWrapper {
             display: none;
           }
         }
 
         &.widthSlim {
-          > .pointsWrapper {
+          > .realContainer .pointsWrapper {
             display: none;
           }
 
-          > .mainInfoWrapper .subWrapper .content .surname {
+          > .realContainer .mainInfoWrapper .subWrapper .content .surname {
             display: none;
           }
 
-          > .mainInfoWrapper .subWrapper .content .number {
+          > .realContainer .mainInfoWrapper .subWrapper .content .number {
             display: none;
           }
         }
 
         &.widthMedium {
-          > .pointsWrapper {
+          > .realContainer .pointsWrapper {
             display: none;
           }
 
-          > .mainInfoWrapper .subWrapper .content .number {
+          > .realContainer .mainInfoWrapper .subWrapper .content .number {
             display: none;
           }
         }
 
         &.widthWide {
-          > .pointsWrapper {
+          > .realContainer .pointsWrapper {
             display: none;
           }
+        }
+
+        .loadingMask {
+          position: absolute;
+          top: 0;
+          left: 0;
+          bottom: 0;
+          right: 0;
         }
 
         .marker {

@@ -61,6 +61,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
   private rebuildLayoutTimeout: NodeJS.Timeout;
   private unMounted = false;
   private isTryingToUpgrade = false;
+  private goingDown = true;
 
   constructor(props: IProps) {
     super(props);
@@ -73,26 +74,30 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
       widthClass: widthCache[this.props.appointment.uniqueId] || WidthClass.Max,
     };
 
-    reaction(
-      () =>
-        this.props.appointment.personInstance &&
-        this.props.appointment.personInstance.loaded,
-      loaded => {
-        this.appLoadedHandler();
-      },
-    );
+    if (
+      this.props.appointment.personInstance &&
+      this.props.appointment.personInstance.loaded
+    )
+      setTimeout(() => this.appLoadedHandler());
+    else
+      reaction(
+        () =>
+          this.props.appointment.personInstance &&
+          this.props.appointment.personInstance.loaded,
+        loaded => {
+          setTimeout(() => this.appLoadedHandler());
+        },
+      );
   }
 
   public updateLayout = (positiveResizing = false) => {
     if (this.unMounted) return;
 
-    // console.log('updateLayout');
-
     const elem = this.widthDivRef.current;
     if (!elem) {
       console.log('null container');
       this.rebuildLayoutTimeout = setTimeout(
-        () => this.updateLayout(),
+        () => this.updateLayout(false),
         300 + Math.random() * 100,
       );
       return;
@@ -103,7 +108,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     if (!elem.offsetWidth) {
       clearTimeout(this.rebuildLayoutTimeout);
       this.rebuildLayoutTimeout = setTimeout(
-        () => this.updateLayout(),
+        () => this.updateLayout(false),
         300 + Math.random() * 100,
       );
       return;
@@ -120,19 +125,26 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
         return Math.max(acc, right);
       }, max);
 
-    const innerContainer = elem.querySelector('.subWrapper') as HTMLElement;
+    const innerContainer = elem.querySelector(
+      '.realContainer .subWrapper',
+    ) as HTMLElement;
     const innerRect = innerContainer.getBoundingClientRect();
     const maxRight = maxRightReducer(Array.from(innerContainer.children));
 
-    // console.log('rebuild');
-
     if (
-      innerRect.height >= cellRect.height ||
-      maxRight > Math.max(cellRect.right, 0)
-    )
+      (innerRect.height >= cellRect.height ||
+        maxRight > Math.max(cellRect.right - 5, 0)) &&
+      this.state.widthClass !== WidthClass.Min
+    ) {
+      this.goingDown = true;
       this.setState({ widthClass: downgradeWidthMap[this.state.widthClass] });
-    else {
-      if (positiveResizing && !this.isTryingToUpgrade) {
+      this.updateLayout(false);
+    } else {
+      if (
+        this.state.widthClass !== WidthClass.Max &&
+        positiveResizing &&
+        !this.isTryingToUpgrade
+      ) {
         const topElem = (elem.parentNode as HTMLElement)
           .parentNode as HTMLElement;
         const virtualNode = topElem.cloneNode(true) as HTMLElement;
@@ -149,6 +161,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
         ) as HTMLElement;
         layoutController.classList.remove(this.state.widthClass);
         layoutController.classList.add(upgradedClass);
+        layoutController.style.visibility = 'hidden';
 
         const virtualInnerContainer = virtualNode.querySelector(
           '.subWrapper',
@@ -167,7 +180,6 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
           this.isTryingToUpgrade = false;
 
           if (newHeight < cellRect.height) {
-            // && newRight < virtualRect.right) {
             this.setState({
               widthClass: upgradeWidthMap[this.state.widthClass],
             });
@@ -177,15 +189,15 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
           }
         });
       }
-
-      if (!this.state.initialized) this.setState({ initialized: true });
+      if (!this.state.initialized && this.goingDown)
+        this.setState({ initialized: true });
     }
   };
 
   public componentDidUpdate() {
     widthCache[this.props.appointment.uniqueId] = this.state.widthClass;
 
-    this.appLoadedHandler();
+    // this.appLoadedHandler();
   }
 
   public componentDidMount() {
@@ -193,7 +205,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
 
     elem.onresize = (e: UIEvent) => this.updateLayout((e.detail as any).dx > 0);
 
-    this.appLoadedHandler();
+    if (widthCache[this.props.appointment.uniqueId]) this.appLoadedHandler();
 
     // this.updateLayout(false);
     // setTimeout(() => this.updateLayout(true), Math.random() * 1000 + 1000);
@@ -207,6 +219,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
       appointment.personInstance.loaded
     )
       this.updateLayout(false);
+    else console.log('not loaded!');
   }
 
   public onMouseWheel(e: React.WheelEvent<any> | WheelEvent) {
@@ -285,6 +298,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     const width = `calc(${widthScale * 100}% + ${widthCorrect}px)`;
 
     const person = personInstance as IPerson;
+
     return (
       <div
         className={`appointmentCell ${translated ? 'translated' : ''} ${
@@ -308,47 +322,52 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
         >
           <div className="containerTempWidth" ref={this.widthDivRef}>
             <div className={`layoutController ${this.state.widthClass}`}>
-              {!this.state.initialized
-                ? [
-                    <div className="marker loading" key="marker" />,
-                    <div className="avatar loading" key="avatar" />,
-                    <div className="mainInfoWrapper" key="mainInfoWrapper">
-                      <div className="subWrapper">
-                        <div className="content loading" />
-                        <div className="content loading" />
-                      </div>
-                    </div>,
-                    <div className="pointsWrapper" key="poinsWrapper">
+              {!this.props.appointment.personInstance ||
+              !this.props.appointment.personInstance.loaded ||
+              !this.state.initialized ? (
+                <div className="loadingMask">
+                  <div className="marker loading" key="marker" />
+                  <div className="avatar loading" key="avatar" />
+                  <div className="mainInfoWrapper" key="mainInfoWrapper">
+                    <div className="subWrapper">
                       <div className="content loading" />
-                    </div>,
-                  ]
-                : [
-                    <div className="marker" key="marker" />,
-                    <div className="avatar" key="avatar" />,
-                    <div className="mainInfoWrapper" key="mainInfoWrapper">
-                      <div className="subWrapper">
-                        <div className="content">
-                          <span className="surname">{person.surname}</span>{' '}
-                          <span className="name">{person.name}</span>{' '}
-                          {person.patronymic ? (
-                            <span className="patronymic">
-                              {person.patronymic}{' '}
-                            </span>
-                          ) : null}
-                          <span className="additionalInfo">
-                            <span className="visits">13</span>{' '}
-                            <span className="grade">A</span>
+                      <div className="content loading" />
+                    </div>
+                  </div>
+                  <div className="pointsWrapper" key="poinsWrapper">
+                    <div className="content loading" />
+                  </div>
+                </div>
+              ) : null}
+              {person && person.loaded ? (
+                <div className="realContainer">
+                  <div className="marker" key="marker" />
+                  <div className="avatar" key="avatar" />
+                  <div className="mainInfoWrapper" key="mainInfoWrapper">
+                    <div className="subWrapper">
+                      <div className="content">
+                        <span className="surname">{person.surname}</span>{' '}
+                        <span className="name">{person.name}</span>{' '}
+                        {person.patronymic ? (
+                          <span className="patronymic">
+                            {person.patronymic}{' '}
                           </span>
-                        </div>
-                        <div className="content">
-                          <span className="number">{person.phone}</span>
-                        </div>
+                        ) : null}
+                        <span className="additionalInfo">
+                          <span className="visits">13</span>{' '}
+                          <span className="grade">A</span>
+                        </span>
                       </div>
-                    </div>,
-                    <div className="pointsWrapper" key="poinsWrapper">
-                      <div className="content">19</div>
-                    </div>,
-                  ]}
+                      <div className="content">
+                        <span className="number">{person.phone}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="pointsWrapper" key="poinsWrapper">
+                    <div className="content">19</div>
+                  </div>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>

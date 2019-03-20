@@ -51,8 +51,10 @@ export default class Grid extends React.Component<IProps> {
       );
     this.updateApps();
     this.updateShifts();
-    this.gridCells = this.generateGrid();
     this.globalMovingId = this.props.movingId;
+    setTimeout(() => {
+      this.gridCells = this.generateGrid();
+    }, 100);
 
     // movingId change reaction
     reaction(
