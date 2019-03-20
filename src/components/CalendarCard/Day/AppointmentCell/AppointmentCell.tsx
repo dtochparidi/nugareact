@@ -75,11 +75,9 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     };
 
     if (
-      this.props.appointment.personInstance &&
-      this.props.appointment.personInstance.loaded
+      !this.props.appointment.personInstance ||
+      !this.props.appointment.personInstance.loaded
     )
-      setTimeout(() => this.appLoadedHandler());
-    else
       reaction(
         () =>
           this.props.appointment.personInstance &&
@@ -139,59 +137,55 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
       this.goingDown = true;
       this.setState({ widthClass: downgradeWidthMap[this.state.widthClass] });
       this.updateLayout(false);
-    } else {
-      if (
-        this.state.widthClass !== WidthClass.Max &&
-        positiveResizing &&
-        !this.isTryingToUpgrade
-      ) {
-        const topElem = (elem.parentNode as HTMLElement)
-          .parentNode as HTMLElement;
-        const virtualNode = topElem.cloneNode(true) as HTMLElement;
-        virtualNode.style.height =
-          topElem.getBoundingClientRect().height + 'px';
-        virtualNode.style.visibility = 'hidden';
-        virtualNode.style.left = '0px';
-        virtualNode.style.top = '0px';
-        virtualNode.style.position = 'fixed';
+    } else if (
+      this.state.widthClass !== WidthClass.Max &&
+      positiveResizing &&
+      !this.isTryingToUpgrade
+    ) {
+      const topElem = (elem.parentNode as HTMLElement)
+        .parentNode as HTMLElement;
+      const virtualNode = topElem.cloneNode(true) as HTMLElement;
+      virtualNode.style.height = topElem.getBoundingClientRect().height + 'px';
+      virtualNode.style.visibility = 'hidden';
+      virtualNode.style.left = '0px';
+      virtualNode.style.top = '0px';
+      virtualNode.style.position = 'fixed';
 
-        const upgradedClass = upgradeWidthMap[this.state.widthClass];
-        const layoutController = virtualNode.querySelector(
-          '.layoutController',
-        ) as HTMLElement;
-        layoutController.classList.remove(this.state.widthClass);
-        layoutController.classList.add(upgradedClass);
-        layoutController.style.visibility = 'hidden';
+      const upgradedClass = upgradeWidthMap[this.state.widthClass];
+      const layoutController = virtualNode.querySelector(
+        '.layoutController',
+      ) as HTMLElement;
+      layoutController.classList.remove(this.state.widthClass);
+      layoutController.classList.add(upgradedClass);
+      layoutController.style.visibility = 'hidden';
 
-        const virtualInnerContainer = virtualNode.querySelector(
-          '.subWrapper',
-        ) as HTMLElement;
+      const virtualInnerContainer = virtualNode.querySelector(
+        '.subWrapper',
+      ) as HTMLElement;
 
-        document.body.appendChild(virtualNode);
-        this.isTryingToUpgrade = true;
+      document.body.appendChild(virtualNode);
+      this.isTryingToUpgrade = true;
 
-        setTimeout(() => {
-          // const virtualRect = virtualNode.getBoundingClientRect();
-          const virtualInnerRect = virtualInnerContainer.getBoundingClientRect();
-          const newHeight = virtualInnerRect.height;
-          // const newRight = reducer(Array.from(virtualInnerContainer.children));
+      setTimeout(() => {
+        // const virtualRect = virtualNode.getBoundingClientRect();
+        const virtualInnerRect = virtualInnerContainer.getBoundingClientRect();
+        const newHeight = virtualInnerRect.height;
+        // const newRight = reducer(Array.from(virtualInnerContainer.children));
 
-          document.body.removeChild(virtualNode);
-          this.isTryingToUpgrade = false;
+        document.body.removeChild(virtualNode);
+        this.isTryingToUpgrade = false;
 
-          if (newHeight < cellRect.height) {
-            this.setState({
-              widthClass: upgradeWidthMap[this.state.widthClass],
-            });
+        if (newHeight < cellRect.height) {
+          this.setState({
+            widthClass: upgradeWidthMap[this.state.widthClass],
+          });
 
-            if (this.state.widthClass !== WidthClass.Max)
-              this.updateLayout(positiveResizing);
-          }
-        });
-      }
-      if (!this.state.initialized && this.goingDown)
-        this.setState({ initialized: true });
-    }
+          if (this.state.widthClass !== WidthClass.Max)
+            this.updateLayout(positiveResizing);
+        }
+      });
+    } else if (!this.state.initialized && this.goingDown)
+      this.setState({ initialized: true });
   };
 
   public componentDidUpdate() {
@@ -205,8 +199,14 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
 
     elem.onresize = (e: UIEvent) => this.updateLayout((e.detail as any).dx > 0);
 
-    if (widthCache[this.props.appointment.uniqueId]) this.appLoadedHandler();
-
+    if (
+      widthCache[this.props.appointment.uniqueId] ||
+      (this.props.appointment.personInstance &&
+        this.props.appointment.personInstance.loaded)
+    ) {
+      this.setState({ initialized: true });
+      setTimeout(() => this.appLoadedHandler());
+    }
     // this.updateLayout(false);
     // setTimeout(() => this.updateLayout(true), Math.random() * 1000 + 1000);
   }
@@ -322,9 +322,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
         >
           <div className="containerTempWidth" ref={this.widthDivRef}>
             <div className={`layoutController ${this.state.widthClass}`}>
-              {!this.props.appointment.personInstance ||
-              !this.props.appointment.personInstance.loaded ||
-              !this.state.initialized ? (
+              {!person || !person.loaded || !this.state.initialized ? (
                 <div className="loadingMask">
                   <div className="marker loading" key="marker" />
                   <div className="avatar loading" key="avatar" />

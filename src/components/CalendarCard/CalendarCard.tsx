@@ -820,11 +820,12 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     topRowsContainer.scrollLeft = 0;
 
     setTimeout(() => {
-      this.updateScroll(true);
       this.updateRequiredDays();
+      this.updateScroll(true);
 
       // this.setState({ loading: false });
 
+      console.log(this.currentLeftColumnIndex);
       this.updateVisibility([
         this.currentLeftColumnIndex,
         this.currentLeftColumnIndex + this.state.columnsPerPage,

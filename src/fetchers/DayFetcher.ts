@@ -32,6 +32,7 @@ export function generateRandomDay(date: IMoment): ICalendarDay {
 
   const data = {
     appointments: new Array(random(155, 50))
+      // appointments: new Array(random(3, 2))
       .fill(null)
       .map(
         (): Appointment | null => {
