@@ -1,3 +1,5 @@
+import { LazyTask } from '@levabala/lazytask/src/LazyTask';
+import LazyTaskManager from '@levabala/lazytask/src/LazyTaskManager';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
 import { action, observable, reaction, toJS } from 'mobx';
 import { observer } from 'mobx-react';
@@ -231,7 +233,7 @@ export default class Grid extends React.Component<IProps> {
       mainColumnStep,
       cols,
       rows,
-      instantRender,
+      // instantRender,
     } = this.props;
 
     clearTimeout(this.iteratorTimeout);
@@ -261,30 +263,39 @@ export default class Grid extends React.Component<IProps> {
         return acc;
       }, new Array(cols).fill(null).map(w => new Array(rows).fill(null).map(u => ({}))));
 
-    const dropped = Object.keys(appointments).some(
-      uniqueId =>
-        Appointment.fromIdentifier(this.globalMovingId).uniqueId === uniqueId,
-    );
+    // const dropped = Object.keys(appointments).some(
+    //   uniqueId =>
+    //     Appointment.fromIdentifier(this.globalMovingId).uniqueId === uniqueId,
+    // );
 
-    const delay = 10;
-    let xc = 0;
-    let yc = 0;
-    const iterator = () => {
-      const changed = this.iterationTick(positionedApps, xc, yc);
+    for (let x = 0; x < cols - 1; x++)
+      for (let y = 0; y < rows - 1; y++) {
+        const task = new LazyTask(() =>
+          this.iterationTick(positionedApps, x, y),
+        );
 
-      if (yc < rows - 1) yc++;
-      else {
-        yc = 0;
-        if (xc < cols - 1) xc++;
-        else return;
+        LazyTaskManager.addTask(task);
       }
 
-      if (changed && !dropped && !instantRender)
-        this.iteratorTimeout = setTimeout(iterator.bind(this), delay);
-      else iterator();
-    };
+    // const delay = 10;
+    // let xc = 0;
+    // let yc = 0;
+    // const iterator = () => {
+    //   const changed = this.iterationTick(positionedApps, xc, yc);
 
-    iterator();
+    //   if (yc < rows - 1) yc++;
+    //   else {
+    //     yc = 0;
+    //     if (xc < cols - 1) xc++;
+    //     else return;
+    //   }
+
+    //   if (changed && !dropped && !instantRender)
+    //     this.iteratorTimeout = setTimeout(iterator.bind(this), delay);
+    //   else iterator();
+    // };
+
+    // iterator();
   }
 
   // public componentDidUpdate() {
