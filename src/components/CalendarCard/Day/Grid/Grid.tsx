@@ -42,7 +42,7 @@ export default class Grid extends React.Component<IProps> {
   public movingId: { id: string } = { id: '' };
   public globalMovingId: string = '';
 
-  public gridCells: React.ReactNode[] = [];
+  public gridCells: React.ReactNode[];
   private iteratorTimeout: NodeJS.Timeout;
   private gridRef = React.createRef<HTMLDivElement>();
   private needUpdateApps = true;
@@ -62,9 +62,7 @@ export default class Grid extends React.Component<IProps> {
     // this.updateApps();
     this.updateShifts();
     this.globalMovingId = this.props.movingId;
-    setTimeout(() => {
-      this.gridCells = this.generateGrid();
-    }, 100);
+    if (this.props.isDisplaying) this.gridCells = this.generateGrid();
 
     // movingId change reaction
     reaction(
@@ -106,7 +104,10 @@ export default class Grid extends React.Component<IProps> {
       () => this.props.isDisplaying,
       () => {
         this.isVisible.value = this.props.isDisplaying;
-        if (this.props.isDisplaying && this.needUpdateApps) this.updateApps();
+        if (this.props.isDisplaying) {
+          if (!this.gridCells) this.gridCells = this.generateGrid();
+          if (this.needUpdateApps) this.updateApps();
+        }
       },
     );
   }

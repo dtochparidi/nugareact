@@ -134,7 +134,8 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     ) {
       this.goingDown = true;
       this.setState({ widthClass: downgradeWidthMap[this.state.widthClass] });
-      this.updateLayout(false);
+
+      lazyTaskManager.addTask(new LazyTask(() => this.updateLayout(false)));
     } else if (
       this.state.widthClass !== WidthClass.Max &&
       positiveResizing &&
@@ -179,8 +180,10 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
               widthClass: upgradeWidthMap[this.state.widthClass],
             });
 
-            if (this.state.widthClass !== WidthClass.Max)
+            if (this.state.widthClass !== WidthClass.Max) {
+              console.log('go max');
               this.updateLayout(positiveResizing);
+            }
           }
         }),
       );

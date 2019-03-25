@@ -691,20 +691,20 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const needUpdateScroll = this.updateRequiredDays(true, pendingOffset);
     if (needUpdateScroll) this.updateScroll(true);
 
+    this.currentLeftColumnIndex += columnsPerTurn * delta;
+
     if (delta > 0)
+      this.updateVisibility([
+        this.currentLeftColumnIndex - columnsPerTurn,
+        this.currentLeftColumnIndex + this.state.columnsPerPage,
+      ]);
+    else
       this.updateVisibility([
         this.currentLeftColumnIndex,
         this.currentLeftColumnIndex +
           this.state.columnsPerPage +
-          columnsPerTurn * delta,
+          columnsPerTurn,
       ]);
-    else
-      this.updateVisibility([
-        this.currentLeftColumnIndex + columnsPerTurn * delta,
-        this.currentLeftColumnIndex + this.state.columnsPerPage,
-      ]);
-
-    this.currentLeftColumnIndex += columnsPerTurn * delta;
 
     this.updateScroll();
   }
@@ -790,10 +790,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   public updateVisibility(indexes: number[]) {
     if ((window as any).lockVisibility) return;
 
+    const buffer = 0;
     const minColumn = Math.min(...indexes);
     const maxColumn = Math.max(...indexes);
-    const minDay = Math.floor(minColumn / this.state.columnsPerDay);
-    const maxDay = Math.floor(maxColumn / this.state.columnsPerDay);
+    const minDay = Math.floor(minColumn / this.state.columnsPerDay) - buffer;
+    const maxDay = Math.floor(maxColumn / this.state.columnsPerDay) + buffer;
 
     Array.from(
       (this.daysContainerRef.current as HTMLDivElement).querySelectorAll(
