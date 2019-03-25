@@ -199,7 +199,8 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
 
     elem.onresize = (e: UIEvent) => this.updateLayout((e.detail as any).dx > 0);
 
-    if (widthCache[this.props.appointment.uniqueId]) this.appLoadedHandler();
+    if (widthCache[this.props.appointment.uniqueId])
+      this.appLoadedHandler(true);
     else if (
       this.props.appointment.personInstance &&
       this.props.appointment.personInstance.loaded
@@ -207,16 +208,18 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
       lazyTaskManager.addTask(new LazyTask(() => this.appLoadedHandler()));
   }
 
-  public appLoadedHandler() {
+  public appLoadedHandler(instant = false) {
     const { appointment } = this.props;
     if (
       appointment &&
       appointment.personInstance &&
       appointment.personInstance.loaded
     )
-      lazyTaskManager.addTask(
-        new LazyTask((() => this.updateLayout(false)).bind(this)),
-      );
+      if (instant) this.updateLayout(false);
+      else
+        lazyTaskManager.addTask(
+          new LazyTask((() => this.updateLayout(false)).bind(this)),
+        );
     else console.log('not loaded!');
   }
 

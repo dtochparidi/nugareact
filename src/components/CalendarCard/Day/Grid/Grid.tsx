@@ -271,23 +271,24 @@ export default class Grid extends React.Component<IProps> {
         return acc;
       }, new Array(cols).fill(null).map(w => new Array(rows).fill(null).map(u => ({}))));
 
-    // const dropped = Object.keys(appointments).some(
-    //   uniqueId =>
-    //     Appointment.fromIdentifier(this.globalMovingId).uniqueId === uniqueId,
-    // );
+    const dropped = Object.keys(appointments).some(
+      uniqueId =>
+        Appointment.fromIdentifier(this.globalMovingId).uniqueId === uniqueId,
+    );
 
-    if (this.gridRef.current)
-      console.log(getComputedStyle(this.gridRef.current).display);
-    else console.log('NANI?!');
+    if (dropped)
+      for (let x = 0; x < cols - 1; x++)
+        for (let y = 0; y < rows - 1; y++)
+          this.iterationTick(positionedApps, x, y);
+    else
+      for (let x = 0; x < cols - 1; x++)
+        for (let y = 0; y < rows - 1; y++) {
+          const task = new LazyTask(() =>
+            this.iterationTick(positionedApps, x, y),
+          );
 
-    for (let x = 0; x < cols - 1; x++)
-      for (let y = 0; y < rows - 1; y++) {
-        const task = new LazyTask(() =>
-          this.iterationTick(positionedApps, x, y),
-        );
-
-        LazyTaskManager.addTask(task);
-      }
+          LazyTaskManager.addTask(task);
+        }
 
     // const delay = 10;
     // let xc = 0;
