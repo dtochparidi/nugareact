@@ -1,4 +1,5 @@
 // import ControlWindow from 'components/ControlWindow';
+import { LazyTaskManager } from '@levabala/lazytask/build/dist';
 import VersionChangelog from 'components/VersionChangelog';
 import * as Cookies from 'js-cookie';
 import { observer } from 'mobx-react';
@@ -41,6 +42,9 @@ if (clientSide) {
     updatesEnabled: false,
   });
 }
+
+// launching singlton-class for controlling lazyTasks
+LazyTaskManager.launch();
 
 // main entry class
 @observer

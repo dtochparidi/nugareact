@@ -94,15 +94,18 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   public currentDayNumber: number;
   @observable
   public monthStartDate: IMoment = moment();
+  @observable
+  public visibilityMap: { [dayId: string]: boolean } = {};
   public currentDayIndex: number = 0;
 
   public currentLeftColumnIndex: number = 0;
   public lazyLoadDays: IMoment[] = [];
   public shiftsCache: {
-    [dayId: number]: {
+    [dayId: string]: {
       [shiftId: string]: { [uniqueId: string]: { dx: number; dy: number } };
     };
   } = {};
+
   private daysContainerRef: React.RefObject<HTMLDivElement>;
   private containerScrollTimeout: NodeJS.Timeout;
   private currentDaysCount: number = 0;
@@ -633,9 +636,18 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     });
   }
 
+  @action
+  public updateVisibilityMap() {
+    this.props.days.forEach(day => {
+      if (!(day.id in this.visibilityMap)) this.visibilityMap[day.id] = true;
+    });
+  }
+
   public componentDidUpdate(prevProps: IProps) {
     if (this.props.days.length !== this.currentDaysCount)
       this.currentDaysCount = this.props.days.length;
+
+    this.updateVisibilityMap();
 
     this.state.requiredDays
       .filter(day => !this.lazyLoadDays.includes(day))
@@ -770,10 +782,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       }, 50);
     };
 
-    callback();
+    // callback();
     gridsContainer.addEventListener('scroll', callback);
   }
 
+  @action
   public updateVisibility(indexes: number[]) {
     if ((window as any).lockVisibility) return;
 
@@ -787,8 +800,14 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         '.dayWrapper',
       ),
     ).forEach((child, index) => {
-      if (index >= minDay && index <= maxDay) child.classList.remove('hidden');
-      else child.classList.add('hidden');
+      const day = this.props.days[index];
+      if (index >= minDay && index <= maxDay) {
+        child.classList.remove('hidden');
+        this.visibilityMap[day.id] = true;
+      } else {
+        child.classList.add('hidden');
+        this.visibilityMap[day.id] = false;
+      }
     });
 
     this.updateDropzones(minDay, maxDay);
@@ -948,6 +967,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           <div className="gridsContainer">
             {this.props.days.map(day => (
               <Day
+                isDisplaying={this.visibilityMap[day.id]}
                 key={day.date.toString()}
                 rows={positionCount}
                 cols={columnsPerDay || 0}

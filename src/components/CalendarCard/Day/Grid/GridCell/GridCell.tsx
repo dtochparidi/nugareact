@@ -18,6 +18,7 @@ export interface IProps {
   // movingIdObj: { id: string };
   movingId: string;
   updateAppointment: (props: IUpdateAppProps) => void;
+  isDisplaying: { value: boolean };
 }
 
 @observer
@@ -35,8 +36,8 @@ export default class GridCell extends React.Component<IProps> {
       gridColumnDuration,
       updateAppointment,
       shift,
-      // movingIdObj,
       movingId,
+      isDisplaying,
     } = this.props;
     const appNodes = Object.values(apps).map(app => {
       const appointment = app as Appointment;
@@ -63,6 +64,7 @@ export default class GridCell extends React.Component<IProps> {
 
       return (
         <AppointmentCell
+          isDisplaying={isDisplaying.value}
           moving={isMoving}
           key={appointment.uniqueId}
           translateX={coeffX}

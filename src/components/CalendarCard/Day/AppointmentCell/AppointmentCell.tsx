@@ -1,3 +1,5 @@
+import { LazyTask } from '@levabala/lazytask/build/dist';
+import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
 import { IPerson } from 'interfaces/IPerson';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
 import { reaction } from 'mobx';
@@ -18,6 +20,7 @@ export interface IProps {
   subGridColumns: number;
   gridColumnDuration: moment.Duration;
   updateAppointment: (props: IUpdateAppProps) => void;
+  isDisplaying: boolean;
 }
 
 export interface IState {
@@ -83,12 +86,17 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
           this.props.appointment.personInstance &&
           this.props.appointment.personInstance.loaded,
         loaded => {
-          setTimeout(
-            () => this.appLoadedHandler(),
-            1000 + Math.random() * 1000,
-          );
+          lazyTaskManager.addTask(new LazyTask(() => this.appLoadedHandler()));
         },
       );
+
+    reaction(
+      () => this.props.isDisplaying,
+      val => {
+        if (this.props.isDisplaying)
+          lazyTaskManager.addTask(new LazyTask(() => this.appLoadedHandler()));
+      },
+    );
   }
 
   public updateLayout = (positiveResizing = false) => {
@@ -96,24 +104,11 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
 
     const elem = this.widthDivRef.current;
     if (!elem) {
-      console.log('null container');
-      this.rebuildLayoutTimeout = setTimeout(
-        () => this.updateLayout(false),
-        300 + Math.random() * 100,
-      );
+      console.warn('null container');
       return;
     }
 
-    // BUG BUG BUG
-    // 'display: none' is not taking into account - perfomance issue (VERY BIG)
-    if (!elem.offsetWidth) {
-      clearTimeout(this.rebuildLayoutTimeout);
-      this.rebuildLayoutTimeout = setTimeout(
-        () => this.updateLayout(false),
-        1000 + Math.random() * 1000,
-      );
-      return;
-    }
+    if (!elem.offsetWidth) return;
 
     const cellRect = elem.getBoundingClientRect();
 
@@ -207,7 +202,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
       this.props.appointment.personInstance &&
       this.props.appointment.personInstance.loaded
     )
-      setTimeout(() => this.appLoadedHandler(), 1000 + Math.random() * 1000);
+      lazyTaskManager.addTask(new LazyTask(() => this.appLoadedHandler()));
     // this.updateLayout(false);
     // setTimeout(() => this.updateLayout(true), Math.random() * 1000 + 1000);
   }
@@ -219,7 +214,9 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
       appointment.personInstance &&
       appointment.personInstance.loaded
     )
-      this.updateLayout(false);
+      lazyTaskManager.addTask(
+        new LazyTask((() => this.updateLayout(false)).bind(this)),
+      );
     else console.log('not loaded!');
   }
 

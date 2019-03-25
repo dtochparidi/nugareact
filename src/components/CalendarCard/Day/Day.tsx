@@ -23,6 +23,7 @@ export interface IProps {
       };
     };
   };
+  isDisplaying: boolean;
   shiftsHash: string;
   updateAppointment: (props: IUpdateAppProps) => void;
   instantRender: boolean;
@@ -44,9 +45,8 @@ export default class Day extends React.Component<IProps> {
       movingId,
       updateAppointment,
       instantRender,
+      isDisplaying,
     } = this.props;
-
-    // console.log('day render', dayData.date.format('DD:MM'));
 
     return (
       <div
@@ -58,6 +58,7 @@ export default class Day extends React.Component<IProps> {
       >
         <div className="day">
           <Grid
+            isDisplaying={isDisplaying}
             rows={rows}
             cols={cols}
             movingId={movingId}

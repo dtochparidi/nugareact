@@ -1,5 +1,4 @@
-import { LazyTask } from '@levabala/lazytask/src/LazyTask';
-import LazyTaskManager from '@levabala/lazytask/src/LazyTaskManager';
+import { LazyTask, LazyTaskManager } from '@levabala/lazytask/build/dist';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
 import { action, observable, reaction, toJS } from 'mobx';
 import { observer } from 'mobx-react';
@@ -28,10 +27,13 @@ export interface IProps {
   subGridColumns: number;
   updateAppointment: (props: IUpdateAppProps) => void;
   instantRender: boolean;
+  isDisplaying: boolean;
 }
 
 @observer
 export default class Grid extends React.Component<IProps> {
+  @observable
+  public isVisible = { value: true };
   @observable
   public appointments: Array<Array<{ [uniqueId: string]: Appointment }>>;
   @observable
@@ -42,6 +44,7 @@ export default class Grid extends React.Component<IProps> {
 
   public gridCells: React.ReactNode[] = [];
   private iteratorTimeout: NodeJS.Timeout;
+  private gridRef = React.createRef<HTMLDivElement>();
 
   constructor(props: IProps) {
     super(props);
@@ -51,7 +54,11 @@ export default class Grid extends React.Component<IProps> {
       .map(w =>
         new Array(this.props.rows).fill(null).map(u => ({ dx: 0, dy: 0 })),
       );
-    this.updateApps();
+    this.appointments = new Array(this.props.cols)
+      .fill(null)
+      .map(w => new Array(this.props.rows).fill(null).map(u => ({})));
+
+    // this.updateApps();
     this.updateShifts();
     this.globalMovingId = this.props.movingId;
     setTimeout(() => {
@@ -92,6 +99,13 @@ export default class Grid extends React.Component<IProps> {
         this.updateShifts();
       },
     );
+
+    reaction(
+      () => this.props.isDisplaying,
+      () => {
+        this.isVisible.value = this.props.isDisplaying;
+      },
+    );
   }
 
   @action
@@ -121,7 +135,7 @@ export default class Grid extends React.Component<IProps> {
 
         gridCells.push(
           <GridCell
-            // movingIdObj={this.movingId}
+            isDisplaying={this.isVisible}
             movingId={this.props.movingId}
             key={`${x}:${y}`}
             x={x}
@@ -238,12 +252,6 @@ export default class Grid extends React.Component<IProps> {
 
     clearTimeout(this.iteratorTimeout);
 
-    this.appointments =
-      this.appointments ||
-      new Array(cols)
-        .fill(null)
-        .map(w => new Array(rows).fill(null).map(u => ({})));
-
     const minutesStep = mainColumnStep.asMinutes();
     const positionedApps: Array<
       Array<{ [uniqueId: string]: Appointment }>
@@ -267,6 +275,10 @@ export default class Grid extends React.Component<IProps> {
     //   uniqueId =>
     //     Appointment.fromIdentifier(this.globalMovingId).uniqueId === uniqueId,
     // );
+
+    if (this.gridRef.current)
+      console.log(getComputedStyle(this.gridRef.current).display);
+    else console.log('NANI?!');
 
     for (let x = 0; x < cols - 1; x++)
       for (let y = 0; y < rows - 1; y++) {
@@ -304,6 +316,10 @@ export default class Grid extends React.Component<IProps> {
   // }
 
   public render() {
-    return <div className="grid">{this.gridCells}</div>;
+    return (
+      <div className="grid" ref={this.gridRef}>
+        {this.gridCells}
+      </div>
+    );
   }
 }
