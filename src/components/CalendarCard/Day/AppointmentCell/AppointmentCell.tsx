@@ -164,24 +164,26 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
       document.body.appendChild(virtualNode);
       this.isTryingToUpgrade = true;
 
-      setTimeout(() => {
-        // const virtualRect = virtualNode.getBoundingClientRect();
-        const virtualInnerRect = virtualInnerContainer.getBoundingClientRect();
-        const newHeight = virtualInnerRect.height;
-        // const newRight = reducer(Array.from(virtualInnerContainer.children));
+      lazyTaskManager.addTask(
+        new LazyTask(() => {
+          // const virtualRect = virtualNode.getBoundingClientRect();
+          const virtualInnerRect = virtualInnerContainer.getBoundingClientRect();
+          const newHeight = virtualInnerRect.height;
+          // const newRight = reducer(Array.from(virtualInnerContainer.children));
 
-        document.body.removeChild(virtualNode);
-        this.isTryingToUpgrade = false;
+          document.body.removeChild(virtualNode);
+          this.isTryingToUpgrade = false;
 
-        if (newHeight < cellRect.height) {
-          this.setState({
-            widthClass: upgradeWidthMap[this.state.widthClass],
-          });
+          if (newHeight < cellRect.height) {
+            this.setState({
+              widthClass: upgradeWidthMap[this.state.widthClass],
+            });
 
-          if (this.state.widthClass !== WidthClass.Max)
-            this.updateLayout(positiveResizing);
-        }
-      });
+            if (this.state.widthClass !== WidthClass.Max)
+              this.updateLayout(positiveResizing);
+          }
+        }),
+      );
     } else if (!this.state.initialized && this.goingDown)
       this.setState({ initialized: true });
   };
@@ -203,8 +205,6 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
       this.props.appointment.personInstance.loaded
     )
       lazyTaskManager.addTask(new LazyTask(() => this.appLoadedHandler()));
-    // this.updateLayout(false);
-    // setTimeout(() => this.updateLayout(true), Math.random() * 1000 + 1000);
   }
 
   public appLoadedHandler() {

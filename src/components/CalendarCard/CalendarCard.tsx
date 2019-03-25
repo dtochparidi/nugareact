@@ -556,7 +556,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const firstDayRect = firstDayElem.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
 
-    const buffer = Math.max(containerRect.width, firstDayRect.width);
+    const buffer = Math.max(containerRect.width, firstDayRect.width) * 1.5;
 
     const leftBorderOffset =
       firstDayRect.left + buffer - (containerRect.left + pendingOffset);
@@ -779,7 +779,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         this.isScrolling = false;
 
         this.pageTurnEmitter.emit('resume');
-      }, 50);
+      }, 150);
     };
 
     // callback();
