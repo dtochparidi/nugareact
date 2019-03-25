@@ -2,6 +2,7 @@
 import { LazyTaskManager } from '@levabala/lazytask/build/dist';
 import VersionChangelog from 'components/VersionChangelog';
 import * as Cookies from 'js-cookie';
+import LazyWidget from 'lazytask-widget/lib';
 import { observer } from 'mobx-react';
 import DevTools, { configureDevtool } from 'mobx-react-devtools';
 import * as React from 'react';
@@ -85,6 +86,17 @@ class App extends React.Component {
           updateAppointment={calendarDayStore.updateAppointment}
           mainColumnStep={uiStore.mainColumnStep}
         />
+        <div
+          style={{
+            border: 'solid black 1px',
+            bottom: 0,
+            position: 'fixed',
+            right: 0,
+            zIndex: 100000,
+          }}
+        >
+          <LazyWidget updateInterval={100} />
+        </div>
       </div>
     );
   }

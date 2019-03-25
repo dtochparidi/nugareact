@@ -25,6 +25,7 @@
     "html-webpack-plugin": "2.29.0",
     "jest": "22.4.2",
     "js-cookie": "^2.2.0",
+    "lazytask-widget": "^1.0.0",
     "levabala_interactjs": "^1.3.6",
     "mitt": "^1.1.3",
     "mobx": "^5.8.0",
