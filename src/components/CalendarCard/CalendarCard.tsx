@@ -556,7 +556,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const firstDayRect = firstDayElem.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
 
-    const buffer = Math.max(containerRect.width, firstDayRect.width) * 1.5;
+    const buffer = Math.max(containerRect.width, firstDayRect.width);
 
     const leftBorderOffset =
       firstDayRect.left + buffer - (containerRect.left + pendingOffset);

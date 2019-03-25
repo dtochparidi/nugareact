@@ -45,6 +45,7 @@ export default class Grid extends React.Component<IProps> {
   public gridCells: React.ReactNode[] = [];
   private iteratorTimeout: NodeJS.Timeout;
   private gridRef = React.createRef<HTMLDivElement>();
+  private needUpdateApps = true;
 
   constructor(props: IProps) {
     super(props);
@@ -88,7 +89,8 @@ export default class Grid extends React.Component<IProps> {
           .map(app => app.stateHash)
           .join(),
       apps => {
-        this.updateApps();
+        if (this.props.isDisplaying) this.updateApps();
+        else this.needUpdateApps = true;
       },
     );
 
@@ -104,6 +106,7 @@ export default class Grid extends React.Component<IProps> {
       () => this.props.isDisplaying,
       () => {
         this.isVisible.value = this.props.isDisplaying;
+        if (this.props.isDisplaying && this.needUpdateApps) this.updateApps();
       },
     );
   }
@@ -290,31 +293,8 @@ export default class Grid extends React.Component<IProps> {
           LazyTaskManager.addTask(task);
         }
 
-    // const delay = 10;
-    // let xc = 0;
-    // let yc = 0;
-    // const iterator = () => {
-    //   const changed = this.iterationTick(positionedApps, xc, yc);
-
-    //   if (yc < rows - 1) yc++;
-    //   else {
-    //     yc = 0;
-    //     if (xc < cols - 1) xc++;
-    //     else return;
-    //   }
-
-    //   if (changed && !dropped && !instantRender)
-    //     this.iteratorTimeout = setTimeout(iterator.bind(this), delay);
-    //   else iterator();
-    // };
-
-    // iterator();
+    this.needUpdateApps = false;
   }
-
-  // public componentDidUpdate() {
-  //   this.updateApps();
-  //   console.log('update');
-  // }
 
   public render() {
     return (
