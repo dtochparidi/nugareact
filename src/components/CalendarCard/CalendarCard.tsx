@@ -618,6 +618,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       this.updateDaysWidth();
       this.updateScroll(true);
 
+      console.log(
+        this.props.days.map(({ date }) => date.format('DD:MM')).join('\n'),
+      );
+
       this.updateRequiredDays(false);
 
       this.currentLeftColumnIndex =
@@ -845,7 +849,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
       // this.setState({ loading: false });
 
-      console.log(this.currentLeftColumnIndex);
       this.updateVisibility([
         this.currentLeftColumnIndex,
         this.currentLeftColumnIndex + this.state.columnsPerPage,
@@ -908,9 +911,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const { columnsPerDay, stamps, dayWidth } = this.state;
     const { days, subGridColumns, positionCount, mainColumnStep } = this.props;
 
-    const instantRender = false;
+    const instantRender = true;
 
-    days.forEach(day => {
+    days.forEach((day, i) => {
       const { id } = day;
       const dayId = `${id}`;
       if (!(dayId in this.shifts)) this.shifts[dayId] = {};
@@ -966,8 +969,13 @@ export default class CalendarCard extends React.Component<IProps, IState> {
             </div>
           </div>
           <div className="gridsContainer">
-            {this.props.days.map(day => (
+            {this.props.days.map((day, i) => (
               <Day
+                startLoadSide={
+                  this.currentLeftColumnIndex < this.state.columnsPerDay * i
+                    ? 'left'
+                    : 'right'
+                }
                 isDisplaying={this.visibilityMap[day.id]}
                 key={day.date.toString()}
                 rows={positionCount}

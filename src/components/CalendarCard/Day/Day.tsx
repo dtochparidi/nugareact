@@ -27,6 +27,7 @@ export interface IProps {
   shiftsHash: string;
   updateAppointment: (props: IUpdateAppProps) => void;
   instantRender: boolean;
+  startLoadSide: 'left' | 'right';
 }
 
 @observer
@@ -46,6 +47,7 @@ export default class Day extends React.Component<IProps> {
       updateAppointment,
       instantRender,
       isDisplaying,
+      startLoadSide,
     } = this.props;
 
     return (
@@ -70,6 +72,7 @@ export default class Day extends React.Component<IProps> {
             subGridColumns={subGridStep}
             mainColumnStep={mainColumnStep}
             instantRender={instantRender}
+            startLoadSide={startLoadSide}
           />
         </div>
       </div>

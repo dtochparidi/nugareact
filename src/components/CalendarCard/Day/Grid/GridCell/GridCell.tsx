@@ -45,7 +45,6 @@ export default class GridCell extends React.Component<IProps> {
       let coeffX = 0;
       let coeffY = 0;
 
-      // const isMoving = appointment.identifier === movingIdObj.id;
       const isMoving = appointment.identifier === movingId;
       if (isMoving) console.log(isMoving);
       if (!isMoving) {

@@ -28,6 +28,7 @@ export interface IProps {
   updateAppointment: (props: IUpdateAppProps) => void;
   instantRender: boolean;
   isDisplaying: boolean;
+  startLoadSide: 'left' | 'right';
 }
 
 @observer
@@ -63,6 +64,8 @@ export default class Grid extends React.Component<IProps> {
     this.updateShifts();
     this.globalMovingId = this.props.movingId;
     if (this.props.isDisplaying) this.gridCells = this.generateGrid();
+
+    if (this.props.instantRender) console.log('instant');
 
     // movingId change reaction
     reaction(
@@ -280,13 +283,27 @@ export default class Grid extends React.Component<IProps> {
         Appointment.fromIdentifier(this.globalMovingId).uniqueId === uniqueId,
     );
 
-    if (dropped)
-      for (let x = 0; x < cols - 1; x++)
-        for (let y = 0; y < rows - 1; y++)
+    if (this.props.startLoadSide === 'left')
+      if (dropped)
+        for (let x = 0; x < cols - 1; x++)
+          for (let y = 0; y < rows - 1; y++)
+            this.iterationTick(positionedApps, x, y);
+      else
+        for (let x = 0; x < cols - 1; x++)
+          for (let y = 0; y < rows - 1; y++) {
+            const task = new LazyTask(() =>
+              this.iterationTick(positionedApps, x, y),
+            );
+
+            LazyTaskManager.addTask(task);
+          }
+    else if (dropped)
+      for (let x = cols - 1; x >= 0; x--)
+        for (let y = rows - 1; y >= 0; y--)
           this.iterationTick(positionedApps, x, y);
     else
-      for (let x = 0; x < cols - 1; x++)
-        for (let y = 0; y < rows - 1; y++) {
+      for (let x = cols - 1; x >= 0; x--)
+        for (let y = rows - 1; y >= 0; y--) {
           const task = new LazyTask(() =>
             this.iterationTick(positionedApps, x, y),
           );
