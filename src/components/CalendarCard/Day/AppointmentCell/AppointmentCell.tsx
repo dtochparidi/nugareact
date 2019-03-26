@@ -86,7 +86,9 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
           this.props.appointment.personInstance &&
           this.props.appointment.personInstance.loaded,
         loaded => {
-          lazyTaskManager.addTask(new LazyTask(() => this.appLoadedHandler()));
+          lazyTaskManager.addTask(
+            new LazyTask(() => this.appLoadedHandler(), 1),
+          );
         },
       );
 
@@ -94,7 +96,9 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
       () => this.props.isDisplaying,
       val => {
         if (this.props.isDisplaying)
-          lazyTaskManager.addTask(new LazyTask(() => this.appLoadedHandler()));
+          lazyTaskManager.addTask(
+            new LazyTask(() => this.appLoadedHandler(), 1),
+          );
       },
     );
   }
@@ -135,7 +139,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
       this.goingDown = true;
       this.setState({ widthClass: downgradeWidthMap[this.state.widthClass] });
 
-      lazyTaskManager.addTask(new LazyTask(() => this.updateLayout(false)));
+      lazyTaskManager.addTask(new LazyTask(() => this.updateLayout(false), 1));
     } else if (
       this.state.widthClass !== WidthClass.Max &&
       positiveResizing &&
@@ -185,7 +189,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
               this.updateLayout(positiveResizing);
             }
           }
-        }),
+        }, 1),
       );
     } else if (!this.state.initialized && this.goingDown)
       this.setState({ initialized: true });
@@ -208,7 +212,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
       this.props.appointment.personInstance &&
       this.props.appointment.personInstance.loaded
     )
-      lazyTaskManager.addTask(new LazyTask(() => this.appLoadedHandler()));
+      lazyTaskManager.addTask(new LazyTask(() => this.appLoadedHandler(), 1));
   }
 
   public appLoadedHandler(instant = false) {
@@ -221,7 +225,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
       if (instant) this.updateLayout(false);
       else
         lazyTaskManager.addTask(
-          new LazyTask((() => this.updateLayout(false)).bind(this)),
+          new LazyTask((() => this.updateLayout(false)).bind(this), 1),
         );
     else console.log('not loaded!');
   }
