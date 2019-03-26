@@ -65,8 +65,6 @@ export default class Grid extends React.Component<IProps> {
     this.globalMovingId = this.props.movingId;
     if (this.props.isDisplaying) this.gridCells = this.generateGrid();
 
-    if (this.props.instantRender) console.log('instant');
-
     // movingId change reaction
     reaction(
       () => this.props.movingId,

@@ -525,6 +525,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public updateDropzones(minDay: number, maxDay: number) {
+    const buffer = 1;
+
     Array.from(
       (this.daysContainerRef.current as HTMLDivElement).querySelectorAll(
         '.dayWrapper',
@@ -533,7 +535,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       const selector = `#${child.id} .grid`;
 
       const includes = this.activatedDropzones.includes(selector);
-      if (index >= minDay && index <= maxDay && !includes) {
+      if (index >= minDay - buffer && index <= maxDay + buffer && !includes) {
         interact(selector).dropzone(this.dropzoneConfig);
         this.activatedDropzones.push(selector);
       } else if (includes) {
@@ -617,10 +619,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       this.setState({ loading: false });
       this.updateDaysWidth();
       this.updateScroll(true);
-
-      console.log(
-        this.props.days.map(({ date }) => date.format('DD:MM')).join('\n'),
-      );
 
       this.updateRequiredDays(false);
 
@@ -972,7 +970,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
             {this.props.days.map((day, i) => (
               <Day
                 startLoadSide={
-                  this.currentLeftColumnIndex < this.state.columnsPerDay * i
+                  this.currentLeftColumnIndex <= this.state.columnsPerDay * i
                     ? 'left'
                     : 'right'
                 }

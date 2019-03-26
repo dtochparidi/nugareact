@@ -45,7 +45,7 @@ if (clientSide) {
 }
 
 // launching singlton-class for controlling lazyTasks
-LazyTaskManager.launch();
+LazyTaskManager.launch(30);
 
 // main entry class
 @observer

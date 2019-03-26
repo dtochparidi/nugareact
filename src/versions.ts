@@ -48,6 +48,13 @@ const versions: Array<[string, string]> = [
 > Система управления задач вынесена в отдельный репозиторий https://github.com/levabala/lazytask
   `,
   ],
+  [
+    'Update1.3',
+    `
+# Different Sides Loading
+Нагрузка дня начинается с ближней к пользователю стороны
+  `,
+  ],
 ];
 
 export default versions;
