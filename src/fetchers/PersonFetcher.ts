@@ -46,7 +46,7 @@ const fetchPerson: IFetcher<string, IPerson> = async function PersonFetcher(
   if (!(id in backendPersons)) backendPersons[id] = generateRandomPerson(id);
 
   // just delay (simulating network delays)
-  // await new Promise(resolve => setTimeout(resolve, random(3200, 200)));
+  // await new Promise(resolve => setTimeout(resolve, random(1200, 200)));
 
   return backendPersons[id];
 };
