@@ -34,7 +34,7 @@ export interface IProps {
 @observer
 export default class Grid extends React.Component<IProps> {
   @observable
-  public isVisible = { value: true };
+  public isVisible = { value: false };
   @observable
   public appointments: Array<Array<{ [uniqueId: string]: Appointment }>>;
   @observable
@@ -47,9 +47,12 @@ export default class Grid extends React.Component<IProps> {
   private iteratorTimeout: NodeJS.Timeout;
   private gridRef = React.createRef<HTMLDivElement>();
   private needUpdateApps = true;
+  private instantFirstRender: boolean;
 
   constructor(props: IProps) {
     super(props);
+
+    this.instantFirstRender = this.props.instantRender;
 
     this.shifts = new Array(this.props.cols)
       .fill(null)
@@ -104,7 +107,9 @@ export default class Grid extends React.Component<IProps> {
     reaction(
       () => this.props.isDisplaying,
       () => {
-        this.isVisible.value = this.props.isDisplaying;
+        if (this.props.isDisplaying)
+          this.isVisible.value = this.props.isDisplaying;
+
         if (this.props.isDisplaying) {
           if (!this.gridCells) this.gridCells = this.generateGrid();
           if (this.needUpdateApps) this.updateApps();
@@ -246,14 +251,7 @@ export default class Grid extends React.Component<IProps> {
 
   @action
   public updateApps() {
-    const {
-      appointments,
-      stamps,
-      mainColumnStep,
-      cols,
-      rows,
-      // instantRender,
-    } = this.props;
+    const { appointments, stamps, mainColumnStep, cols, rows } = this.props;
 
     clearTimeout(this.iteratorTimeout);
 
@@ -282,7 +280,7 @@ export default class Grid extends React.Component<IProps> {
     );
 
     if (this.props.startLoadSide === 'left')
-      if (dropped)
+      if (dropped || this.instantFirstRender)
         for (let x = 0; x < cols - 1; x++)
           for (let y = 0; y < rows - 1; y++)
             this.iterationTick(positionedApps, x, y);
@@ -295,7 +293,7 @@ export default class Grid extends React.Component<IProps> {
 
             LazyTaskManager.addTask(task);
           }
-    else if (dropped)
+    else if (dropped || this.instantFirstRender)
       for (let x = cols - 1; x >= 0; x--)
         for (let y = rows - 1; y >= 0; y--)
           this.iterationTick(positionedApps, x, y);

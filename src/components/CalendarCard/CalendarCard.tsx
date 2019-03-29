@@ -25,6 +25,7 @@ import ToggleArea from './ToggleArea';
 import * as Emitter from 'events';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
 import { action, observable } from 'mobx';
+import rootStore from 'stores/RootStore';
 import MonthRow from './Day/MonthRow';
 import TopRow from './Day/TopRow';
 import { generateDropzoneConfig } from './modules/dropzoneConfig';
@@ -65,6 +66,7 @@ export interface IState {
   leftColumnWidth: number;
   loading: boolean;
   stamps: IMoment[];
+  firstLoad: boolean;
 }
 
 export enum Direction {
@@ -116,6 +118,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   private tooFarPagesTrigger = 2;
   private jumpToDayHandler: (index: number) => void;
   private dropzoneConfig = generateDropzoneConfig.bind(this)();
+  private firstLoadDays: IMoment[] = [];
 
   constructor(props: IProps) {
     super(props);
@@ -151,6 +154,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       columnsPerDay: stamps.length,
       columnsPerPage: 4,
       dayWidth: '100%',
+      firstLoad: true,
       leftColumnWidth: 30,
       loading: true,
       requiredDays: [moment().startOf('day')],
@@ -548,7 +552,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     });
   }
 
-  public updateRequiredDays(compensate = true, pendingOffset = 0) {
+  public updateRequiredDays(
+    compensate = true,
+    pendingOffset = 0,
+    beforeStateUpdate: () => void = () => null,
+  ) {
     const container = this.daysContainerRef.current as HTMLDivElement;
 
     const { days } = this.props;
@@ -593,6 +601,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           .add(1, 'day'),
       );
 
+    beforeStateUpdate();
     this.setState({ requiredDays: this.state.requiredDays });
 
     return compensate && changeDeltaAbs > 0;
@@ -621,6 +630,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       this.updateScroll(true);
 
       this.updateRequiredDays(false);
+      this.firstLoadDays = this.state.requiredDays.map(d => d);
 
       this.currentLeftColumnIndex =
         Math.floor((this.state.requiredDays.length - 1) / 2) *
@@ -657,6 +667,13 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         if (!this.props.days.find(d => d.date.diff(day, 'days') === 0))
           this.props.requestCallback(day);
       });
+
+    if (this.state.firstLoad && this.firstLoadDays.length) {
+      const firstDaysLoaded = this.firstLoadDays.every(
+        date => !!this.props.days.find(day => day.date.diff(date, 'day') === 0),
+      );
+      if (firstDaysLoaded) this.setState({ firstLoad: false });
+    }
 
     // step-by-step
     const medianDay = this.state.requiredDays
@@ -765,6 +782,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     this.pageTurnEmitter.emit('freeze');
     this.isScrolling = true;
+    rootStore.uiStore.setScrolling(true);
 
     const callback = () => {
       clearTimeout(this.containerScrollTimeout);
@@ -781,6 +799,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         this.isScrolling = false;
 
         this.pageTurnEmitter.emit('resume');
+
+        rootStore.uiStore.setScrolling(false);
       }, 150);
     };
 
@@ -909,7 +929,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const { columnsPerDay, stamps, dayWidth } = this.state;
     const { days, subGridColumns, positionCount, mainColumnStep } = this.props;
 
-    const instantRender = true;
+    const instantRender = this.state.firstLoad;
 
     days.forEach((day, i) => {
       const { id } = day;

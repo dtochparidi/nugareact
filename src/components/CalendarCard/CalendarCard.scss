@@ -90,7 +90,7 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
       visibility: hidden;
     }
 
-    &.loading > .topRowsContainer .stickyContainer {
+    &.loading > .topRowsContainer {
       visibility: hidden;
     }
 

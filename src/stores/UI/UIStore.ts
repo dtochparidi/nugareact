@@ -12,6 +12,8 @@ export default class UIStore {
   @observable
   public fastMode: boolean = false;
   @observable
+  public isScrolling: boolean = false;
+  @observable
   public dayTimeRange: DateRange = moment.range(
     moment()
       .startOf('day')
@@ -22,6 +24,11 @@ export default class UIStore {
   );
   @observable
   public mainColumnStep: Moment.Duration = Moment.duration(45, 'minutes');
+
+  @action
+  public setScrolling(scrolling: boolean) {
+    this.isScrolling = scrolling;
+  }
 
   @action
   public setFastMode(enabled: boolean) {
