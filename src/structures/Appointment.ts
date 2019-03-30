@@ -10,6 +10,22 @@ import { v4 } from 'uuid';
 const moment = extendMoment(Moment);
 
 export default class Appointment implements IAppointment {
+  public static fromJSON(json: string) {
+    const parsed = JSON.parse(json);
+    const { personId, position } = parsed;
+    let { duration, date } = parsed;
+
+    duration = Moment.duration(duration);
+    date = Moment(date);
+
+    return new Appointment({
+      date,
+      duration,
+      personId,
+      position,
+    });
+  }
+
   public static fromIdentifier(id: string) {
     const arr = id.split('_');
     const data = {
@@ -112,5 +128,14 @@ export default class Appointment implements IAppointment {
       this.uniqueId,
     );
     this.stateHash = Appointment.getStateHash();
+  }
+
+  public toJSON() {
+    return {
+      date: this.date.valueOf(),
+      duration: this.duration.asMilliseconds(),
+      personId: this.personId,
+      position: this.position,
+    };
   }
 }

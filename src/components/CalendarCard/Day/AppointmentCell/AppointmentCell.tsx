@@ -56,7 +56,7 @@ const downgradeWidthMap = {
 
 const widthCache: { [uniqueId: string]: WidthClass } = {};
 
-const condFun = () => !rootStore.uiStore.isScrolling;
+const condFun = () => !rootStore.uiStore.isScrollingUnbinded;
 
 @observer
 export default class AppointmentCell extends React.Component<IProps, IState> {

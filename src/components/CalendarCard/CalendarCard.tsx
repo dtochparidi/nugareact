@@ -38,6 +38,7 @@ import {
 } from './modules/staticMethods';
 
 const calendarCellMinWidth = parseFloat(CardVariables.calendarCellWidthMin);
+const calendarCellHeight = parseFloat(CardVariables.calendarCellHeight);
 const thinWidth = parseFloat(StyleVariables.thinWidth);
 
 const moment = extendMoment(Moment);
@@ -109,11 +110,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   } = {};
 
   private daysContainerRef: React.RefObject<HTMLDivElement>;
-  private containerScrollTimeout: NodeJS.Timeout;
   private currentDaysCount: number = 0;
   private isScrolling: boolean = false;
   private pageTurnEmitter: Emitter;
   // private clientRect: ClientRect;
+  private scrollingUpdateTimeout: NodeJS.Timeout;
   private activatedDropzones: string[] = [];
   private tooFarPagesTrigger = 2;
   private jumpToDayHandler: (index: number) => void;
@@ -785,26 +786,29 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     rootStore.uiStore.setScrolling(true);
 
     const callback = () => {
-      clearTimeout(this.containerScrollTimeout);
+      clearTimeout(this.scrollingUpdateTimeout);
 
-      this.containerScrollTimeout = setTimeout(() => {
-        // this.removeTooFarDays();
+      const delta = Math.floor(Math.abs(gridsContainer.scrollLeft - left));
+      if (delta !== 0) return;
 
-        this.updateVisibility([
-          this.currentLeftColumnIndex,
-          this.currentLeftColumnIndex + this.state.columnsPerPage,
-        ]);
-        gridsContainer.removeEventListener('scroll', callback);
+      gridsContainer.removeEventListener('scroll', callback);
 
-        this.isScrolling = false;
+      this.updateVisibility([
+        this.currentLeftColumnIndex,
+        this.currentLeftColumnIndex + this.state.columnsPerPage,
+      ]);
 
-        this.pageTurnEmitter.emit('resume');
+      this.isScrolling = false;
 
-        rootStore.uiStore.setScrolling(false);
-      }, 150);
+      this.pageTurnEmitter.emit('resume');
+
+      this.scrollingUpdateTimeout = setTimeout(
+        () => rootStore.uiStore.setScrolling(false),
+        200,
+      );
     };
 
-    // callback();
+    callback();
     gridsContainer.addEventListener('scroll', callback);
   }
 
@@ -1001,6 +1005,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 dayData={day}
                 stamps={stamps}
                 dayWidth={dayWidth}
+                cellHeight={calendarCellHeight}
                 shifts={this.shifts[day.id]}
                 shiftsHash={this.shiftsHash[day.id]}
                 updateAppointment={this.props.updateAppointment}

@@ -13,6 +13,8 @@ export default class UIStore {
   public fastMode: boolean = false;
   @observable
   public isScrolling: boolean = false;
+  public isScrollingUnbinded: boolean = false;
+
   @observable
   public dayTimeRange: DateRange = moment.range(
     moment()
@@ -28,6 +30,7 @@ export default class UIStore {
   @action
   public setScrolling(scrolling: boolean) {
     this.isScrolling = scrolling;
+    this.isScrollingUnbinded = scrolling;
   }
 
   @action
