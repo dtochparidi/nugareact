@@ -1,17 +1,20 @@
 import { LazyTask } from '@levabala/lazytask/build/dist';
 import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
+import { observer } from 'mobx-react';
 import moize from 'moize';
 import * as PIXI from 'pixi.js';
 import * as React from 'react';
 
 export interface IProps {
   children?: React.ReactNode;
-  width: number;
+  dayWidth: number;
   cellHeight: number;
-  cols: number;
-  rows: number;
+  daysCount: number;
+  colsPerDay: number;
+  rowsPerDay: number;
   subGridColumns: number;
   instantRender: boolean;
+  style?: React.CSSProperties;
 }
 
 export interface IState {
@@ -21,9 +24,10 @@ export interface IState {
 // collectStats();
 // setInterval(() => console.log(moize.getStats('generateGraphics')), 1500);
 
+@observer
 export default class GridP extends React.Component<IProps, IState> {
   private static generateGraphics = moize(
-    (width, cellHeight, cols, rows, subGridColumns) => {
+    (width, cellHeight, cols, rows, daysCount, subGridColumns) => {
       const container = new PIXI.Container();
 
       const xStep = width / cols;
@@ -33,7 +37,7 @@ export default class GridP extends React.Component<IProps, IState> {
       // main grid
       const mainGrid = new PIXI.Graphics();
       mainGrid.lineStyle(2, 0xd3d3d3, 1);
-      for (let x = 0; x <= cols; x++) {
+      for (let x = 0; x <= cols * daysCount; x++) {
         const xCoord = x * xStep;
         mainGrid.moveTo(xCoord, 0);
         mainGrid.lineTo(xCoord, cellHeight * rows);
@@ -42,12 +46,13 @@ export default class GridP extends React.Component<IProps, IState> {
       for (let y = 0; y <= rows; y++) {
         const yCoord = y * yStep;
         mainGrid.moveTo(0, yCoord);
-        mainGrid.lineTo(width, yCoord);
+        mainGrid.lineTo(width * daysCount, yCoord);
       }
+
       // second grid
       const secondaryGrid = new PIXI.Graphics();
       secondaryGrid.lineStyle(1, 0xd3d3d3, 1);
-      for (let x = 0; x <= cols * subGridColumns; x++) {
+      for (let x = 0; x <= cols * subGridColumns * daysCount; x++) {
         const xCoord = x * xSecondStep;
         secondaryGrid.moveTo(xCoord, 0);
         secondaryGrid.lineTo(xCoord, cellHeight * rows);
@@ -62,6 +67,7 @@ export default class GridP extends React.Component<IProps, IState> {
   );
 
   private wrapperRef = React.createRef<HTMLDivElement>();
+  private canvasWrapper = React.createRef<HTMLDivElement>();
   private renderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer;
   private initialized = false;
 
@@ -78,12 +84,16 @@ export default class GridP extends React.Component<IProps, IState> {
 
     const func = () => {
       this.renderer = new PIXI.WebGLRenderer(
-        this.props.width,
-        this.props.cellHeight * this.props.rows,
+        this.props.dayWidth * this.props.daysCount,
+        this.props.cellHeight * this.props.rowsPerDay,
       );
       this.renderer.backgroundColor = 0xffffff;
 
-      wrapper.appendChild(this.renderer.view);
+      wrapper.style.width = `${this.renderer.width}px`;
+      wrapper.style.height = `${this.renderer.height}px`;
+      (this.canvasWrapper.current as HTMLDivElement).appendChild(
+        this.renderer.view,
+      );
 
       this.renderPIXI();
 
@@ -96,13 +106,18 @@ export default class GridP extends React.Component<IProps, IState> {
 
   public componentDidUpdate(prevProps: IProps) {
     if (
-      (prevProps.width !== this.props.width ||
-        prevProps.cellHeight !== this.props.cellHeight) &&
+      (prevProps.dayWidth !== this.props.dayWidth ||
+        prevProps.cellHeight !== this.props.cellHeight ||
+        prevProps.daysCount !== this.props.daysCount) &&
       this.initialized
     ) {
+      const wrapper = this.wrapperRef.current as HTMLDivElement;
+      wrapper.style.width = `${this.renderer.width}px`;
+      wrapper.style.height = `${this.renderer.height}px`;
+
       this.renderer.resize(
-        this.props.width,
-        this.props.cellHeight * this.props.rows,
+        this.props.dayWidth * this.props.daysCount,
+        this.props.cellHeight * this.props.rowsPerDay,
       );
 
       this.renderPIXI();
@@ -110,18 +125,39 @@ export default class GridP extends React.Component<IProps, IState> {
   }
 
   public renderPIXI() {
-    const { width, cellHeight, cols, rows, subGridColumns } = this.props;
+    const {
+      dayWidth: width,
+      cellHeight,
+      colsPerDay: cols,
+      rowsPerDay: rows,
+      subGridColumns,
+      daysCount,
+    } = this.props;
     const container = GridP.generateGraphics(
       width,
       cellHeight,
       cols,
       rows,
+      daysCount,
       subGridColumns,
     );
     this.renderer.render(container);
   }
 
   public render() {
-    return <div ref={this.wrapperRef} />;
+    return (
+      <div ref={this.wrapperRef} style={this.props.style}>
+        <div
+          ref={this.canvasWrapper}
+          style={{
+            left: '0px',
+            position: 'absolute',
+            right: '0px',
+            top: '0px',
+          }}
+        />
+        {this.props.children}
+      </div>
+    );
   }
 }

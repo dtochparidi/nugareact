@@ -8,7 +8,7 @@ import { v4 } from 'uuid';
 
 import ICalendarDay from '../../interfaces/ICalendarDay';
 import Card from '../Card';
-import Day, { DateRow } from './Day';
+import Day, { DateRow, GridP } from './Day';
 import LeftColumn from './LeftColumn';
 
 import * as StyleVariables from '../../common/variables.scss';
@@ -564,7 +564,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const firstDay = days[0];
     const firstDayElem = document.getElementById(firstDay.id) as HTMLElement;
 
-    const firstDayRect = firstDayElem.getBoundingClientRect();
+    const firstDayRect = (firstDayElem &&
+      firstDayElem.getBoundingClientRect()) || {
+      left: 0,
+      width: parseFloat(this.state.dayWidth),
+    };
     const containerRect = container.getBoundingClientRect();
 
     const buffer = Math.max(containerRect.width, firstDayRect.width);
@@ -709,6 +713,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const pendingOffset = columnsPerTurn * this.state.cellWidth * delta;
 
     const needUpdateScroll = this.updateRequiredDays(true, pendingOffset);
+
     if (needUpdateScroll) this.updateScroll(true);
 
     this.currentLeftColumnIndex += columnsPerTurn * delta;
@@ -848,34 +853,38 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const requiredDays = [targetDate.subtract(1, 'day')];
     this.lazyLoadDays = requiredDays.map(m => m);
 
-    this.setState({
-      // loading: true,
-      requiredDays,
-    });
+    this.setState(
+      {
+        // loading: true,
+        requiredDays,
+      },
+      () => {
+        // const container = this.daysContainerRef.current as HTMLDivElement;
 
-    const container = this.daysContainerRef.current as HTMLDivElement;
+        // const gridsContainer = container.querySelector(
+        //   '.gridsContainer',
+        // ) as HTMLElement;
+        // const topRowsContainer = container.querySelector(
+        //   '.topRowsContainer .scrollingContainer',
+        // ) as HTMLElement;
 
-    const gridsContainer = container.querySelector(
-      '.gridsContainer',
-    ) as HTMLElement;
-    const topRowsContainer = container.querySelector(
-      '.topRowsContainer .scrollingContainer',
-    ) as HTMLElement;
+        // gridsContainer.scrollLeft = 0;
+        // topRowsContainer.scrollLeft = 0;
 
-    gridsContainer.scrollLeft = 0;
-    topRowsContainer.scrollLeft = 0;
+        // this.updateScroll(true);
+        this.updateRequiredDays();
+        setTimeout(() => {
+          this.updateScroll(true);
 
-    setTimeout(() => {
-      this.updateRequiredDays();
-      this.updateScroll(true);
+          // this.setState({ loading: false });
 
-      // this.setState({ loading: false });
-
-      this.updateVisibility([
-        this.currentLeftColumnIndex,
-        this.currentLeftColumnIndex + this.state.columnsPerPage,
-      ]);
-    });
+          this.updateVisibility([
+            this.currentLeftColumnIndex,
+            this.currentLeftColumnIndex + this.state.columnsPerPage,
+          ]);
+        });
+      },
+    );
   }
 
   public say(s: string) {
@@ -991,30 +1000,40 @@ export default class CalendarCard extends React.Component<IProps, IState> {
             </div>
           </div>
           <div className="gridsContainer">
-            {this.props.days.map((day, i) => (
-              <Day
-                startLoadSide={
-                  this.currentLeftColumnIndex <= this.state.columnsPerDay * i
-                    ? 'left'
-                    : 'right'
-                }
-                isDisplaying={this.visibilityMap[day.id]}
-                key={day.date.toString()}
-                rows={positionCount}
-                cols={columnsPerDay || 0}
-                dayData={day}
-                stamps={stamps}
-                dayWidth={dayWidth}
-                cellHeight={calendarCellHeight}
-                shifts={this.shifts[day.id]}
-                shiftsHash={this.shiftsHash[day.id]}
-                updateAppointment={this.props.updateAppointment}
-                subGridColumns={subGridColumns}
-                mainColumnStep={mainColumnStep}
-                movingId={this.movingId}
-                instantRender={instantRender}
-              />
-            ))}
+            <GridP
+              cellHeight={calendarCellHeight}
+              colsPerDay={this.state.columnsPerDay}
+              dayWidth={parseFloat(this.state.dayWidth)}
+              daysCount={this.props.days.length}
+              instantRender={instantRender}
+              rowsPerDay={this.props.positionCount}
+              subGridColumns={this.props.subGridColumns}
+            >
+              {this.props.days.map((day, i) => (
+                <Day
+                  startLoadSide={
+                    this.currentLeftColumnIndex <= this.state.columnsPerDay * i
+                      ? 'left'
+                      : 'right'
+                  }
+                  isDisplaying={this.visibilityMap[day.id]}
+                  key={day.date.toString()}
+                  rows={positionCount}
+                  cols={columnsPerDay || 0}
+                  dayData={day}
+                  stamps={stamps}
+                  dayWidth={dayWidth}
+                  cellHeight={calendarCellHeight}
+                  shifts={this.shifts[day.id]}
+                  shiftsHash={this.shiftsHash[day.id]}
+                  updateAppointment={this.props.updateAppointment}
+                  subGridColumns={subGridColumns}
+                  mainColumnStep={mainColumnStep}
+                  movingId={this.movingId}
+                  instantRender={instantRender}
+                />
+              ))}
+            </GridP>
           </div>
         </div>
         <LeftColumn positionCount={positionCount} />

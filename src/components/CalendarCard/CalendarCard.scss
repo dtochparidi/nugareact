@@ -135,6 +135,7 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
     .gridsContainer {
       width: 100%;
       overflow: hidden;
+      position: relative;
 
       .dayWrapper {
         --columns-count: 6;
