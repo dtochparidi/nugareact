@@ -12,6 +12,7 @@ export interface IProps {
   rows: number;
   subGridColumns: number;
   instantRender: boolean;
+  style?: React.CSSProperties;
 }
 
 export interface IState {
@@ -122,6 +123,6 @@ export default class GridP extends React.Component<IProps, IState> {
   }
 
   public render() {
-    return <div ref={this.wrapperRef} />;
+    return <div ref={this.wrapperRef} style={this.props.style} />;
   }
 }

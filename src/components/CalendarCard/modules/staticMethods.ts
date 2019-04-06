@@ -96,3 +96,7 @@ export function getCellInfo(target: HTMLElement) {
   stamp.minute(minute);
   return { stamp, position };
 }
+
+export function calcGridsCount(clientWidth: number, dayWidth: number) {
+  return Math.ceil(clientWidth / dayWidth) + 1;  
+}

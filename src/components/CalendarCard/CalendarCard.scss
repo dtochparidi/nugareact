@@ -71,14 +71,14 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
     }
   }
 
-  .daysContainer {
+  .calendarContainer {
     position: relative;
 
     display: grid;
     grid-template-rows: $top-row-height auto;
     grid-template-columns: 100%;
 
-    grid-area: daysContainer;
+    grid-area: calendarContainer;
     overflow: hidden;
 
     height: 100%;

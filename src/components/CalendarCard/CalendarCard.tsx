@@ -8,7 +8,7 @@ import { v4 } from 'uuid';
 
 import ICalendarDay from '../../interfaces/ICalendarDay';
 import Card from '../Card';
-import Day, { DateRow } from './Day';
+import Day, { DateRow, GridP } from './Day';
 import LeftColumn from './LeftColumn';
 
 import * as StyleVariables from '../../common/variables.scss';
@@ -33,6 +33,7 @@ import { generateResizeConfig } from './modules/resizeConfig';
 import {
   calcColumnsCount,
   calcDaySize,
+  calcGridsCount,
   getCellInfo,
   updateStickyElements,
 } from './modules/staticMethods';
@@ -109,7 +110,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     };
   } = {};
 
-  private daysContainerRef: React.RefObject<HTMLDivElement>;
+  private calendarContainerRef: React.RefObject<HTMLDivElement>;
   private currentDaysCount: number = 0;
   private isScrolling: boolean = false;
   private pageTurnEmitter: Emitter;
@@ -120,11 +121,12 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   private jumpToDayHandler: (index: number) => void;
   private dropzoneConfig = generateDropzoneConfig.bind(this)();
   private firstLoadDays: IMoment[] = [];
+  private backgroundGrids: JSX.Element[] = [];
 
   constructor(props: IProps) {
     super(props);
 
-    this.daysContainerRef = React.createRef();
+    this.calendarContainerRef = React.createRef();
     this.pageTurnEmitter = new Emitter();
 
     this.jumpToDayHandler = this.jumpToDay.bind(this);
@@ -398,7 +400,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           const [y] = entrie2;
           const elem: { dx: number; dy: number } = row[y];
 
-          const day = (this.daysContainerRef
+          const day = (this.calendarContainerRef
             .current as HTMLElement).querySelector(`#${dayId}`) as HTMLElement;
           const gridCell = day.querySelector(
             `[data-x="${x}"][data-y="${y}"]`,
@@ -533,7 +535,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const buffer = 1;
 
     Array.from(
-      (this.daysContainerRef.current as HTMLDivElement).querySelectorAll(
+      (this.calendarContainerRef.current as HTMLDivElement).querySelectorAll(
         '.dayWrapper',
       ),
     ).forEach((child, index) => {
@@ -553,12 +555,35 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     });
   }
 
+  public updateParalaxGrids() {
+    const needCount = calcGridsCount(
+      (this.calendarContainerRef.current as HTMLElement).offsetWidth,
+      parseFloat(this.state.dayWidth),
+    );
+
+    if (this.backgroundGrids.length !== needCount)
+      this.backgroundGrids = new Array(needCount)
+        .fill(null)
+        .map((v, i) => (
+          <GridP
+            style={{ display: 'inline-block' }}
+            key={i}
+            width={parseFloat(this.state.dayWidth)}
+            cellHeight={calendarCellHeight}
+            rows={this.props.positionCount}
+            cols={this.state.columnsPerDay}
+            subGridColumns={this.props.subGridColumns}
+            instantRender={false}
+          />
+        ));
+  }
+
   public updateRequiredDays(
     compensate = true,
     pendingOffset = 0,
     beforeStateUpdate: () => void = () => null,
   ) {
-    const container = this.daysContainerRef.current as HTMLDivElement;
+    const container = this.calendarContainerRef.current as HTMLDivElement;
 
     const { days } = this.props;
     const firstDay = days[0];
@@ -643,6 +668,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       ]);
 
       setTimeout(() => {
+        this.updateParalaxGrids();
+
         this.updateDaysWidth();
         this.updateScroll(true);
       });
@@ -746,7 +773,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public updateScroll(force = false) {
-    const container = this.daysContainerRef.current as HTMLDivElement;
+    const container = this.calendarContainerRef.current as HTMLDivElement;
     const dayIndex = Math.floor(
       this.currentLeftColumnIndex / this.state.columnsPerDay,
     );
@@ -823,7 +850,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const maxDay = Math.floor(maxColumn / this.state.columnsPerDay) + buffer;
 
     Array.from(
-      (this.daysContainerRef.current as HTMLDivElement).querySelectorAll(
+      (this.calendarContainerRef.current as HTMLDivElement).querySelectorAll(
         '.dayWrapper',
       ),
     ).forEach((child, index) => {
@@ -853,7 +880,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       requiredDays,
     });
 
-    const container = this.daysContainerRef.current as HTMLDivElement;
+    const container = this.calendarContainerRef.current as HTMLDivElement;
 
     const gridsContainer = container.querySelector(
       '.gridsContainer',
@@ -902,7 +929,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public updateColumnsCount() {
-    const containerWidth = (this.daysContainerRef.current as HTMLDivElement)
+    const containerWidth = (this.calendarContainerRef.current as HTMLDivElement)
       .offsetWidth;
     const count = calcColumnsCount(containerWidth, calendarCellMinWidth);
     this.setState({ columnsPerPage: count });
@@ -910,7 +937,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
   public calcDaysWidth() {
     const { columnsPerDay, columnsPerPage, leftColumnWidth } = this.state;
-    const containerWidth = (this.daysContainerRef.current as HTMLDivElement)
+    const containerWidth = (this.calendarContainerRef.current as HTMLDivElement)
       .offsetWidth;
     const dayWidth = calcDaySize(
       columnsPerPage,
@@ -924,8 +951,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   // public updateBoundingRect() {
-  //   this.clientRect = this.daysContainerRef.current
-  //     ? (this.daysContainerRef.current as HTMLElement).getBoundingClientRect()
+  //   this.clientRect = this.calendarContainerRef.current
+  //     ? (this.calendarContainerRef.current as HTMLElement).getBoundingClientRect()
   //     : { top: 0, right: 0, left: 0, bottom: 0, width: 0, height: 0 };
   // }
 
@@ -952,8 +979,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         }
       >
         <div
-          className={`daysContainer ${this.state.loading ? 'loading' : ''}`}
-          ref={this.daysContainerRef}
+          className={`calendarContainer ${this.state.loading ? 'loading' : ''}`}
+          ref={this.calendarContainerRef}
         >
           <div className="topRowsContainer">
             <ReactCSSTransitionReplace
@@ -990,7 +1017,17 @@ export default class CalendarCard extends React.Component<IProps, IState> {
               </div>
             </div>
           </div>
-          <div className="gridsContainer">
+          <div className="gridsContainer">{this.backgroundGrids}</div>
+          <div
+            className="daysContainer"
+            style={{
+              bottom: 0,
+              left: 0,
+              position: 'absolute',
+              right: 0,
+              top: 0,
+            }}
+          >
             {this.props.days.map((day, i) => (
               <Day
                 startLoadSide={
@@ -1063,6 +1100,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           this.currentLeftColumnIndex,
           this.currentLeftColumnIndex + this.state.columnsPerPage,
         ]);
+        this.updateParalaxGrids();
 
         updateStickyElements(true);
       }, boundTime);

@@ -5,7 +5,7 @@ import * as React from 'react';
 import CalendarDay from 'structures/CalendarDay';
 
 // import Grid from './Grid';
-import { GridP } from '.';
+// import { GridP } from '.';
 
 export interface IProps {
   rows: number;
@@ -37,12 +37,12 @@ export default class Day extends React.Component<IProps> {
   public render() {
     const {
       cols,
-      rows,
+      // rows,
       dayData,
       dayWidth,
-      cellHeight,
-      subGridColumns,
-      instantRender,
+      // cellHeight,
+      // subGridColumns,
+      // instantRender,
     } = this.props;
 
     return (
@@ -54,14 +54,14 @@ export default class Day extends React.Component<IProps> {
         id={`${dayData.id}`}
       >
         <div className="day">
-          <GridP
+          {/* <GridP
             width={parseFloat(dayWidth)}
             cellHeight={cellHeight}
             rows={rows}
             cols={cols}
             subGridColumns={subGridColumns}
             instantRender={instantRender}
-          />
+          /> */}
         </div>
       </div>
     );
