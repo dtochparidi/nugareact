@@ -98,5 +98,5 @@ export function getCellInfo(target: HTMLElement) {
 }
 
 export function calcGridsCount(clientWidth: number, dayWidth: number) {
-  return Math.ceil(clientWidth / dayWidth) + 1;  
+  return Math.ceil(clientWidth / dayWidth) * 4;
 }

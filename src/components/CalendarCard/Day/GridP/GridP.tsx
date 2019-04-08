@@ -54,6 +54,17 @@ export default class GridP extends React.Component<IProps, IState> {
         secondaryGrid.lineTo(xCoord, cellHeight * rows);
       }
 
+      // mark
+      const mark = new PIXI.Graphics();
+      mark.beginFill(0xf4e842);
+      mark.moveTo(0, 0);
+      mark.lineTo(100, 0);
+      mark.lineTo(100, 100);
+      mark.lineTo(0, 100);
+      mark.lineTo(0, 0);
+      mark.endFill();
+      container.addChild(mark);
+
       container.addChild(mainGrid);
       container.addChild(secondaryGrid);
 
@@ -108,6 +119,10 @@ export default class GridP extends React.Component<IProps, IState> {
 
       this.renderPIXI();
     }
+  }
+
+  public componentWillUnmount() {
+    this.renderer.destroy(true);
   }
 
   public renderPIXI() {

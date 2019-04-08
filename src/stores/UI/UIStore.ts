@@ -22,6 +22,7 @@ export default class UIStore {
       .hour(8),
     moment()
       .startOf('day')
+      // .hour(11),
       .hour(17),
   );
   @observable
