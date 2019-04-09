@@ -78,7 +78,7 @@ class App extends React.Component {
           fastMode={uiStore.fastMode}
           subGridColumns={uiStore.subGridColumns || 0}
           days={calendarDayStore.days}
-          requestCallback={calendarDayStore.loadDay}
+          requestCallback={calendarDayStore.loadDays}
           removeDays={calendarDayStore.removeDays}
           positionCount={uiStore.positionCount || 0}
           dayTimeRange={uiStore.dayTimeRange}

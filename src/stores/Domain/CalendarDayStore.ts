@@ -24,27 +24,30 @@ export default class CalendarDayStore {
   }
 
   @action.bound
-  public loadDay(date: IMoment): CalendarDay {
-    const day = new CalendarDay(date.startOf('day'));
+  public loadDays(dates: IMoment[]): CalendarDay[] {
+    const calendarDays = dates.map(date => {
+      const day = new CalendarDay(date.startOf('day'));
 
-    this.loadDayData(day);
+      this.loadDayData(day);
 
-    if (day.id in this.daysMap) return day;
+      if (day.id in this.daysMap) return day;
 
-    this.daysMap[day.id] = day;
+      this.daysMap[day.id] = day;
 
-    if (this.days.length === 0) this.days.push(day);
-    else {
-      let i = -1;
-      let insertIndex = null;
-      while (++i < this.days.length && insertIndex === null)
-        if (this.days[i].date.diff(day.date) > 0) insertIndex = i;
+      if (this.days.length === 0) this.days.push(day);
+      else {
+        let i = -1;
+        let insertIndex = null;
+        while (++i < this.days.length && insertIndex === null)
+          if (this.days[i].date.diff(day.date) > 0) insertIndex = i;
 
-      if (insertIndex !== null) this.days.splice(insertIndex, 0, day);
-      else this.days.push(day);
-    }
+        if (insertIndex !== null) this.days.splice(insertIndex, 0, day);
+        else this.days.push(day);
+      }
 
-    return day;
+      return day;
+    });
+    return calendarDays;
   }
 
   @action.bound
@@ -114,7 +117,7 @@ export default class CalendarDayStore {
 
     // check if we need to load day
     if (!newDay) {
-      this.loadDay(targetDate.clone().startOf('day'));
+      this.loadDays([targetDate.clone().startOf('day')]);
       return;
     }
 

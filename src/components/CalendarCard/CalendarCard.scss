@@ -61,8 +61,8 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
     width: $time-column-width;
     pointer-events: none;
 
-    grid-template-rows: $top-row-height repeat(
-        var(--rows-count),
+    grid-template-rows: ($top-row-height - $calendar-cell-height) repeat(
+        calc(var(--rows-count) + 1),
         $calendar-cell-height
       );
 
@@ -109,6 +109,8 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
           width: 100%;
           overflow: hidden;
 
+          margin-left: $time-column-width - $thin-width / 2;
+
           .stickyContainer {
             display: grid;
             grid-auto-flow: column;
@@ -136,6 +138,7 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
       position: relative;
 
       margin-bottom: $thin-width * -5;
+      margin-left: $time-column-width;
 
       .daysContainer {
         overflow: hidden;

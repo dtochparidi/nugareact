@@ -8,10 +8,10 @@ import CalendarCard from './CalendarCard';
 
 const moment = extendMoment(Moment);
 
-const dates: IMoment[] = [moment()];
+let dates: IMoment[] = [moment()];
 
-function requestDay(date: IMoment) {
-  dates.push(date);
+function requestDay(newDates: IMoment[]) {
+  dates = dates.concat(newDates);
 }
 
 function removeDays() {
