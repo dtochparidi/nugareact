@@ -582,10 +582,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const buffer = Math.max(containerRect.width, firstDayRect.width);
 
     const leftBorderOffset =
-      firstDayRect.left +
-      buffer -
-      (containerRect.left + pendingOffset) -
-      this.state.leftColumnWidth;
+      firstDayRect.left + buffer - (containerRect.left + pendingOffset);
     const rightBorderOffset =
       containerRect.right +
       buffer -
@@ -978,15 +975,16 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const { columnsPerDay, columnsPerPage, leftColumnWidth } = this.state;
     const containerWidth = (this.calendarContainerRef.current as HTMLDivElement)
       .offsetWidth;
-    const dayWidth = Math.floor(
+    const dayWidth =
+      // Math.floor(
       calcDaySize(
         columnsPerPage,
         columnsPerDay,
         containerWidth,
         thinWidth,
         leftColumnWidth,
-      ),
-    );
+        // ),
+      );
 
     return dayWidth <= 0 ? '100%' : `${dayWidth}px`;
   }
@@ -1016,6 +1014,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           {
             '--rows-count': positionCount,
             '--sub-columns-count:': subGridColumns,
+            visibility: this.state.firstLoad ? 'hidden' : 'visible',
           } as React.CSSProperties
         }
       >
