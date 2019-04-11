@@ -137,9 +137,9 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
                 flex-grow: 1;
                 flex-basis: 0;
 
-                &:first {
-                  border-left: none;
-                }
+                // &.first {
+                //   border-left: none;
+                // }
               }
             }
           }

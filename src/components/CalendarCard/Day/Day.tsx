@@ -54,7 +54,7 @@ export default class Day extends React.Component<IProps> {
         id={`${dayData.id}`}
       >
         <div className="day">
-          <span>{dayData.id}</span>
+          {/* <span>{dayData.id}</span> */}
           {/* <GridP
             width={parseFloat(dayWidth)}
             cellHeight={cellHeight}
