@@ -24,7 +24,7 @@ export default class CalendarDayStore {
   }
 
   @action.bound
-  public loadDays(dates: IMoment[]): CalendarDay[] {
+  public async loadDays(dates: IMoment[]): Promise<CalendarDay[]> {
     const calendarDays = dates.map(date => {
       const day = new CalendarDay(date.startOf('day'));
 
