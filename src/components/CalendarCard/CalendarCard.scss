@@ -116,31 +116,31 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
             grid-auto-flow: column;
 
             .topRow {
-              // display: grid;
-              // z-index: 101;
-
-              // height: $calendar-cell-height;
-
-              // overflow: hidden;
-
-              // grid-template-rows: $calendar-cell-height;
-              // grid-template-columns: repeat(var(--columns-count), 1fr);
-              // grid-auto-flow: column;
-
-              // will-change: left, width;
-
-              display: flex;
+              display: grid;
+              z-index: 101;
 
               height: $calendar-cell-height;
 
-              .item {
-                flex-grow: 1;
-                flex-basis: 0;
+              overflow: hidden;
 
-                // &.first {
-                //   border-left: none;
-                // }
-              }
+              grid-template-rows: $calendar-cell-height;
+              grid-template-columns: repeat(var(--columns-count), 1fr);
+              grid-auto-flow: column;
+
+              will-change: left, width;
+
+              // display: flex;
+
+              // height: $calendar-cell-height;
+
+              // .item {
+              //   flex-grow: 1;
+              //   flex-basis: 0;
+
+              //   // &.first {
+              //   //   border-left: none;
+              //   // }
+              // }
             }
           }
         }
@@ -165,7 +165,7 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
         .dayWrapper {
           height: 100%;
           display: inline-block;
-          // outline: solid black 1px;
+          outline: solid black 1px;
         }
       }
 

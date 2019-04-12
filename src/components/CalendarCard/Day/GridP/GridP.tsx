@@ -4,8 +4,8 @@ import moize from 'moize';
 import * as PIXI from 'pixi.js';
 import * as React from 'react';
 
-// import * as StyleVariables from '../../../../common/variables.scss';
-// const thinWidth = parseFloat(StyleVariables.thinWidth);
+import * as StyleVariables from '../../../../common/variables.scss';
+const thinWidth = parseFloat(StyleVariables.thinWidth);
 
 export interface IProps {
   children?: React.ReactNode;
@@ -38,7 +38,7 @@ export default class GridP extends React.Component<IProps, IState> {
       const mainGrid = new PIXI.Graphics();
       mainGrid.lineStyle(2, 0xd3d3d3, 1);
       for (let x = 0; x <= cols; x++) {
-        const xCoord = x * xStep; // + thinWidth;
+        const xCoord = x * xStep + thinWidth;
         mainGrid.moveTo(xCoord, 0);
         mainGrid.lineTo(xCoord, cellHeight * rows);
       }
@@ -53,7 +53,7 @@ export default class GridP extends React.Component<IProps, IState> {
       const secondaryGrid = new PIXI.Graphics();
       secondaryGrid.lineStyle(1, 0xd3d3d3, 1);
       for (let x = 0; x <= cols * subGridColumns; x++) {
-        const xCoord = x * xSecondStep; // + thinWidth;
+        const xCoord = x * xSecondStep + thinWidth;
         secondaryGrid.moveTo(xCoord, 0);
         secondaryGrid.lineTo(xCoord, cellHeight * rows);
       }

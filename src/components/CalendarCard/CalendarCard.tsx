@@ -126,6 +126,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   constructor(props: IProps) {
     super(props);
 
+    (window as any).calendarCard = this;
+
     this.calendarContainerRef = React.createRef();
     this.pageTurnEmitter = new Emitter();
 
@@ -579,7 +581,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const firstDayRect = firstDayElem.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
 
-    const buffer = Math.max(containerRect.width, firstDayRect.width);
+    const buffer = Math.max(containerRect.width, firstDayRect.width) * 1.5;
 
     const leftBorderOffset =
       firstDayRect.left + buffer - (containerRect.left + pendingOffset);
@@ -588,12 +590,12 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       buffer -
       (firstDayRect.left + firstDayRect.width * days.length + pendingOffset);
 
-    console.log(
-      leftBorderOffset,
-      firstDayRect.width,
-      '->',
-      leftBorderOffset / firstDayRect.width,
-    );
+    // console.log(
+    //   leftBorderOffset,
+    //   firstDayRect.width,
+    //   '->',
+    //   leftBorderOffset / firstDayRect.width,
+    // );
 
     let leftAddCount = Math.max(
       Math.round(leftBorderOffset / firstDayRect.width),
@@ -758,7 +760,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     this.currentDayNumber = this.props.days[dayIndex].date.date();
     this.currentDayIndex = dayIndex;
 
-    console.log(dayIndex, this.currentDayNumber);
+    // console.log(dayIndex, this.currentDayNumber);
 
     if (
       !this.monthStartDate ||
@@ -774,7 +776,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       this.currentLeftColumnIndex / this.state.columnsPerDay,
     );
 
-    console.log(this.currentLeftColumnIndex / this.state.columnsPerDay);
+    // console.log(this.currentLeftColumnIndex / this.state.columnsPerDay);
 
     this.updateCurrentDayData(dayIndex);
 
@@ -811,6 +813,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       gridsContainer.scrollLeft = gridFrom;
     }
 
+    // console.log(gridTo, gridsContainer.scrollWidth);
+
     if (!force)
       if (gridTo < gridFrom && daysContainer.scrollLeft < left) {
         gridFrom -= pageCeiledWidth;
@@ -825,6 +829,14 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       }
 
     // console.log(...[gridFrom, gridTo].map(Math.floor));
+
+    console.log(
+      Math.floor(
+        Math.abs(
+          daysContainer.scrollWidth - left - parseFloat(this.state.dayWidth),
+        ),
+      ),
+    );
 
     // setTimeout(() => {
     gridsContainer.scrollTo({
@@ -842,6 +854,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       left,
     });
 
+    console.log(force, Math.floor(left));
+
     if (force || Math.abs(left - daysContainer.scrollLeft) < 5) return;
 
     this.pageTurnEmitter.emit('freeze');
@@ -852,6 +866,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       clearTimeout(this.scrollingUpdateTimeout);
 
       const delta = Math.floor(Math.abs(daysContainer.scrollLeft - left));
+      // console.log(delta);
       if (delta > 5) return;
 
       daysContainer.removeEventListener('scroll', callback);
