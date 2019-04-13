@@ -70,6 +70,7 @@ export interface IState {
   stamps: IMoment[];
   firstLoad: boolean;
   gridsCount: number;
+  renderedDays: JSX.Element[];
 }
 
 export enum Direction {
@@ -163,6 +164,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       gridsCount: 0,
       leftColumnWidth: 30,
       loading: true,
+      renderedDays: [],
       requiredDays: [moment().startOf('day')],
       stamps,
     };
@@ -679,9 +681,53 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public componentDidUpdate(prevProps: IProps) {
-    if (this.props.days.length !== this.currentDaysCount)
+    if (this.props.days.length !== this.currentDaysCount) {
       this.currentDaysCount = this.props.days.length;
 
+      const { columnsPerDay, stamps, dayWidth } = this.state;
+      const {
+        days,
+        subGridColumns,
+        positionCount,
+        mainColumnStep,
+      } = this.props;
+      const instantRender = this.state.firstLoad;
+
+      // updateDays
+      const newRenderedDays = days.map((day, i) => {
+        const newKey = day.date.toString();
+        // return (
+        //   this.state.renderedDays.find(dd => dd.key === newKey) || (
+        return (
+          <Day
+            startLoadSide={
+              this.currentLeftColumnIndex <= this.state.columnsPerDay * i
+                ? 'left'
+                : 'right'
+            }
+            isDisplaying={this.visibilityMap[day.id]}
+            key={newKey}
+            rows={positionCount}
+            cols={columnsPerDay || 0}
+            dayData={day}
+            stamps={stamps}
+            dayWidth={dayWidth}
+            cellHeight={calendarCellHeight}
+            shifts={this.shifts[day.id]}
+            shiftsHash={this.shiftsHash[day.id]}
+            updateAppointment={this.props.updateAppointment}
+            subGridColumns={subGridColumns}
+            mainColumnStep={mainColumnStep}
+            movingId={this.movingId}
+            instantRender={instantRender}
+          />
+        );
+        //   )
+        // );
+      });
+
+      this.setState({ renderedDays: newRenderedDays });
+    }
     this.updateVisibilityMap();
 
     this.props.requestCallback(
@@ -1011,10 +1057,13 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   // }
 
   public render() {
-    const { columnsPerDay, stamps, dayWidth } = this.state;
-    const { days, subGridColumns, positionCount, mainColumnStep } = this.props;
+    // const { columnsPerDay, stamps, dayWidth } = this.state;
+    // const { days, subGridColumns, positionCount, mainColumnStep } = this.props;
 
-    const instantRender = this.state.firstLoad;
+    // const instantRender = this.state.firstLoad;
+
+    const { stamps, dayWidth } = this.state;
+    const { days, subGridColumns, positionCount } = this.props;
 
     days.forEach((day, i) => {
       const { id } = day;
@@ -1094,32 +1143,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                 />
               ))}
             </div>
-            <div className="daysContainer">
-              {this.props.days.map((day, i) => (
-                <Day
-                  startLoadSide={
-                    this.currentLeftColumnIndex <= this.state.columnsPerDay * i
-                      ? 'left'
-                      : 'right'
-                  }
-                  isDisplaying={this.visibilityMap[day.id]}
-                  key={day.date.toString()}
-                  rows={positionCount}
-                  cols={columnsPerDay || 0}
-                  dayData={day}
-                  stamps={stamps}
-                  dayWidth={dayWidth}
-                  cellHeight={calendarCellHeight}
-                  shifts={this.shifts[day.id]}
-                  shiftsHash={this.shiftsHash[day.id]}
-                  updateAppointment={this.props.updateAppointment}
-                  subGridColumns={subGridColumns}
-                  mainColumnStep={mainColumnStep}
-                  movingId={this.movingId}
-                  instantRender={instantRender}
-                />
-              ))}
-            </div>
+            <div className="daysContainer">{this.state.renderedDays}</div>
           </div>
         </div>
         <LeftColumn

@@ -8,11 +8,11 @@ import * as moment from 'moment';
 import * as React from 'react';
 import rootStore from 'stores/RootStore';
 
-import * as StyleVariables from '../../../../common/variables.scss';
 import Appointment from '../../../../structures/Appointment';
 
 import './AppointmentCell.scss';
 
+// import * as StyleVariables from '../../../../common/variables.scss';
 export interface IProps {
   appointment: Appointment;
   translateX?: number;
@@ -302,13 +302,15 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
       return null;
     }
 
-    const borderWidth = parseFloat(StyleVariables.thinWidth);
+    // const borderWidth = parseFloat(StyleVariables.thinWidth);
 
     translateX = translateX || 0;
     translateY = translateY || 0;
 
-    const offsetX = (Math.floor((translateX / 100) * 2) - 1) * borderWidth;
-    const offsetY = Math.floor((translateY / 100) * 2) * borderWidth;
+    // const offsetX = (Math.floor((translateX / 100) * 2) - 1) * borderWidth;
+    // const offsetY = Math.floor((translateY / 100) * 2) * borderWidth;
+    const offsetX = 0;
+    const offsetY = 0;
 
     const translated = true;
 

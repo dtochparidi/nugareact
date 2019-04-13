@@ -1,8 +1,8 @@
 import ICalendarDay from 'interfaces/ICalendarDay';
 import { action, observable } from 'mobx';
 import { Moment as IMoment } from 'moment';
-
 import * as moment from 'moment';
+
 import Appointment from './Appointment';
 
 export default class CalendarDay implements ICalendarDay {

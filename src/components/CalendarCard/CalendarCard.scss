@@ -170,6 +170,8 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
           height: 100%;
           width: 100%;
 
+          outline: solid black 1px;
+
           &.hidden > .day > .grid {
             display: none;
           }

@@ -18,9 +18,8 @@
   left: 0px;
   top: 0px;
 
-  // height: calc(var(--mainGridColumnWidth) * var(--sizeX));
-  // width: calc(#{$calendar-cell-height} * var(--sizeY));
   width: var(--mainGridColumnWidth);
+  // width: 200px;
   height: #{$calendar-cell-height};
 
   touch-action: none;

@@ -1,5 +1,5 @@
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
-import { observer } from 'mobx-react';
+import { reaction } from 'mobx';
 import * as moment from 'moment';
 import * as React from 'react';
 import Appointment from 'structures/Appointment';
@@ -37,20 +37,42 @@ export interface IProps {
   startLoadSide: 'left' | 'right';
 }
 
-@observer
-export default class Day extends React.Component<IProps> {
-  public render() {
+export interface IState {
+  apps: JSX.Element[];
+}
+
+export default class Day extends React.Component<IProps, IState> {
+  constructor(props: IProps) {
+    super(props);
+
+    // appointments change reaction
+    reaction(
+      // OPTIMIZE
+      () =>
+        Object.values(this.props.dayData.appointments)
+          .map(app => app.stateHash)
+          .join(),
+      apps => {
+        this.setState({
+          apps: this.generateApps(),
+        });
+
+        console.log('apps updated');
+      },
+    );
+
+    this.state = {
+      apps: this.generateApps(),
+    };
+  }
+
+  public generateApps() {
     const {
-      cols,
-      // rows,
       dayData,
-      dayWidth,
       updateAppointment,
       stamps,
       subGridColumns,
       mainColumnStep,
-      // cellHeight,
-      // instantRender,
     } = this.props;
 
     const gridColumnDuration = moment.duration(
@@ -58,6 +80,36 @@ export default class Day extends React.Component<IProps> {
       'millisecond',
     );
     const minutesStep = mainColumnStep.asMinutes();
+
+    return Object.values(dayData.appointments).map(app => {
+      const x = Math.floor(
+        (app.date.hour() * 60 +
+          app.date.minute() -
+          (stamps[0].hour() * 60 + stamps[0].minute())) /
+          minutesStep,
+      );
+      const y = app.position;
+
+      return (
+        <AppointmentCell
+          isDisplaying={true}
+          moving={false}
+          key={app.uniqueId}
+          translateX={x * 100}
+          translateY={y * 100}
+          appointment={app as Appointment}
+          updateAppointment={updateAppointment}
+          subGridColumns={subGridColumns}
+          gridColumnDuration={gridColumnDuration}
+        />
+      );
+    });
+  }
+
+  public render() {
+    const { cols, dayData, dayWidth } = this.props;
+
+    console.log('render');
 
     return (
       <div
@@ -67,31 +119,7 @@ export default class Day extends React.Component<IProps> {
         }
         id={`${dayData.id}`}
       >
-        <div className="day">
-          {Object.values(dayData.appointments).map(app => {
-            const x = Math.floor(
-              (app.date.hour() * 60 +
-                app.date.minute() -
-                (stamps[0].hour() * 60 + stamps[0].minute())) /
-                minutesStep,
-            );
-            const y = app.position;
-
-            return (
-              <AppointmentCell
-                isDisplaying={true}
-                moving={false}
-                key={app.uniqueId}
-                translateX={x * 100}
-                translateY={y * 100}
-                appointment={app as Appointment}
-                updateAppointment={updateAppointment}
-                subGridColumns={subGridColumns}
-                gridColumnDuration={gridColumnDuration}
-              />
-            );
-          })}
-        </div>
+        <div className="day">{this.state.apps}</div>
       </div>
     );
   }
