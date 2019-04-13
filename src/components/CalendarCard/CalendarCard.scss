@@ -21,6 +21,7 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
 
   --rows-count: 5;
   --sub-columns-count: 5;
+  --mainGridColumnWidth: 100px;
 
   display: block;
   width: auto !important;
@@ -163,17 +164,6 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
         top: 0;
 
         .dayWrapper {
-          height: 100%;
-          display: inline-block;
-          outline: solid black 1px;
-        }
-      }
-
-      .gridsContainer {
-        width: 100%;
-        overflow: hidden;
-
-        .dayWrapper {
           --columns-count: 6;
 
           display: inline-block;
@@ -189,6 +179,8 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
           }
 
           .day {
+            position: relative;
+
             display: grid;
             height: 100%;
             width: 100%;
@@ -252,6 +244,11 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
             }
           }
         }
+      }
+
+      .gridsContainer {
+        width: 100%;
+        overflow: hidden;
       }
     }
   }

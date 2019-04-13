@@ -1027,6 +1027,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         cardClass="calendarCard"
         style={
           {
+            '--mainGridColumnWidth': `${this.state.cellWidth}px`,
             '--rows-count': positionCount,
             '--sub-columns-count:': subGridColumns,
             visibility: this.state.firstLoad ? 'hidden' : 'visible',
