@@ -14,12 +14,14 @@ import './AppointmentCell.scss';
 
 // import * as StyleVariables from '../../../../common/variables.scss';
 export interface IProps {
+  style?: React.CSSProperties;
   appointment: Appointment;
   translateX?: number;
   translateY?: number;
   moving: boolean;
   subGridColumns: number;
   gridColumnDuration: moment.Duration;
+  getCellWidth: () => number;
   updateAppointment: (props: IUpdateAppProps) => void;
   isDisplaying: boolean;
 }
@@ -295,7 +297,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     } = this.props.appointment;
 
     let { translateX, translateY } = this.props;
-    const { gridColumnDuration, moving } = this.props;
+    const { gridColumnDuration, moving, getCellWidth } = this.props;
 
     if (!personInstance) {
       console.warn('missing instance');
@@ -309,14 +311,17 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
 
     // const offsetX = (Math.floor((translateX / 100) * 2) - 1) * borderWidth;
     // const offsetY = Math.floor((translateY / 100) * 2) * borderWidth;
-    const offsetX = 0;
-    const offsetY = 0;
+    // const offsetX = 0;
+    // const offsetY = 0;
 
     const translated = true;
 
     const widthScale = duration.asMinutes() / gridColumnDuration.asMinutes();
-    const widthCorrect = Math.floor(widthScale) * 2;
-    const width = `calc(${widthScale * 100}% + ${widthCorrect}px)`;
+    // const widthCorrect = Math.floor(widthScale) * 2;
+
+    const cellWidth = getCellWidth();
+    const width = `${cellWidth * widthScale}px`;
+    // const width = `calc(${widthScale * 100}% + ${widthCorrect}px)`;
 
     const person = personInstance as IPerson;
 
@@ -327,13 +332,15 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
         } ${overlapping ? 'overlapping' : ''}`}
         id={identifier}
         onWheel={this.onMouseWheelHandler}
-        style={
-          translated && !moving
-            ? {
-                transform: `translate(calc(${translateX}% + ${offsetX}px), calc(${translateY}% + ${offsetY}px))`,
-              }
-            : {}
-        }
+        style={this.props.style}
+        // style={Object.assign(
+        //   this.props.style || {},
+        //   translated && !moving
+        //     ? {
+        //         transform: `translate(calc(${translateX}% + ${offsetX}px), calc(${translateY}% + ${offsetY}px))`,
+        //       }
+        //     : {},
+        // )}
       >
         <div
           className="container"

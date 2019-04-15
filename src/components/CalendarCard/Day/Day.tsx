@@ -1,3 +1,5 @@
+import { LazyTask } from '@levabala/lazytask/build/dist';
+import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
 import { reaction } from 'mobx';
 import * as moment from 'moment';
@@ -19,12 +21,13 @@ export interface IProps {
   stamps: moment.Moment[];
   mainColumnStep: moment.Duration;
   dayWidth: string;
+  getCellWidth: () => number;
   cellHeight: number;
   subGridColumns: number;
   movingId: string;
   shifts: {
     [x: number]: {
-      [x: number]: {
+      [y: number]: {
         dx: number;
         dy: number;
       };
@@ -53,26 +56,27 @@ export default class Day extends React.Component<IProps, IState> {
           .map(app => app.stateHash)
           .join(),
       apps => {
-        this.setState({
-          apps: this.generateApps(),
-        });
-
-        console.log('apps updated');
+        this.updateApps(), console.log('apps updated');
       },
     );
 
     this.state = {
-      apps: this.generateApps(),
+      apps: [],
     };
+
+    this.updateApps();
   }
 
-  public generateApps() {
+  public updateApps() {
     const {
       dayData,
       updateAppointment,
       stamps,
       subGridColumns,
       mainColumnStep,
+      getCellWidth,
+      cellHeight,
+      shifts,
     } = this.props;
 
     const gridColumnDuration = moment.duration(
@@ -81,7 +85,9 @@ export default class Day extends React.Component<IProps, IState> {
     );
     const minutesStep = mainColumnStep.asMinutes();
 
-    return Object.values(dayData.appointments).map(app => {
+    const cellWidth = getCellWidth();
+
+    const generateAppElement = (app: Appointment) => {
       const x = Math.floor(
         (app.date.hour() * 60 +
           app.date.minute() -
@@ -90,18 +96,52 @@ export default class Day extends React.Component<IProps, IState> {
       );
       const y = app.position;
 
+      const shift = (x in shifts
+        ? y in shifts[x]
+          ? shifts[x][y]
+          : null
+        : null) || { dx: 0, dy: 0 };
+
+      const stamp = this.props.stamps[x];
+      const { dx, dy } = shift;
+      const d = app.date;
+      const s = d
+        .clone()
+        .hour(stamp.hour())
+        .minute(stamp.minute());
+
+      const coeffX = d.diff(s, 'second') / gridColumnDuration.asSeconds() + dx;
+
+      const coeffY = dy;
+
       return (
         <AppointmentCell
+          style={{
+            left: (x + coeffX) * cellWidth,
+            top: (y + coeffY) * cellHeight,
+          }}
+          getCellWidth={getCellWidth}
           isDisplaying={true}
           moving={false}
           key={app.uniqueId}
-          translateX={x * 100}
-          translateY={y * 100}
+          // translateX={x * 100}
+          // translateY={y * 100}
           appointment={app as Appointment}
           updateAppointment={updateAppointment}
           subGridColumns={subGridColumns}
           gridColumnDuration={gridColumnDuration}
         />
+      );
+    };
+
+    Object.values(dayData.appointments).forEach(app => {
+      lazyTaskManager.addTask(
+        new LazyTask(() => {
+          const appElem = generateAppElement(app);
+          this.state.apps.push(appElem);
+
+          this.setState({ apps: this.state.apps });
+        }),
       );
     });
   }

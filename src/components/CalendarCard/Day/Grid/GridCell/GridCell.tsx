@@ -56,8 +56,11 @@ const GridCell = ({
       coeffY = dy * 100;
     }
 
+    const getCellWidth = () => 0;
+
     return (
       <AppointmentCell
+        getCellWidth={getCellWidth}
         isDisplaying={isDisplaying.value}
         moving={isMoving}
         key={appointment.uniqueId}
