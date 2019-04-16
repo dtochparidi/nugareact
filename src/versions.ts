@@ -55,6 +55,13 @@ const versions: Array<[string, string]> = [
 Нагрузка дня начинается с ближней к пользователю стороны
   `,
   ],
+  [
+    'Update1.4',
+    `
+# Paralax Grid
+updated.
+  `,
+  ],
 ];
 
 export default versions;

@@ -88,6 +88,10 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
 
     will-change: scroll-position;
 
+    &.loading > .mainContainer > .daysContainer {
+      visibility: hidden;
+    }
+
     &.loading > .mainContainer > .gridsContainer {
       visibility: hidden;
     }
