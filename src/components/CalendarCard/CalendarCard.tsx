@@ -579,18 +579,19 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const { days } = this.props;
     const firstDay = days[0];
     const firstDayElem = document.getElementById(firstDay.id) as HTMLElement;
+    const lastDay = days[days.length - 1];
+    const lastDayElem = document.getElementById(lastDay.id) as HTMLElement;
 
     const firstDayRect = firstDayElem.getBoundingClientRect();
+    const lastDayRect = lastDayElem.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
 
-    const buffer = Math.max(containerRect.width, firstDayRect.width) * 1.5;
+    const dayWidth = Math.max(containerRect.width, firstDayRect.width);
+    const buffer = dayWidth * 1;
 
     const leftBorderOffset =
       firstDayRect.left + buffer - (containerRect.left + pendingOffset);
-    const rightBorderOffset =
-      containerRect.right +
-      buffer -
-      (firstDayRect.left + firstDayRect.width * days.length + pendingOffset);
+    const rightBorderOffset = Math.max(buffer - lastDayRect.right + dayWidth);
 
     // console.log(
     //   leftBorderOffset,
@@ -607,6 +608,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       Math.round(rightBorderOffset / firstDayRect.width),
       0,
     );
+
+    // console.log(rightBorderOffset, firstDayRect.width);
+    // console.log('left:', leftAddCount, 'right:', rightAddCount);
 
     const changeDeltaAbs = leftAddCount + rightAddCount;
 
@@ -684,6 +688,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     if (this.props.days.length !== this.currentDaysCount)
       this.currentDaysCount = this.props.days.length;
 
+    console.log(this.props.days.length);
+
     // const { columnsPerDay, stamps, dayWidth } = this.state;
     // const {
     //   days,
@@ -733,13 +739,13 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     this.updateVisibilityMap();
 
-    this.props.requestCallback(
-      this.state.requiredDays
-        .filter(day => !this.lazyLoadDays.includes(day))
-        .filter(
-          day => !this.props.days.find(d => d.date.diff(day, 'days') === 0),
-        ),
-    );
+    const daysToLoad = this.state.requiredDays
+      .filter(day => !this.lazyLoadDays.includes(day))
+      .filter(
+        day => !this.props.days.find(d => d.date.diff(day, 'days') === 0),
+      );
+
+    if (daysToLoad.length) this.props.requestCallback(daysToLoad);
 
     if (this.state.firstLoad && this.firstLoadDays.length) {
       const firstDaysLoaded = this.firstLoadDays.every(
@@ -858,7 +864,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     let gridTo =
       left - Math.floor(left / pageCeiledWidth - 1) * pageCeiledWidth;
 
-    console.log(left, gridTo);
+    // console.log(left, gridTo);
 
     if (force && gridFrom < pageCeiledWidth) {
       gridFrom += cellWidth; // - this.state.leftColumnWidth;

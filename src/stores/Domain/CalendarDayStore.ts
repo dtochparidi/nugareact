@@ -2,7 +2,7 @@ import fetchDay from 'fetchers/DayFetcher';
 import IAppointment from 'interfaces/IAppointment';
 import ICalendarDay from 'interfaces/ICalendarDay';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
-import { action, observable } from 'mobx';
+import { action, observable, transaction } from 'mobx';
 import { Moment as IMoment } from 'moment';
 import * as moment from 'moment';
 import Appointment from 'structures/Appointment';
@@ -25,29 +25,44 @@ export default class CalendarDayStore {
 
   @action.bound
   public async loadDays(dates: IMoment[]): Promise<CalendarDay[]> {
-    const calendarDays = dates.map(date => {
-      const day = new CalendarDay(date.startOf('day'));
+    return transaction(() => {
+      performance.mark('load days start');
 
-      this.loadDayData(day);
+      let pushes = 0;
+      const calendarDays = dates.map(date => {
+        const day = new CalendarDay(date.startOf('day'));
 
-      if (day.id in this.daysMap) return day;
+        this.loadDayData(day);
 
-      this.daysMap[day.id] = day;
+        if (day.id in this.daysMap) return day;
 
-      if (this.days.length === 0) this.days.push(day);
-      else {
-        let i = -1;
-        let insertIndex = null;
-        while (++i < this.days.length && insertIndex === null)
-          if (this.days[i].date.diff(day.date) > 0) insertIndex = i;
+        this.daysMap[day.id] = day;
 
-        if (insertIndex !== null) this.days.splice(insertIndex, 0, day);
-        else this.days.push(day);
-      }
+        if (this.days.length === 0) {
+          this.days.push(day);
+          pushes++;
+        } else {
+          let i = -1;
+          let insertIndex = null;
+          while (++i < this.days.length && insertIndex === null)
+            if (this.days[i].date.diff(day.date) > 0) insertIndex = i;
 
-      return day;
+          if (insertIndex !== null) this.days.splice(insertIndex, 0, day);
+          else this.days.push(day);
+
+          pushes++;
+        }
+
+        return day;
+      });
+
+      console.log('pushes:', pushes);
+
+      performance.mark('load days end');
+      performance.measure('load days', 'load days start', 'load days end');
+
+      return calendarDays;
     });
-    return calendarDays;
   }
 
   @action.bound

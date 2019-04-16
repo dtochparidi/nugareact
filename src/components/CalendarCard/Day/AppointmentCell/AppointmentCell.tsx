@@ -109,7 +109,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
   }
 
   public updateLayout = (positiveResizing = false) => {
-    if (this.unMounted) return;
+    if (this.unMounted || !this.props.isDisplaying) return;
 
     const elem = this.widthDivRef.current;
     if (!elem) {
@@ -213,9 +213,8 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
   }
 
   public componentDidMount() {
-    const elem = this.widthDivRef.current as HTMLElement;
-
-    elem.onresize = (e: UIEvent) => this.updateLayout((e.detail as any).dx > 0);
+    // const elem = this.widthDivRef.current as HTMLElement;
+    // elem.onresize = (e: UIEvent) => this.updateLayout((e.detail as any).dx > 0);
 
     if (widthCache[this.props.appointment.uniqueId])
       this.appLoadedHandler(true);
@@ -295,6 +294,9 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
       duration,
       overlapping,
     } = this.props.appointment;
+
+    const { isDisplaying } = this.props;
+    if (!isDisplaying) return null;
 
     let { translateX, translateY } = this.props;
     const { gridColumnDuration, moving, getCellWidth } = this.props;
