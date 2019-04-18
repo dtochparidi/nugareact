@@ -3,6 +3,14 @@
   "typescriptHero.imports.grouping": ["Modules", "Workspace", "Plains"],
   "todohighlight.keywords": [
     {
+      "text": "MARK",
+      // "border": "1px solid red",
+      "borderRadius": "2px", //NOTE: using borderRadius along with `border` or you will see nothing change
+      "backgroundColor": "transparent",
+      "color": "orange"
+      //other styling properties goes here ...
+    },
+    {
       "text": "TODO:",
       // "border": "1px solid red",
       "borderRadius": "2px", //NOTE: using borderRadius along with `border` or you will see nothing change

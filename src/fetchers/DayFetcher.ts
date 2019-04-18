@@ -135,6 +135,7 @@ async function generateAppointments(
 
   return (await Promise.all(
     new Array(random(255, 250))
+      // new Array(random(1, 1))
       // appointments: new Array(random(3, 2))
       .fill(null)
       .map(

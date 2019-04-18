@@ -25,7 +25,7 @@ import ToggleArea from './ToggleArea';
 import * as Emitter from 'events';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
 import { action, observable } from 'mobx';
-import rootStore from 'stores/RootStore';
+// import rootStore from 'stores/RootStore';
 import MonthRow from './Day/MonthRow';
 import TopRow from './Day/TopRow';
 import { generateDropzoneConfig } from './modules/dropzoneConfig';
@@ -100,7 +100,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   public currentDayNumber: number;
   @observable
   public monthStartDate: IMoment = moment();
-  @observable
+  // @observable
   public visibilityMap: { [dayId: string]: boolean } = {};
   public currentDayIndex: number = 0;
 
@@ -630,6 +630,15 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       );
 
     beforeStateUpdate();
+
+    const daysToLoad = this.state.requiredDays
+      .filter(day => !this.lazyLoadDays.includes(day))
+      .filter(
+        day => !this.props.days.find(d => d.date.diff(day, 'days') === 0),
+      );
+
+    if (daysToLoad.length) this.props.requestCallback(daysToLoad);
+
     this.setState({ requiredDays: this.state.requiredDays });
 
     return compensate && changeDeltaAbs > 0;
@@ -689,54 +698,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       this.currentDaysCount = this.props.days.length;
 
     console.log(this.props.days.length);
-
-    // const { columnsPerDay, stamps, dayWidth } = this.state;
-    // const {
-    //   days,
-    //   subGridColumns,
-    //   positionCount,
-    //   mainColumnStep,
-    // } = this.props;
-    // const instantRender = this.state.firstLoad;
-
-    // const cellWidthGetter = () => this.state.cellWidth;
-
-    // // updateDays
-    // const newRenderedDays = days.map((day, i) => {
-    //   const newKey = day.date.toString();
-    //   // return (
-    //   //   this.state.renderedDays.find(dd => dd.key === newKey) || (
-    //   return (
-    //     <Day
-    //       startLoadSide={
-    //         this.currentLeftColumnIndex <= this.state.columnsPerDay * i
-    //           ? 'left'
-    //           : 'right'
-    //       }
-    //       getCellWidth={cellWidthGetter}
-    //       isDisplaying={this.visibilityMap[day.id]}
-    //       key={newKey}
-    //       rows={positionCount}
-    //       cols={columnsPerDay || 0}
-    //       dayData={day}
-    //       stamps={stamps}
-    //       dayWidth={dayWidth}
-    //       cellHeight={calendarCellHeight}
-    //       shifts={this.shifts[day.id]}
-    //       shiftsHash={this.shiftsHash[day.id]}
-    //       updateAppointment={this.props.updateAppointment}
-    //       subGridColumns={subGridColumns}
-    //       mainColumnStep={mainColumnStep}
-    //       movingId={this.movingId}
-    //       instantRender={instantRender}
-    //     />
-    //   );
-    //   //   )
-    //   // );
-    // });
-
-    // this.setState({ renderedDays: newRenderedDays });
-
     this.updateVisibilityMap();
 
     const daysToLoad = this.state.requiredDays
@@ -791,18 +752,19 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     this.currentLeftColumnIndex += columnsPerTurn * delta;
 
-    if (delta > 0)
-      this.updateVisibility([
-        this.currentLeftColumnIndex - columnsPerTurn,
-        this.currentLeftColumnIndex + this.state.columnsPerPage,
-      ]);
-    else
-      this.updateVisibility([
-        this.currentLeftColumnIndex,
-        this.currentLeftColumnIndex +
-          this.state.columnsPerPage +
-          columnsPerTurn,
-      ]);
+    // MARK
+    // if (delta > 0)
+    //   this.updateVisibility([
+    //     this.currentLeftColumnIndex - columnsPerTurn,
+    //     this.currentLeftColumnIndex + this.state.columnsPerPage,
+    //   ]);
+    // else
+    //   this.updateVisibility([
+    //     this.currentLeftColumnIndex,
+    //     this.currentLeftColumnIndex +
+    //       this.state.columnsPerPage +
+    //       columnsPerTurn,
+    //   ]);
 
     this.updateScroll();
   }
@@ -845,11 +807,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       '.topRowsContainer .scrollingContainer',
     ) as HTMLElement;
 
-    // const daysListWidth = daysContainer.scrollWidth;
-    // const cellWidth =
-    //   daysListWidth / this.state.columnsPerDay / this.state.requiredDays.length;
+    const daysListWidth = daysContainer.scrollWidth;
+    const cellWidth =
+      daysListWidth / this.state.columnsPerDay / this.state.requiredDays.length;
 
-    const cellWidth = this.state.cellWidth;
+    // const cellWidth = this.state.cellWidth;
 
     const left = this.currentLeftColumnIndex * cellWidth; // - this.state.leftColumnWidth;
 
@@ -919,7 +881,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     this.pageTurnEmitter.emit('freeze');
     this.isScrolling = true;
-    rootStore.uiStore.setScrolling(true);
+    // rootStore.uiStore.setScrolling(true);
 
     const callback = () => {
       clearTimeout(this.scrollingUpdateTimeout);
@@ -930,19 +892,20 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
       daysContainer.removeEventListener('scroll', callback);
 
-      this.updateVisibility([
-        this.currentLeftColumnIndex,
-        this.currentLeftColumnIndex + this.state.columnsPerPage,
-      ]);
+      // MARK
+      // this.updateVisibility([
+      //   this.currentLeftColumnIndex,
+      //   this.currentLeftColumnIndex + this.state.columnsPerPage,
+      // ]);
 
       this.isScrolling = false;
 
       this.pageTurnEmitter.emit('resume');
 
-      this.scrollingUpdateTimeout = setTimeout(
-        () => rootStore.uiStore.setScrolling(false),
-        200,
-      );
+      // this.scrollingUpdateTimeout = setTimeout(
+      //   () => rootStore.uiStore.setScrolling(false),
+      //   200,
+      // );
     };
 
     callback();
@@ -950,7 +913,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     // }, 400);
   }
 
-  @action
+  // @action
   public updateVisibility(indexes: number[]) {
     if ((window as any).lockVisibility) return;
 
