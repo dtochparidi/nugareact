@@ -23,7 +23,7 @@ export interface IProps {
   gridColumnDuration: moment.Duration;
   getCellWidth: () => number;
   updateAppointment: (props: IUpdateAppProps) => void;
-  isDisplaying: boolean;
+  isDisplaying: { value: boolean };
 }
 
 export interface IState {
@@ -98,9 +98,9 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
       );
 
     reaction(
-      () => this.props.isDisplaying,
+      () => this.props.isDisplaying.value,
       val => {
-        if (this.props.isDisplaying)
+        if (this.props.isDisplaying.value)
           lazyTaskManager.addTask(
             new LazyTask(() => this.appLoadedHandler(), 1, condFun),
           );
@@ -109,7 +109,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
   }
 
   public updateLayout = (positiveResizing = false) => {
-    if (this.unMounted || !this.props.isDisplaying) return;
+    if (this.unMounted || !this.props.isDisplaying.value) return;
 
     const elem = this.widthDivRef.current;
     if (!elem) {
@@ -296,7 +296,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     } = this.props.appointment;
 
     const { isDisplaying } = this.props;
-    if (!isDisplaying) return null;
+    if (!isDisplaying.value) return null;
 
     let { translateX, translateY } = this.props;
     const { gridColumnDuration, moving, getCellWidth } = this.props;

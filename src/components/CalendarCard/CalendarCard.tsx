@@ -639,7 +639,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     if (daysToLoad.length) this.props.requestCallback(daysToLoad);
 
-    this.setState({ requiredDays: this.state.requiredDays });
+    // this.setState({ requiredDays: this.state.requiredDays });
 
     return compensate && changeDeltaAbs > 0;
   }
@@ -788,6 +788,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public updateScroll(force = false) {
+    console.trace();
+    console.log(`update scroll (forced: ${force})`);
     const container = this.calendarContainerRef.current as HTMLDivElement;
     const dayIndex = Math.floor(
       this.currentLeftColumnIndex / this.state.columnsPerDay,
@@ -849,15 +851,15 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         gridsContainer.scrollLeft = gridFrom;
       }
 
-    // console.log(...[gridFrom, gridTo].map(Math.floor));
+    console.log(...[gridFrom, gridTo].map(Math.floor));
 
-    console.log(
-      Math.floor(
-        Math.abs(
-          daysContainer.scrollWidth - left - parseFloat(this.state.dayWidth),
-        ),
-      ),
-    );
+    // console.log(
+    //   Math.floor(
+    //     Math.abs(
+    //       daysContainer.scrollWidth - left - parseFloat(this.state.dayWidth),
+    //     ),
+    //   ),
+    // );
 
     // setTimeout(() => {
     gridsContainer.scrollTo({
@@ -875,7 +877,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       left,
     });
 
-    console.log(force, Math.floor(left));
+    // console.log(force, Math.floor(left));
 
     if (force || Math.abs(left - daysContainer.scrollLeft) < 5) return;
 
@@ -887,7 +889,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       clearTimeout(this.scrollingUpdateTimeout);
 
       const delta = Math.floor(Math.abs(daysContainer.scrollLeft - left));
-      // console.log(delta);
+      // const delta2 = Math.floor(Math.abs(gridsContainer.scrollLeft - gridTo));
+      // console.log(delta, '/', delta2);
       if (delta > 5) return;
 
       daysContainer.removeEventListener('scroll', callback);
