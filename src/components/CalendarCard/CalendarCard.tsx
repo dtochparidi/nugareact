@@ -71,6 +71,7 @@ export interface IState {
   firstLoad: boolean;
   gridsCount: number;
   renderedDays: JSX.Element[];
+  gridsContainer: JSX.Element;
 }
 
 export enum Direction {
@@ -161,6 +162,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       columnsPerPage: 4,
       dayWidth: '100%',
       firstLoad: true,
+      gridsContainer: <div className="gridsContainer" />,
       gridsCount: 0,
       leftColumnWidth: 30,
       loading: true,
@@ -566,7 +568,25 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       parseFloat(this.state.dayWidth),
     );
 
-    if (this.state.gridsCount !== gridsCount) this.setState({ gridsCount });
+    const gridsContainer = (
+      <div className="gridsContainer">
+        {new Array(gridsCount).fill(null).map((v, i) => (
+          <GridP
+            style={{ display: 'inline-block' }}
+            key={i}
+            width={parseFloat(this.state.dayWidth)}
+            cellHeight={calendarCellHeight}
+            rows={this.props.positionCount}
+            cols={this.state.columnsPerDay}
+            subGridColumns={this.props.subGridColumns}
+            instantRender={true}
+          />
+        ))}
+      </div>
+    );
+
+    if (this.state.gridsCount !== gridsCount)
+      this.setState({ gridsCount, gridsContainer });
   }
 
   public updateRequiredDays(
@@ -788,7 +808,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public updateScroll(force = false) {
-    console.trace();
+    // console.trace();
     console.log(`update scroll (forced: ${force})`);
     const container = this.calendarContainerRef.current as HTMLDivElement;
     const dayIndex = Math.floor(
@@ -809,7 +829,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       '.topRowsContainer .scrollingContainer',
     ) as HTMLElement;
 
-    const daysListWidth = daysContainer.scrollWidth;
+    // const daysListWidth = daysContainer.scrollWidth;
+    const daysListWidth =
+      parseFloat(this.state.dayWidth) * this.props.days.length;
     const cellWidth =
       daysListWidth / this.state.columnsPerDay / this.state.requiredDays.length;
 
@@ -828,15 +850,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     let gridTo =
       left - Math.floor(left / pageCeiledWidth - 1) * pageCeiledWidth;
 
-    // console.log(left, gridTo);
-
     if (force && gridFrom < pageCeiledWidth) {
       gridFrom += cellWidth; // - this.state.leftColumnWidth;
 
       gridsContainer.scrollLeft = gridFrom;
     }
-
-    // console.log(gridTo, gridsContainer.scrollWidth);
 
     if (!force)
       if (gridTo < gridFrom && daysContainer.scrollLeft < left) {
@@ -850,16 +868,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
         gridsContainer.scrollLeft = gridFrom;
       }
-
-    console.log(...[gridFrom, gridTo].map(Math.floor));
-
-    // console.log(
-    //   Math.floor(
-    //     Math.abs(
-    //       daysContainer.scrollWidth - left - parseFloat(this.state.dayWidth),
-    //     ),
-    //   ),
-    // );
 
     // setTimeout(() => {
     gridsContainer.scrollTo({
@@ -1116,20 +1124,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
             </div>
           </div>
           <div className="mainContainer">
-            <div className="gridsContainer">
-              {new Array(this.state.gridsCount).fill(null).map((v, i) => (
-                <GridP
-                  style={{ display: 'inline-block' }}
-                  key={i}
-                  width={parseFloat(this.state.dayWidth)}
-                  cellHeight={calendarCellHeight}
-                  rows={this.props.positionCount}
-                  cols={this.state.columnsPerDay}
-                  subGridColumns={this.props.subGridColumns}
-                  instantRender={true}
-                />
-              ))}
-            </div>
+            {this.state.gridsContainer}
             {/* <div className="daysContainer">{this.state.renderedDays}</div> */}
             <div className="daysContainer">
               {days.map((day, i) => (
