@@ -25,7 +25,7 @@ import ToggleArea from './ToggleArea';
 import * as Emitter from 'events';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
 import { action, observable } from 'mobx';
-// import rootStore from 'stores/RootStore';
+import rootStore from 'stores/RootStore';
 import MonthRow from './Day/MonthRow';
 import TopRow from './Day/TopRow';
 import { generateDropzoneConfig } from './modules/dropzoneConfig';
@@ -773,18 +773,18 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     this.currentLeftColumnIndex += columnsPerTurn * delta;
 
     // MARK
-    // if (delta > 0)
-    //   this.updateVisibility([
-    //     this.currentLeftColumnIndex - columnsPerTurn,
-    //     this.currentLeftColumnIndex + this.state.columnsPerPage,
-    //   ]);
-    // else
-    //   this.updateVisibility([
-    //     this.currentLeftColumnIndex,
-    //     this.currentLeftColumnIndex +
-    //       this.state.columnsPerPage +
-    //       columnsPerTurn,
-    //   ]);
+    if (delta > 0)
+      this.updateVisibility([
+        this.currentLeftColumnIndex - columnsPerTurn,
+        this.currentLeftColumnIndex + this.state.columnsPerPage,
+      ]);
+    else
+      this.updateVisibility([
+        this.currentLeftColumnIndex,
+        this.currentLeftColumnIndex +
+          this.state.columnsPerPage +
+          columnsPerTurn,
+      ]);
 
     this.updateScroll();
   }
@@ -891,7 +891,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     this.pageTurnEmitter.emit('freeze');
     this.isScrolling = true;
-    // rootStore.uiStore.setScrolling(true);
+    rootStore.uiStore.setScrolling(true);
 
     const callback = () => {
       clearTimeout(this.scrollingUpdateTimeout);
@@ -904,25 +904,29 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       daysContainer.removeEventListener('scroll', callback);
 
       // MARK
-      // this.updateVisibility([
-      //   this.currentLeftColumnIndex,
-      //   this.currentLeftColumnIndex + this.state.columnsPerPage,
-      // ]);
+      this.updateVisibility([
+        this.currentLeftColumnIndex,
+        this.currentLeftColumnIndex + this.state.columnsPerPage,
+      ]);
 
       this.isScrolling = false;
 
       this.pageTurnEmitter.emit('resume');
 
-      // this.scrollingUpdateTimeout = setTimeout(
-      //   () => rootStore.uiStore.setScrolling(false),
-      //   200,
-      // );
+      this.scrollingUpdateTimeout = setTimeout(
+        () => rootStore.uiStore.setScrolling(false),
+        200,
+      );
     };
 
     callback();
     daysContainer.addEventListener('scroll', callback);
     // }, 400);
   }
+
+  // public updateScrollingState (state: boolean) {
+
+  // }
 
   // @action
   public updateVisibility(indexes: number[]) {
@@ -947,6 +951,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         child.classList.add('hidden');
         this.visibilityMap[day.id] = false;
       }
+
+      // if (index >= minDay && index <= maxDay) child.classList.remove('hidden');
+      // else child.classList.add('hidden');
     });
 
     this.updateDropzones(minDay, maxDay);
@@ -1044,6 +1051,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   // }
 
   public render() {
+    // console.log('card render');
     // const { columnsPerDay, stamps, dayWidth } = this.state;
     // const { days, subGridColumns, positionCount, mainColumnStep } = this.props;
 
@@ -1110,14 +1118,18 @@ export default class CalendarCard extends React.Component<IProps, IState> {
               <div className="viewPortContainer">
                 <div className="scrollingContainer">
                   <div className="stickyContainer">
-                    {this.props.days.map(day => (
-                      <TopRow
-                        visible={true}
-                        stamps={stamps}
-                        key={day.date.startOf('day').format('DD:MM:YYYY')}
-                        style={{ width: dayWidth }}
-                      />
-                    ))}
+                    {this.props.days.map(day => {
+                      const k = day.date.startOf('day').format('DD:MM:YYYY');
+                      return (
+                        <TopRow
+                          visible={true}
+                          stamps={stamps}
+                          keyStamp={k}
+                          key={k}
+                          style={{ width: dayWidth }}
+                        />
+                      );
+                    })}
                   </div>
                 </div>
               </div>

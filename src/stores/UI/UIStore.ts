@@ -30,6 +30,9 @@ export default class UIStore {
 
   @action
   public setScrolling(scrolling: boolean) {
+    if (this.isScrollingUnbinded === scrolling) return;
+
+    console.log(`set scrolling ${this.isScrollingUnbinded} -> ${scrolling}`);
     this.isScrolling = scrolling;
     this.isScrollingUnbinded = scrolling;
   }

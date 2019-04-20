@@ -1,7 +1,8 @@
-import { LazyTask } from '@levabala/lazytask/build/dist';
-import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
+// import { LazyTask } from '@levabala/lazytask/build/dist';
+// import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
-import { observable, reaction, runInAction } from 'mobx';
+import { reaction } from 'mobx';
+import { observer } from 'mobx-react';
 import * as moment from 'moment';
 import * as React from 'react';
 import Appointment from 'structures/Appointment';
@@ -44,9 +45,10 @@ export interface IState {
   apps: JSX.Element[];
 }
 
+@observer
 export default class Day extends React.Component<IProps, IState> {
-  @observable
-  public displayMap: { [key: string]: { value: boolean } } = {};
+  // @observable
+  // public displayMap: { [key: string]: { value: boolean } } = {};
 
   constructor(props: IProps) {
     super(props);
@@ -124,8 +126,8 @@ export default class Day extends React.Component<IProps, IState> {
             top: (y + coeffY) * cellHeight,
           }}
           getCellWidth={getCellWidth}
-          isDisplaying={this.displayMap[app.uniqueId]}
-          // isDisplaying={true}
+          // isDisplaying={this.displayMap[app.uniqueId]}
+          isDisplaying={{ value: true }}
           moving={false}
           key={app.uniqueId}
           // translateX={x * 100}
@@ -139,23 +141,23 @@ export default class Day extends React.Component<IProps, IState> {
     };
 
     const apps = Object.values(dayData.appointments);
-    this.displayMap = apps.reduce((acc, val) => {
-      acc[val.uniqueId] = { value: false };
-      return acc;
-    }, this.displayMap);
+    // this.displayMap = apps.reduce((acc, val) => {
+    //   acc[val.uniqueId] = { value: false };
+    //   return acc;
+    // }, this.displayMap);
 
     const newApps = apps.map(app => generateAppElement(app));
     this.setState({ apps: newApps });
 
-    Object.values(dayData.appointments).forEach(app => {
-      lazyTaskManager.addTask(
-        new LazyTask(() => {
-          runInAction(() => {
-            this.displayMap[app.uniqueId].value = true;
-          });
-        }),
-      );
-    });
+    // Object.values(dayData.appointments).forEach(app => {
+    //   lazyTaskManager.addTask(
+    //     new LazyTask(() => {
+    //       runInAction(() => {
+    //         this.displayMap[app.uniqueId].value = true;
+    //       });
+    //     }),
+    //   );
+    // });
 
     // this.setState({ apps: [] });
     // Object.values(dayData.appointments).forEach(app => {

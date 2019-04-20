@@ -109,13 +109,21 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
   }
 
   public updateLayout = (positiveResizing = false) => {
-    if (this.unMounted || !this.props.isDisplaying.value) return;
+    if (this.unMounted) {
+      console.warn('unmounted');
+      return;
+    }
 
     const elem = this.widthDivRef.current;
     if (!elem) {
       console.warn('null container');
       return;
     }
+
+    // if (!elem.offsetWidth) {
+    //   console.warn('display: none');
+    //   return;
+    // }
 
     if (!elem.offsetWidth) return;
 
@@ -150,7 +158,8 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     } else if (
       this.state.widthClass !== WidthClass.Max &&
       positiveResizing &&
-      !this.isTryingToUpgrade
+      !this.isTryingToUpgrade &&
+      1 !== 1
     ) {
       const topElem = (elem.parentNode as HTMLElement)
         .parentNode as HTMLElement;
@@ -326,6 +335,8 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     // const width = `calc(${widthScale * 100}% + ${widthCorrect}px)`;
 
     const person = personInstance as IPerson;
+
+    // console.log(person.loaded);
 
     return (
       <div
