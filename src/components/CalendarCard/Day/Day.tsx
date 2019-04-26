@@ -1,8 +1,11 @@
 // import { LazyTask } from '@levabala/lazytask/build/dist';
 // import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
+import { LazyTask } from '@levabala/lazytask/build/dist';
+import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
-import { reaction } from 'mobx';
+import { observable, reaction, runInAction } from 'mobx';
 import { observer } from 'mobx-react';
+import moize from 'moize';
 import * as moment from 'moment';
 import * as React from 'react';
 import Appointment from 'structures/Appointment';
@@ -14,6 +17,12 @@ import './AppointmentCell/AppointmentCell.scss';
 
 // import Grid from './Grid';
 // import { GridP } from '.';
+
+moize.collectStats();
+
+setInterval(() => {
+  console.log((moize.getStats().profiles as any).appCellGenerator);
+}, 3000);
 
 export interface IProps {
   rows: number;
@@ -47,8 +56,8 @@ export interface IState {
 
 @observer
 export default class Day extends React.Component<IProps, IState> {
-  // @observable
-  // public displayMap: { [key: string]: { value: boolean } } = {};
+  @observable
+  public displayMap: { [key: string]: { value: boolean } } = {};
 
   constructor(props: IProps) {
     super(props);
@@ -66,11 +75,26 @@ export default class Day extends React.Component<IProps, IState> {
       },
     );
 
+    reaction(() => this.props.isDisplaying, () => this.updateVisibility());
+
     this.state = {
       apps: [],
     };
 
     setTimeout(() => this.updateApps());
+  }
+
+  public updateVisibility() {
+    Object.values(this.props.dayData.appointments).forEach(app => {
+      lazyTaskManager.addTask(
+        new LazyTask(() => {
+          runInAction(() => {
+            this.displayMap[app.uniqueId].value = true;
+          });
+        }),
+        false,
+      );
+    });
   }
 
   public updateApps() {
@@ -93,71 +117,81 @@ export default class Day extends React.Component<IProps, IState> {
 
     const cellWidth = getCellWidth();
 
-    const generateAppElement = (app: Appointment) => {
-      const x = Math.floor(
-        (app.date.hour() * 60 +
-          app.date.minute() -
-          (stamps[0].hour() * 60 + stamps[0].minute())) /
-          minutesStep,
-      );
-      const y = app.position;
+    const generateAppElement = moize.reactSimple(
+      (app: Appointment) => {
+        const x = Math.floor(
+          (app.date.hour() * 60 +
+            app.date.minute() -
+            (stamps[0].hour() * 60 + stamps[0].minute())) /
+            minutesStep,
+        );
+        const y = app.position;
 
-      const shift = (x in shifts
-        ? y in shifts[x]
-          ? shifts[x][y]
-          : null
-        : null) || { dx: 0, dy: 0 };
+        const shift = (x in shifts
+          ? y in shifts[x]
+            ? shifts[x][y]
+            : null
+          : null) || { dx: 0, dy: 0 };
 
-      const stamp = this.props.stamps[x];
-      const { dx, dy } = shift;
-      const d = app.date;
-      const s = d
-        .clone()
-        .hour(stamp.hour())
-        .minute(stamp.minute());
+        const stamp = this.props.stamps[x];
+        const { dx, dy } = shift;
+        const d = app.date;
+        const s = d
+          .clone()
+          .hour(stamp.hour())
+          .minute(stamp.minute());
 
-      const coeffX = d.diff(s, 'second') / gridColumnDuration.asSeconds() + dx;
-      const coeffY = dy;
+        const coeffX =
+          d.diff(s, 'second') / gridColumnDuration.asSeconds() + dx;
+        const coeffY = dy;
 
-      return (
-        <AppointmentCell
-          style={{
-            left: (x + coeffX) * cellWidth,
-            top: (y + coeffY) * cellHeight,
-          }}
-          getCellWidth={getCellWidth}
-          // isDisplaying={this.displayMap[app.uniqueId]}
-          isDisplaying={{ value: true }}
-          moving={false}
-          key={app.uniqueId}
-          // translateX={x * 100}
-          // translateY={y * 100}
-          appointment={app as Appointment}
-          updateAppointment={updateAppointment}
-          subGridColumns={subGridColumns}
-          gridColumnDuration={gridColumnDuration}
-        />
-      );
-    };
+        return (
+          <AppointmentCell
+            style={{
+              left: (x + coeffX) * cellWidth,
+              top: (y + coeffY) * cellHeight,
+            }}
+            getCellWidth={getCellWidth}
+            isDisplaying={this.displayMap[app.uniqueId]}
+            // isDisplaying={{ value: true }}
+            moving={false}
+            key={app.uniqueId}
+            // translateX={x * 100}
+            // translateY={y * 100}
+            appointment={app as Appointment}
+            updateAppointment={updateAppointment}
+            subGridColumns={subGridColumns}
+            gridColumnDuration={gridColumnDuration}
+          />
+        );
+      },
+      {
+        equals: (appPrev: Appointment, appNow: Appointment) =>
+          appPrev.stateHash === appNow.stateHash,
+        profileName: 'appCellGenerator',
+      },
+    );
 
     const apps = Object.values(dayData.appointments);
-    // this.displayMap = apps.reduce((acc, val) => {
-    //   acc[val.uniqueId] = { value: false };
-    //   return acc;
-    // }, this.displayMap);
+    this.displayMap = apps.reduce((acc, val) => {
+      acc[val.uniqueId] = { value: false };
+      return acc;
+    }, this.displayMap);
 
     const newApps = apps.map(app => generateAppElement(app));
     this.setState({ apps: newApps });
 
-    // Object.values(dayData.appointments).forEach(app => {
-    //   lazyTaskManager.addTask(
-    //     new LazyTask(() => {
-    //       runInAction(() => {
-    //         this.displayMap[app.uniqueId].value = true;
-    //       });
-    //     }),
-    //   );
-    // });
+    if (this.props.isDisplaying)
+      Object.values(dayData.appointments).forEach(app => {
+        lazyTaskManager.addTask(
+          new LazyTask(() => {
+            runInAction(() => {
+              this.displayMap[app.uniqueId].value = true;
+            });
+          }),
+          false,
+        );
+      });
 
     // this.setState({ apps: [] });
     // Object.values(dayData.appointments).forEach(app => {

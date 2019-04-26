@@ -27,7 +27,6 @@ export interface IProps {
 }
 
 export interface IState {
-  widthClass: WidthClass;
   tempWidth: string;
   initialized: boolean;
 }
@@ -66,10 +65,13 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
   public mouseWheelStep: number = 150;
   private mouseDeltaBuffer: number = 0;
   private widthDivRef: React.RefObject<HTMLDivElement> = React.createRef();
+  private layoutDivRef: React.RefObject<HTMLDivElement> = React.createRef();
   private rebuildLayoutTimeout: NodeJS.Timeout;
   private unMounted = false;
   private isTryingToUpgrade = false;
   private goingDown = true;
+  private widthClass: WidthClass =
+    widthCache[this.props.appointment.uniqueId] || WidthClass.Max;
 
   constructor(props: IProps) {
     super(props);
@@ -79,7 +81,6 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     this.state = {
       initialized: false,
       tempWidth: '',
-      widthClass: widthCache[this.props.appointment.uniqueId] || WidthClass.Max,
     };
 
     if (
@@ -91,9 +92,10 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
           this.props.appointment.personInstance &&
           this.props.appointment.personInstance.loaded,
         loaded => {
-          lazyTaskManager.addTask(
-            new LazyTask(() => this.appLoadedHandler(), 1, condFun),
-          );
+          if (this.props.isDisplaying.value)
+            lazyTaskManager.addTask(
+              new LazyTask(() => this.appLoadedHandler(), 1, condFun),
+            );
         },
       );
 
@@ -101,11 +103,21 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
       () => this.props.isDisplaying.value,
       val => {
         if (this.props.isDisplaying.value)
-          lazyTaskManager.addTask(
-            new LazyTask(() => this.appLoadedHandler(), 1, condFun),
-          );
+          if (this.state.initialized)
+            lazyTaskManager.addTask(
+              new LazyTask(() => this.appLoadedHandler(), 1, condFun),
+            );
       },
     );
+
+    // if (this.props.isDisplaying.value) this.init();
+  }
+
+  public updateWidthClass() {
+    if (this.layoutDivRef.current) {
+      const layoutDiv = this.layoutDivRef.current as HTMLDivElement;
+      layoutDiv.className = `layoutController ${this.widthClass}`;
+    }
   }
 
   public updateLayout = (positiveResizing = false) => {
@@ -147,19 +159,19 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     if (
       (innerRect.height >= cellRect.height ||
         maxRight > Math.max(cellRect.right - 5, 0)) &&
-      this.state.widthClass !== WidthClass.Min
+      this.widthClass !== WidthClass.Min
     ) {
       this.goingDown = true;
-      this.setState({ widthClass: downgradeWidthMap[this.state.widthClass] });
+      this.widthClass = downgradeWidthMap[this.widthClass];
+      this.updateWidthClass();
 
       lazyTaskManager.addTask(
         new LazyTask(() => this.updateLayout(false), 1, condFun),
       );
     } else if (
-      this.state.widthClass !== WidthClass.Max &&
+      this.widthClass !== WidthClass.Max &&
       positiveResizing &&
-      !this.isTryingToUpgrade &&
-      1 !== 1
+      !this.isTryingToUpgrade
     ) {
       const topElem = (elem.parentNode as HTMLElement)
         .parentNode as HTMLElement;
@@ -170,11 +182,11 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
       virtualNode.style.top = '0px';
       virtualNode.style.position = 'fixed';
 
-      const upgradedClass = upgradeWidthMap[this.state.widthClass];
+      const upgradedClass = upgradeWidthMap[this.widthClass];
       const layoutController = virtualNode.querySelector(
         '.layoutController',
       ) as HTMLElement;
-      layoutController.classList.remove(this.state.widthClass);
+      layoutController.classList.remove(this.widthClass);
       layoutController.classList.add(upgradedClass);
       layoutController.style.visibility = 'hidden';
 
@@ -197,11 +209,10 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
             this.isTryingToUpgrade = false;
 
             if (newHeight < cellRect.height) {
-              this.setState({
-                widthClass: upgradeWidthMap[this.state.widthClass],
-              });
+              this.widthClass = upgradeWidthMap[this.widthClass];
+              this.updateWidthClass();
 
-              if (this.state.widthClass !== WidthClass.Max) {
+              if (this.widthClass !== WidthClass.Max) {
                 console.log('go max');
                 this.updateLayout(positiveResizing);
               }
@@ -216,20 +227,32 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
   };
 
   public componentDidUpdate() {
-    widthCache[this.props.appointment.uniqueId] = this.state.widthClass;
-
-    // this.appLoadedHandler();
+    // console.log(
+    //   !this.state.initialized,
+    //   this.props.isDisplaying.value,
+    //   '->',
+    //   !this.state.initialized && this.props.isDisplaying.value,
+    //   this.props.appointment.date.date(),
+    // );
+    if (!this.state.initialized && this.props.isDisplaying.value) this.init();
+    if (this.state.initialized)
+      widthCache[this.props.appointment.uniqueId] = this.widthClass;
   }
 
   public componentDidMount() {
-    // const elem = this.widthDivRef.current as HTMLElement;
-    // elem.onresize = (e: UIEvent) => this.updateLayout((e.detail as any).dx > 0);
+    //
+  }
+
+  public init() {
+    const elem = this.widthDivRef.current as HTMLElement;
+    elem.onresize = (e: UIEvent) => this.updateLayout((e.detail as any).dx > 0);
 
     if (widthCache[this.props.appointment.uniqueId])
       this.appLoadedHandler(true);
     else if (
       this.props.appointment.personInstance &&
-      this.props.appointment.personInstance.loaded
+      this.props.appointment.personInstance.loaded &&
+      this.props.isDisplaying.value
     )
       lazyTaskManager.addTask(
         new LazyTask(() => this.appLoadedHandler(), 1, condFun),
@@ -362,7 +385,10 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
           }}
         >
           <div className="containerTempWidth" ref={this.widthDivRef}>
-            <div className={`layoutController ${this.state.widthClass}`}>
+            <div
+              className={`layoutController ${this.widthClass}`}
+              ref={this.layoutDivRef}
+            >
               {!person || !person.loaded || !this.state.initialized ? (
                 <div className="loadingMask">
                   <div className="marker loading" key="marker" />

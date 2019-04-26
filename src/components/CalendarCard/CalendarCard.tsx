@@ -24,7 +24,7 @@ import ToggleArea from './ToggleArea';
 
 import * as Emitter from 'events';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
-import { action, observable } from 'mobx';
+import { action, IObservableObject, observable } from 'mobx';
 import rootStore from 'stores/RootStore';
 import MonthRow from './Day/MonthRow';
 import TopRow from './Day/TopRow';
@@ -101,8 +101,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   public currentDayNumber: number;
   @observable
   public monthStartDate: IMoment = moment();
-  // @observable
-  public visibilityMap: { [dayId: string]: boolean } = {};
+  public visibilityMap: IObservableObject = observable({}); // { [dayId: string]: boolean }
   public currentDayIndex: number = 0;
 
   public currentLeftColumnIndex: number = 0;
@@ -630,7 +629,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     );
 
     // console.log(rightBorderOffset, firstDayRect.width);
-    // console.log('left:', leftAddCount, 'right:', rightAddCount);
+    console.log('left:', leftAddCount, 'right:', rightAddCount);
 
     const changeDeltaAbs = leftAddCount + rightAddCount;
 
@@ -717,7 +716,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     if (this.props.days.length !== this.currentDaysCount)
       this.currentDaysCount = this.props.days.length;
 
-    console.log(this.props.days.length);
+    console.log('days count:', this.props.days.length);
     this.updateVisibilityMap();
 
     const daysToLoad = this.state.requiredDays
@@ -928,7 +927,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
   // }
 
-  // @action
+  @action
   public updateVisibility(indexes: number[]) {
     if ((window as any).lockVisibility) return;
 

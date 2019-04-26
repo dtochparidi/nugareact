@@ -115,6 +115,7 @@ module.exports = {
   module: {
     strictExportPresence: true,
     rules: [
+      { test: /\.json$/, loader: 'json-loader' },
       {
         test: /\.(js|jsx|mjs)$/,
         loader: require.resolve('source-map-loader'),

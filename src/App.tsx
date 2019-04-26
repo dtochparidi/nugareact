@@ -1,6 +1,7 @@
 // import ControlWindow from 'components/ControlWindow';
 import { LazyTaskManager } from '@levabala/lazytask/build/dist';
 import VersionChangelog from 'components/VersionChangelog';
+import VersionLabel from 'components/VersionLabel';
 import * as Cookies from 'js-cookie';
 import LazyWidget from 'lazytask-widget/lib';
 import { observer } from 'mobx-react';
@@ -8,6 +9,7 @@ import DevTools, { configureDevtool } from 'mobx-react-devtools';
 import * as React from 'react';
 
 import CalendarCard from './components/CalendarCard';
+import currentVersion from './CurrentVersion.json';
 import { clientSide } from './dev/clientSide';
 import rootStore from './stores/RootStore';
 import versions from './versions';
@@ -97,6 +99,11 @@ class App extends React.Component {
         >
           <LazyWidget updateInterval={100} />
         </div>
+        <VersionLabel
+          major={currentVersion.major}
+          minor={currentVersion.minor}
+          patch={currentVersion.patch}
+        />
       </div>
     );
   }

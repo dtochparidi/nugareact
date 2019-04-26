@@ -26,7 +26,7 @@ export default class CalendarDayStore {
   @action.bound
   public async loadDays(dates: IMoment[]): Promise<CalendarDay[]> {
     // return transaction(() => {
-    performance.mark('load days start');
+    // performance.mark('load days start');
 
     let pushes = 0;
     const calendarDays = dates.map(date => {
@@ -58,8 +58,8 @@ export default class CalendarDayStore {
 
     console.log('pushes:', pushes);
 
-    performance.mark('load days end');
-    performance.measure('load days', 'load days start', 'load days end');
+    // performance.mark('load days end');
+    // performance.measure('load days', 'load days start', 'load days end');
 
     return calendarDays;
     // });
