@@ -1,4 +1,4 @@
-node /scripts/patch.js
+node ./scripts/patch.js
 
 message=${1:-patch}
 # target=${2:-master}
