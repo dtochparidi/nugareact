@@ -128,15 +128,19 @@
     }
   }
 
-  $avatar-width: $calendar-cell-height - $avatar-left-margin * 2 - $thin-width;
+  // $avatar-width: $calendar-cell-height - $avatar-left-margin * 2 - $thin-width;
   .avatar {
     position: absolute;
 
+    $vertical-offset: ($calendar-cell-height - $avatar-size) / 2;
     left: $avatar-left-margin;
-    top: $avatar-left-margin;
-    bottom: $avatar-left-margin;
+    // top: $avatar-left-margin;
+    // bottom: $avatar-left-margin;
+    top: $vertical-offset;
+    bottom: $vertical-offset;
 
-    width: $avatar-width;
+    // width: $avatar-width;
+    width: $avatar-size;
     border-radius: 50%;
 
     background: lightgrey;
@@ -148,7 +152,8 @@
 
   .mainInfoWrapper {
     position: absolute;
-    left: $avatar-width + $avatar-left-margin * 2;
+    // left: $avatar-width + $avatar-left-margin * 2;
+    left: $avatar-size + $avatar-left-margin * 2;
     top: 0;
     bottom: 0;
     right: $points-right-margin + $points-size + $avatar-left-margin;
