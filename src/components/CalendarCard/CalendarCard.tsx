@@ -38,6 +38,7 @@ import {
 } from './modules/staticMethods';
 
 const calendarCellMinWidth = parseFloat(CardVariables.calendarCellWidthMin);
+const timeColumnWidth = parseFloat(CardVariables.timeColumnWidth);
 const calendarCellHeight = parseFloat(CardVariables.calendarCellHeight);
 const thinWidth = parseFloat(StyleVariables.thinWidth);
 
@@ -163,7 +164,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       firstLoad: true,
       gridsContainer: <div className="gridsContainer" />,
       gridsCount: 0,
-      leftColumnWidth: 30,
+      leftColumnWidth: timeColumnWidth,
       loading: true,
       renderedDays: [],
       requiredDays: [moment().startOf('day')],
@@ -1033,13 +1034,14 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
   public updateDaysWidth() {
     const dayWidth = this.calcDaysWidth();
-    const leftColumn = document.querySelector('.leftColumn') as HTMLElement;
 
-    this.setState({
-      cellWidth: parseInt(dayWidth, 10) / this.state.columnsPerDay,
-      dayWidth,
-      leftColumnWidth: leftColumn.getBoundingClientRect().width,
-    });
+    this.setState(
+      {
+        cellWidth: parseInt(dayWidth, 10) / this.state.columnsPerDay,
+        dayWidth,
+      },
+      () => console.log(this.state.leftColumnWidth),
+    );
   }
 
   public updateColumnsCount() {
@@ -1053,6 +1055,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const { columnsPerDay, columnsPerPage, leftColumnWidth } = this.state;
     const containerWidth = (this.calendarContainerRef.current as HTMLDivElement)
       .offsetWidth;
+
+    console.log('==-=-=-=-=-=--=-', containerWidth);
+
     const dayWidth =
       // Math.floor(
       calcDaySize(

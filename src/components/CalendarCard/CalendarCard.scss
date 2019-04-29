@@ -12,6 +12,7 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
 :export {
   #{'calendarCellWidthMin'}: $calendar-cell-width-min;
   #{'calendarCellHeight'}: $calendar-cell-height;
+  #{'timeColumnWidth'}: $time-column-width;
 }
 
 .calendarCard {
