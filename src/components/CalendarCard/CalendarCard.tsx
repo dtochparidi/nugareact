@@ -1228,9 +1228,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           this.currentLeftColumnIndex,
           this.currentLeftColumnIndex + this.state.columnsPerPage,
         ]);
-        this.updateParalaxGrids(true);
+        // this.updateParalaxGrids(true);
 
         updateStickyElements(true);
+
+        // setTimeout(() => this.updateParalaxGrids(true), 3500);
       }, boundTime);
     });
   }

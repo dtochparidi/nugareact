@@ -12,6 +12,7 @@ var currentVersion = JSON.parse(fs.readFileSync(path));
 let { major, minor, patch } = currentVersion;
 
 minor++;
+patch = 0;
 
 const newFile = JSON.stringify({ major, minor, patch });
 fs.writeFileSync(path, newFile);

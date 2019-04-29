@@ -106,7 +106,7 @@ export default class AppointmentCell extends React.Component<IProps> {
         } ${overlapping ? 'overlapping' : ''}`}
         id={identifier}
         onWheel={this.onMouseWheelHandler}
-        style={Object.assign(this.props.style || {}, { width })}
+        style={Object.assign({ width }, this.props.style || {})}
       >
         {!person || !person.loaded ? (
           <div className="loadingMask">
