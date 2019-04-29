@@ -741,8 +741,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     if (daysToLoad.length) {
       this.updateVisibilityMap(daysToLoad.map(CalendarDay.calcId));
 
-      if (this.state.firstLoad)
-        this.props.requestCallback(daysToLoad).then(() => {
+      this.props.requestCallback(daysToLoad).then(() => {
+        if (this.state.firstLoad) {
           this.fullfilledDays.push(...daysToLoad.map(CalendarDay.calcId));
           const loaded =
             this.state.firstLoad &&
@@ -757,7 +757,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
               this.updateScroll(true);
             });
           }
-        });
+        }
+      });
     }
 
     // step-by-step

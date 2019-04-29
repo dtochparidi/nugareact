@@ -3,7 +3,7 @@
 import { LazyTask } from '@levabala/lazytask/build/dist';
 import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
-import { observable, reaction, runInAction } from 'mobx';
+import { IReactionDisposer, observable, reaction, runInAction } from 'mobx';
 import { observer } from 'mobx-react';
 import moize from 'moize';
 import * as moment from 'moment';
@@ -90,11 +90,13 @@ export default class Day extends React.Component<IProps, IState> {
     },
   );
 
+  private reactions: IReactionDisposer[] = [];
+
   constructor(props: IProps) {
     super(props);
 
     // appointments change reaction
-    reaction(
+    const r1 = reaction(
       () => {
         // console.log(
         //   this.props.dayData.stateIndex,
@@ -109,12 +111,20 @@ export default class Day extends React.Component<IProps, IState> {
       },
     );
 
-    reaction(() => this.props.isDisplaying, () => this.updateVisibility());
+    const r2 = reaction(
+      () => this.props.isDisplaying,
+      () => this.updateVisibility(),
+    );
+    this.reactions = [r1, r2];
 
     this.state = {
       apps: [],
       stateIndex: 0,
     };
+  }
+
+  public componentWillUnmount() {
+    this.reactions.forEach(r => r());
   }
 
   public componentDidMount() {
