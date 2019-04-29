@@ -20,10 +20,14 @@ function noop() {
   //
 }
 
-// disable performance using
+// disable console&performance using
 if (process.env.NODE_ENV !== 'development') {
   performance.mark = noop;
   performance.measure = noop;
+
+  console.log = noop;
+  console.warn = noop;
+  // console.error = noop;
 }
 
 // getting stores

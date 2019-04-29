@@ -1056,8 +1056,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const containerWidth = (this.calendarContainerRef.current as HTMLDivElement)
       .offsetWidth;
 
-    console.log('==-=-=-=-=-=--=-', containerWidth);
-
     const dayWidth =
       // Math.floor(
       calcDaySize(
