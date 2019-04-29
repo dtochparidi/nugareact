@@ -20,7 +20,6 @@ function random(to: number, from: number = 0) {
 
 const littleStepMinutes = 9;
 const largeStepMinutes = 45;
-const stepsPerColumn = Math.floor(largeStepMinutes / littleStepMinutes);
 const daysCache = {};
 
 // const daysDeepCache = JSON.parse(store.get('cachedDays', '{}'));
@@ -110,12 +109,14 @@ async function generateAppointments(
         .clone()
         // .hour(random(17, 8))
         .hour(fromHour)
-        .add(littleStepMinutes * random(maxStepsCount, 0), 'minute'),
-      duration: Moment.duration(
-        littleStepMinutes *
-          random(stepsPerColumn * 2, Math.floor(stepsPerColumn * 0.75)),
-        'minute',
-      ),
+        // .add(littleStepMinutes * random(maxStepsCount, 0), 'minute'),
+        .add(
+          Math.floor(
+            (littleStepMinutes * random(maxStepsCount, 0)) / largeStepMinutes,
+          ) * largeStepMinutes,
+          'minute',
+        ),
+      duration: Moment.duration(largeStepMinutes, 'minutes'),
       personId: `${random(99)
         .toString()
         .padStart(3, '0')}`,

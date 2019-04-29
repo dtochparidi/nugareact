@@ -3,15 +3,19 @@
 @import 'src/components/CalendarCard/Day/MonthRow/MonthRow.scss';
 
 $scale: 0.7;
+$avatar-size: 40px;
 $time-column-width: 50px * $scale;
-$calendar-cell-height: 60px * $scale;
-$calendar-cell-width-min: 220px * $scale;
+// $calendar-cell-height: 100px * $scale;
+// $calendar-cell-width-min: 250px * $scale;
+$calendar-cell-height: 70px * $scale;
+$calendar-cell-width-min: 390px * $scale;
 $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
   $dateRow-padding * 2 + $thin-width;
 
 :export {
   #{'calendarCellWidthMin'}: $calendar-cell-width-min;
   #{'calendarCellHeight'}: $calendar-cell-height;
+  #{'timeColumnWidth'}: $time-column-width;
 }
 
 .calendarCard {

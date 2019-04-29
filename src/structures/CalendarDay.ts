@@ -13,7 +13,7 @@ export default class CalendarDay implements ICalendarDay {
     };
   }
 
-  private static calcId(date: IMoment) {
+  public static calcId(date: IMoment) {
     const id = `day_${date.format('DD-MM-YYYY')}`;
     return id;
   }
@@ -24,6 +24,9 @@ export default class CalendarDay implements ICalendarDay {
   public date: IMoment;
   public id: string;
 
+  @observable
+  public stateIndex: number = 0;
+
   constructor(
     date: IMoment,
     appointments: { [uniqueId: string]: Appointment } = {},
@@ -31,10 +34,24 @@ export default class CalendarDay implements ICalendarDay {
     this.date = date;
     this.appointments = appointments;
     this.id = CalendarDay.calcId(date);
+
+    Object.values(this.appointments).forEach(app =>
+      app.registerListener('dayHandler', this.appointmentDidUpdated),
+    );
   }
 
   @action
   public setAppointments(apps: { [uniqueId: string]: Appointment }) {
     this.appointments = apps;
+
+    Object.values(this.appointments).forEach(app =>
+      app.registerListener('dayHandler', this.appointmentDidUpdated),
+    );
+
+    this.stateIndex++;
   }
+
+  public appointmentDidUpdated = (app: Appointment) => {
+    this.stateIndex++;
+  };
 }

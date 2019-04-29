@@ -80,6 +80,7 @@ export default class Appointment implements IAppointment {
 
   public uniqueId: string;
   public dateRange: DateRange;
+  public updateListeners: { [key: string]: (app: Appointment) => void } = {};
 
   constructor(obj: {
     date: IMoment;
@@ -90,7 +91,11 @@ export default class Appointment implements IAppointment {
   }) {
     this.uniqueId = v4();
 
-    this.update(obj);
+    this.date = obj.date;
+    this.position = obj.position;
+    this.personId = obj.personId;
+    this.personInstance = obj.personInstance;
+    this.duration = obj.duration;
   }
 
   @action
@@ -128,6 +133,11 @@ export default class Appointment implements IAppointment {
       this.uniqueId,
     );
     this.stateHash = Appointment.getStateHash();
+
+    Object.values(this.updateListeners).forEach(listener => {
+      console.log('call');
+      listener(this);
+    });
   }
 
   public toJSON() {
@@ -137,5 +147,9 @@ export default class Appointment implements IAppointment {
       personId: this.personId,
       position: this.position,
     };
+  }
+
+  public registerListener(key: string, listener: (app: Appointment) => void) {
+    this.updateListeners[key] = listener;
   }
 }

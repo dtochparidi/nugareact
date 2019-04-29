@@ -51,209 +51,193 @@
     visibility: hidden;
   }
 
-  .container {
+  background: white;
+  outline: solid lightgrey 1px;
+
+  pointer-events: visible;
+
+  .translated & & {
+    outline: dotted lightgrey 2px;
+    outline-offset: -2px;
+  }
+
+  .moving & & {
+    @extend .light-box-shadow;
+    background: rgba(255, 255, 255, 0.397);
+  }
+
+  &.widthMin {
+    > .realContainer .pointsWrapper {
+      display: none;
+    }
+
+    > .realContainer .mainInfoWrapper {
+      display: none;
+    }
+  }
+
+  &.widthSlim {
+    > .realContainer .pointsWrapper {
+      display: none;
+    }
+
+    > .realContainer .mainInfoWrapper .subWrapper .content .surname {
+      display: none;
+    }
+
+    > .realContainer .mainInfoWrapper .subWrapper .content .number {
+      display: none;
+    }
+  }
+
+  &.widthMedium {
+    > .realContainer .pointsWrapper {
+      display: none;
+    }
+
+    > .realContainer .mainInfoWrapper .subWrapper .content .number {
+      display: none;
+    }
+  }
+
+  &.widthWide {
+    > .realContainer .pointsWrapper {
+      display: none;
+    }
+  }
+
+  .loadingMask {
     position: absolute;
-    left: 0;
     top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+  }
 
-    width: 100%;
-    height: 100%;
+  .marker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: $marker-width;
 
-    .containerTempWidth {
-      position: absolute;
-      left: 0;
-      top: 0;
+    background: green;
 
+    &.loading {
+      background: lightgrey;
+    }
+  }
+
+  // $avatar-width: $calendar-cell-height - $avatar-left-margin * 2 - $thin-width;
+  .avatar {
+    position: absolute;
+
+    $vertical-offset: ($calendar-cell-height - $avatar-size) / 2;
+    left: $avatar-left-margin;
+    // top: $avatar-left-margin;
+    // bottom: $avatar-left-margin;
+    top: $vertical-offset;
+    bottom: $vertical-offset;
+
+    // width: $avatar-width;
+    width: $avatar-size;
+    border-radius: 50%;
+
+    background: lightgrey;
+
+    &.loading {
+      background: lightgrey;
+    }
+  }
+
+  .mainInfoWrapper {
+    position: absolute;
+    // left: $avatar-width + $avatar-left-margin * 2;
+    left: $avatar-size + $avatar-left-margin * 2;
+    top: 0;
+    bottom: 0;
+    right: $points-right-margin + $points-size + $avatar-left-margin;
+
+    display: flex;
+    justify-content: left;
+    align-items: center;
+
+    .subWrapper {
       width: 100%;
-      height: 100%;
+    }
 
-      background: white;
-      outline: solid lightgrey 1px;
+    .content {
+      overflow-wrap: break-word;
+      white-space: normal;
 
-      pointer-events: visible;
-
-      .translated & & {
-        outline: dotted lightgrey 2px;
-        outline-offset: -2px;
+      span {
+        white-space: nowrap;
       }
 
-      .moving & & {
-        @extend .light-box-shadow;
-        background: rgba(255, 255, 255, 0.397);
+      .surname,
+      .name,
+      .patronymic,
+      .grade {
+        @extend .font-primary-semibold;
       }
 
-      .layoutController {
-        &.widthMin {
-          > .realContainer .pointsWrapper {
-            display: none;
-          }
-
-          > .realContainer .mainInfoWrapper {
-            display: none;
-          }
+      .additionalInfo {
+        .grade {
+          color: green;
         }
 
-        &.widthSlim {
-          > .realContainer .pointsWrapper {
-            display: none;
-          }
-
-          > .realContainer .mainInfoWrapper .subWrapper .content .surname {
-            display: none;
-          }
-
-          > .realContainer .mainInfoWrapper .subWrapper .content .number {
-            display: none;
-          }
+        .visits {
+          @extend .font-secondary-little-semibold;
+          margin-left: $visits-count-margin;
+          margin-right: $visits-count-margin;
+          padding: 0;
+          color: black;
+          vertical-align: top;
         }
+      }
 
-        &.widthMedium {
-          > .realContainer .pointsWrapper {
-            display: none;
-          }
+      .number {
+        @extend .font-secondary-middle;
+      }
 
-          > .realContainer .mainInfoWrapper .subWrapper .content .number {
-            display: none;
-          }
-        }
+      &.loading {
+        background: lightgrey;
+        height: 15px;
+        width: auto;
 
-        &.widthWide {
-          > .realContainer .pointsWrapper {
-            display: none;
-          }
-        }
+        margin: 2.5px;
+      }
+    }
+  }
 
-        .loadingMask {
-          position: absolute;
-          top: 0;
-          left: 0;
-          bottom: 0;
-          right: 0;
-        }
+  .pointsWrapper {
+    position: absolute;
+    right: $points-right-margin;
+    top: 0;
+    bottom: 0;
 
-        .marker {
-          position: absolute;
-          top: 0;
-          left: 0;
-          bottom: 0;
-          width: $marker-width;
+    width: $points-size;
 
-          background: green;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
-          &.loading {
-            background: lightgrey;
-          }
-        }
+    .content {
+      @extend .font-points-circle;
 
-        $avatar-width: $calendar-cell-height - $avatar-left-margin * 2 -
-          $thin-width;
-        .avatar {
-          position: absolute;
+      background: $color-calendar-points-background;
 
-          left: $avatar-left-margin;
-          top: $avatar-left-margin;
-          bottom: $avatar-left-margin;
+      width: $points-size;
+      height: $points-size;
 
-          width: $avatar-width;
-          border-radius: 50%;
+      border-radius: 50%;
 
-          background: lightgrey;
+      display: flex;
+      justify-content: center;
+      align-items: center;
 
-          &.loading {
-            background: lightgrey;
-          }
-        }
-
-        .mainInfoWrapper {
-          position: absolute;
-          left: $avatar-width + $avatar-left-margin * 2;
-          top: 0;
-          bottom: 0;
-          right: $points-right-margin + $points-size + $avatar-left-margin;
-
-          display: flex;
-          justify-content: left;
-          align-items: center;
-
-          .subWrapper {
-            width: 100%;
-          }
-
-          .content {
-            overflow-wrap: break-word;
-            white-space: normal;
-
-            span {
-              white-space: nowrap;
-            }
-
-            .surname,
-            .name,
-            .patronymic,
-            .grade {
-              @extend .font-primary-semibold;
-            }
-
-            .additionalInfo {
-              .grade {
-                color: green;
-              }
-
-              .visits {
-                @extend .font-secondary-little-semibold;
-                margin-left: $visits-count-margin;
-                margin-right: $visits-count-margin;
-                padding: 0;
-                color: black;
-                vertical-align: top;
-              }
-            }
-
-            .number {
-              @extend .font-secondary-middle;
-            }
-
-            &.loading {
-              background: lightgrey;
-              height: 15px;
-              width: auto;
-
-              margin: 2.5px;
-            }
-          }
-        }
-
-        .pointsWrapper {
-          position: absolute;
-          right: $points-right-margin;
-          top: 0;
-          bottom: 0;
-
-          width: $points-size;
-
-          display: flex;
-          justify-content: center;
-          align-items: center;
-
-          .content {
-            @extend .font-points-circle;
-
-            background: $color-calendar-points-background;
-
-            width: $points-size;
-            height: $points-size;
-
-            border-radius: 50%;
-
-            display: flex;
-            justify-content: center;
-            align-items: center;
-
-            &.loading {
-              background: lightgrey;
-            }
-          }
-        }
+      &.loading {
+        background: lightgrey;
       }
     }
   }
