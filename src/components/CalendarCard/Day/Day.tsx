@@ -13,6 +13,7 @@ import CalendarDay from 'structures/CalendarDay';
 
 import AppointmentCell from './AppointmentCell';
 
+import VisibilityStore from 'stores/UI/VisibilityStote';
 import './AppointmentCell/AppointmentCell.scss';
 
 // import Grid from './Grid';
@@ -21,8 +22,10 @@ import './AppointmentCell/AppointmentCell.scss';
 // moize.collectStats();
 
 // setInterval(() => {
-//   console.log((moize.getStats().profiles as any).appCellGenerator);
+//   // console.log((moize.getStats().profiles as any).appCellGenerator);
 // }, 3000);
+
+const renderCounts = {};
 
 export interface IProps {
   rows: number;
@@ -43,7 +46,7 @@ export interface IProps {
       };
     };
   };
-  isDisplaying: boolean;
+  visibilityStore: VisibilityStore;
   shiftsHash: string;
   updateAppointment: (props: IUpdateAppProps) => void;
   instantRender: boolean;
@@ -64,7 +67,7 @@ export default class Day extends React.Component<IProps, IState> {
     ({ props, stateIndex }: { props: IProps; stateIndex: number }) => {
       const { cols, dayData, dayWidth } = props;
 
-      // console.log('render');
+      // // console.log('render');
 
       return (
         <div
@@ -98,21 +101,21 @@ export default class Day extends React.Component<IProps, IState> {
     // appointments change reaction
     const r1 = reaction(
       () => {
-        // console.log(
+        // // console.log(
         //   this.props.dayData.stateIndex,
         //   Object.keys(this.props.dayData.appointments).length,
         // );
-        console.log('check to update', this.props.dayData.stateIndex);
+        // console.log('check to update', this.props.dayData.stateIndex);
         return this.props.dayData.stateIndex;
       },
       apps => {
         this.updateApps(this.props.instantRender);
-        console.log('apps updated');
+        // console.log('apps updated');
       },
     );
 
     const r2 = reaction(
-      () => this.props.isDisplaying,
+      () => this.props.visibilityStore.isVisible(this.props.dayData.id),
       () => this.updateVisibility(),
     );
     this.reactions = [r1, r2];
@@ -196,11 +199,15 @@ export default class Day extends React.Component<IProps, IState> {
       const coeffX = d.diff(s, 'second') / gridColumnDuration.asSeconds() + dx;
       const coeffY = dy;
 
+      const left = (x + coeffX) * cellWidth;
+      const top = (y + coeffY) * cellHeight;
+
       return (
         <AppointmentCell
           style={{
-            left: (x + coeffX) * cellWidth,
-            top: (y + coeffY) * cellHeight,
+            // left: (x + coeffX) * cellWidth,
+            // top: (y + coeffY) * cellHeight,
+            transform: `translate3d(${left}px, ${top}px, 0px)`,
           }}
           getCellWidth={getCellWidth}
           isDisplaying={this.displayMap[app.uniqueId]}
@@ -226,8 +233,8 @@ export default class Day extends React.Component<IProps, IState> {
     const newApps = apps.map(app => generateAppElement(app));
     this.setState({ apps: newApps, stateIndex: this.state.stateIndex + 1 });
 
-    console.log('-----------------------', instant);
-    if (this.props.isDisplaying)
+    // console.log('-----------------------', instant);
+    if (this.props.visibilityStore.isVisible(this.props.dayData.id))
       if (instant)
         runInAction(() => {
           Object.values(dayData.appointments).forEach(app => {
@@ -263,13 +270,22 @@ export default class Day extends React.Component<IProps, IState> {
   }
 
   public render() {
+    renderCounts[this.props.dayData.id] =
+      (renderCounts[this.props.dayData.id] || 0) + 1;
+
+    console.log('---');
+    const vals = Object.values(renderCounts)
+      .sort()
+      .join('\n');
+    console.log(vals);
+
     return this.moizedRenderer({
       props: this.props,
       stateIndex: this.state.stateIndex,
     });
     // const { cols, dayData, dayWidth } = this.props;
 
-    // // console.log('render');
+    // // // console.log('render');
 
     // return (
     //   <div

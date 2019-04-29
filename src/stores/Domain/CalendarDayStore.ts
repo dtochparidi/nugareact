@@ -25,11 +25,11 @@ export default class CalendarDayStore {
 
   @action.bound
   public async loadDays(dates: IMoment[]) {
-    console.log('load', dates.map(d => d.format('DD:MM')));
+    // console.log('load', dates.map(d => d.format('DD:MM')));
     // return transaction(() => {
     // performance.mark('load days start');
 
-    let pushes = 0;
+    // let pushes = 0;
     const loadDataPromises: Array<Promise<void>> = [];
     dates.map(date => {
       const day = new CalendarDay(date.startOf('day'));
@@ -41,10 +41,9 @@ export default class CalendarDayStore {
 
       this.daysMap[day.id] = day;
 
-      if (this.days.length === 0) {
-        this.days.push(day);
-        pushes++;
-      } else {
+      if (this.days.length === 0) this.days.push(day);
+      // pushes++;
+      else {
         let i = -1;
         let insertIndex = null;
         while (++i < this.days.length && insertIndex === null)
@@ -53,13 +52,13 @@ export default class CalendarDayStore {
         if (insertIndex !== null) this.days.splice(insertIndex, 0, day);
         else this.days.push(day);
 
-        pushes++;
+        // pushes++;
       }
 
       return day;
     });
 
-    console.log('pushes:', pushes);
+    // console.log('pushes:', pushes);
 
     // performance.mark('load days end');
     // performance.measure('load days', 'load days start', 'load days end');
