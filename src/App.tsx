@@ -16,6 +16,16 @@ import versions from './versions';
 
 import './App.css';
 
+function noop() {
+  //
+}
+
+// disable performance using
+if (process.env.NODE_ENV !== 'development') {
+  performance.mark = noop;
+  performance.measure = noop;
+}
+
 // getting stores
 const { personStore, calendarDayStore } = rootStore.domainStore;
 const { uiStore } = rootStore;
