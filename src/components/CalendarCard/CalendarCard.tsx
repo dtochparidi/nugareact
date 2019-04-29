@@ -52,7 +52,7 @@ export interface IProps {
   dayTimeRangeActual: DateRange;
   positionCount: number;
   subGridColumns: number;
-  requestCallback: (date: Moment.Moment[]) => void;
+  requestCallback: (date: Moment.Moment[]) => Promise<void>;
   removeDays: (indexStart: number, indexEnd: number) => void;
   mainColumnStep: IDuration;
   updateAppointment: (props: IUpdateAppProps) => void;
@@ -122,6 +122,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   private jumpToDayHandler: (index: number) => void;
   private dropzoneConfig = generateDropzoneConfig.bind(this)();
   private firstLoadDays: IMoment[] = [];
+  private fullfilledDays: string[] = [];
 
   constructor(props: IProps) {
     super(props);
@@ -687,8 +688,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       this.updateDaysWidth();
       // this.updateScroll(true);
 
-      this.updateRequiredDays(false);
+      // this.updateRequiredDays(false);
       this.firstLoadDays = this.state.requiredDays.map(d => d);
+      console.log('-- init --', this.firstLoadDays);
 
       this.currentLeftColumnIndex =
         Math.floor((this.state.requiredDays.length - 1) / 2) *
@@ -725,6 +727,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     console.log('days count:', this.props.days.length);
 
+    // if (this.props.days.length === 0) {
+    //   this.firstLoadDays = this.state.requiredDays.map(d => d);
+    //   console.log('-- init --', this.firstLoadDays);
+    // }
+
     const daysToLoad = this.state.requiredDays
       .filter(day => !this.lazyLoadDays.includes(day))
       .filter(
@@ -732,14 +739,22 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       );
     if (daysToLoad.length) {
       this.updateVisibilityMap(daysToLoad.map(CalendarDay.calcId));
-      this.props.requestCallback(daysToLoad);
-    }
-
-    if (this.state.firstLoad && this.firstLoadDays.length) {
-      const firstDaysLoaded = this.firstLoadDays.every(
-        date => !!this.props.days.find(day => day.date.diff(date, 'day') === 0),
-      );
-      if (firstDaysLoaded) this.setState({ firstLoad: false });
+      this.props.requestCallback(daysToLoad).then(() => {
+        this.fullfilledDays.push(...daysToLoad.map(CalendarDay.calcId));
+        const loaded =
+          this.state.firstLoad &&
+          this.firstLoadDays.length &&
+          this.firstLoadDays.every(date =>
+            this.fullfilledDays.includes(CalendarDay.calcId(date)),
+          );
+        if (loaded) {
+          this.setState({ firstLoad: false });
+          setTimeout(() => {
+            this.updateRequiredDays(true);
+            this.updateScroll(true);
+          });
+        }
+      });
     }
 
     // step-by-step
@@ -770,7 +785,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public turnPage(delta: -1 | 1) {
-    if (this.isScrolling) return;
+    if (this.isScrolling || this.state.loading) return;
 
     const columnsPerTurn = Math.ceil(this.state.columnsPerPage / 3);
     const pendingOffset = columnsPerTurn * this.state.cellWidth * delta;
@@ -1076,11 +1091,12 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     const { columnsPerDay } = this.state;
     const { mainColumnStep } = this.props;
-    const instantRender = this.state.firstLoad;
 
     const cellWidthGetter = () => this.state.cellWidth;
 
     // console.log('card render');
+
+    console.log(this.firstLoadDays);
 
     return (
       <Card
@@ -1172,7 +1188,12 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                     subGridColumns={subGridColumns}
                     mainColumnStep={mainColumnStep}
                     movingId={this.movingId}
-                    instantRender={instantRender}
+                    instantRender={
+                      !!this.firstLoadDays.find(m => {
+                        console.log(m.diff(day.date, 'day') === 0);
+                        return m.diff(day.date, 'day') === 0;
+                      })
+                    }
                   />
                 );
               })}

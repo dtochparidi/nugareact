@@ -104,7 +104,7 @@ export default class Day extends React.Component<IProps, IState> {
         return this.props.dayData.stateIndex;
       },
       apps => {
-        this.updateApps();
+        this.updateApps(this.props.instantRender);
         console.log('apps updated');
       },
     );
@@ -115,8 +115,10 @@ export default class Day extends React.Component<IProps, IState> {
       apps: [],
       stateIndex: 0,
     };
+  }
 
-    setTimeout(() => this.updateApps());
+  public componentDidMount() {
+    // this.updateApps(this.props.instantRender);
   }
 
   public updateVisibility() {
@@ -133,7 +135,12 @@ export default class Day extends React.Component<IProps, IState> {
     });
   }
 
-  public updateApps() {
+  public updateApps(instant = false) {
+    const prefix = `updateApps instant:${instant} ${this.props.dayData.date.format(
+      'DD.MM',
+    )}`;
+    performance.mark(`${prefix}-start`);
+
     const {
       dayData,
       updateAppointment,
@@ -209,17 +216,25 @@ export default class Day extends React.Component<IProps, IState> {
     const newApps = apps.map(app => generateAppElement(app));
     this.setState({ apps: newApps, stateIndex: this.state.stateIndex + 1 });
 
+    console.log('-----------------------', instant);
     if (this.props.isDisplaying)
-      Object.values(dayData.appointments).forEach(app => {
-        lazyTaskManager.addTask(
-          new LazyTask(() => {
-            runInAction(() => {
-              this.displayMap[app.uniqueId].value = true;
-            });
-          }),
-          false,
-        );
-      });
+      if (instant)
+        runInAction(() => {
+          Object.values(dayData.appointments).forEach(app => {
+            this.displayMap[app.uniqueId].value = true;
+          });
+        });
+      else
+        Object.values(dayData.appointments).forEach(app => {
+          lazyTaskManager.addTask(
+            new LazyTask(() => {
+              runInAction(() => {
+                this.displayMap[app.uniqueId].value = true;
+              });
+            }),
+            false,
+          );
+        });
 
     // this.setState({ apps: [] });
     // Object.values(dayData.appointments).forEach(app => {
@@ -232,6 +247,9 @@ export default class Day extends React.Component<IProps, IState> {
     //     }),
     //   );
     // });
+
+    performance.mark(`${prefix}-end`);
+    performance.measure(prefix, `${prefix}-start`, `${prefix}-end`);
   }
 
   public render() {

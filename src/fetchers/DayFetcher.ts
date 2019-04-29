@@ -109,7 +109,13 @@ async function generateAppointments(
         .clone()
         // .hour(random(17, 8))
         .hour(fromHour)
-        .add(littleStepMinutes * random(maxStepsCount, 0), 'minute'),
+        // .add(littleStepMinutes * random(maxStepsCount, 0), 'minute'),
+        .add(
+          Math.floor(
+            (littleStepMinutes * random(maxStepsCount, 0)) / largeStepMinutes,
+          ) * largeStepMinutes,
+          'minute',
+        ),
       duration: Moment.duration(largeStepMinutes, 'minutes'),
       personId: `${random(99)
         .toString()
