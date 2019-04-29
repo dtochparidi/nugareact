@@ -24,8 +24,7 @@ import ToggleArea from './ToggleArea';
 
 import * as Emitter from 'events';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
-import { action, IObservableObject, observable } from 'mobx';
-import rootStore from 'stores/RootStore';
+import { action, IObservableObject, observable, toJS } from 'mobx';
 import MonthRow from './Day/MonthRow';
 import TopRow from './Day/TopRow';
 import { generateDropzoneConfig } from './modules/dropzoneConfig';
@@ -656,7 +655,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         day => !this.props.days.find(d => d.date.diff(day, 'days') === 0),
       );
 
-    if (daysToLoad.length) this.props.requestCallback(daysToLoad);
+    if (daysToLoad.length) {
+      this.updateVisibilityMap(daysToLoad.map(CalendarDay.calcId));
+      this.props.requestCallback(daysToLoad);
+    }
 
     // this.setState({ requiredDays: this.state.requiredDays });
 
@@ -706,10 +708,15 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   @action
-  public updateVisibilityMap() {
-    this.props.days.forEach(day => {
-      if (!(day.id in this.visibilityMap)) this.visibilityMap[day.id] = true;
-    });
+  public updateVisibilityMap(additionalIds: string[] = []) {
+    this.props.days
+      .map(day => day.id)
+      .concat(additionalIds)
+      .forEach(id => {
+        if (!(id in this.visibilityMap)) this.visibilityMap[id] = true;
+      });
+
+    console.log(toJS(this.visibilityMap));
   }
 
   public componentDidUpdate(prevProps: IProps) {
@@ -717,15 +724,16 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       this.currentDaysCount = this.props.days.length;
 
     console.log('days count:', this.props.days.length);
-    this.updateVisibilityMap();
 
     const daysToLoad = this.state.requiredDays
       .filter(day => !this.lazyLoadDays.includes(day))
       .filter(
         day => !this.props.days.find(d => d.date.diff(day, 'days') === 0),
       );
-
-    if (daysToLoad.length) this.props.requestCallback(daysToLoad);
+    if (daysToLoad.length) {
+      this.updateVisibilityMap(daysToLoad.map(CalendarDay.calcId));
+      this.props.requestCallback(daysToLoad);
+    }
 
     if (this.state.firstLoad && this.firstLoadDays.length) {
       const firstDaysLoaded = this.firstLoadDays.every(
@@ -735,29 +743,30 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     }
 
     // step-by-step
-    const medianDay = this.state.requiredDays
-      .map(m => m.clone())
-      .sort((a, b) => (a.diff(b) > 0 ? 1 : -1))[
-      Math.floor(this.state.requiredDays.length / 2)
-    ];
-    const sorted = this.state.requiredDays
-      .filter(day => this.lazyLoadDays.includes(day))
-      .sort((a, b) =>
-        Math.abs(medianDay.diff(a)) - Math.abs(medianDay.diff(b)) > 0 ? 1 : -1,
-      );
-    const unloadedDay = sorted.find(
-      day => !this.props.days.find(d => d.date.diff(day, 'days') === 0),
-    );
-    if (unloadedDay) {
-      if (!this.props.days.length) {
-        this.props.requestCallback([unloadedDay]);
-        this.updateCurrentDayData(0);
-      } else
-        setTimeout(() => {
-          this.props.requestCallback([unloadedDay]);
-        });
-      this.lazyLoadDays.splice(this.lazyLoadDays.indexOf(unloadedDay), 1);
-    }
+    // const medianDay = this.state.requiredDays
+    //   .map(m => m.clone())
+    //   .sort((a, b) => (a.diff(b) > 0 ? 1 : -1))[
+    //   Math.floor(this.state.requiredDays.length / 2)
+    // ];
+    // const sorted = this.state.requiredDays
+    //   .filter(day => this.lazyLoadDays.includes(day))
+    //   .sort((a, b) =>
+    //     Math.abs(medianDay.diff(a)) - Math.abs(medianDay.diff(b)) > 0 ? 1 : -1,
+    //   );
+    // const unloadedDay = sorted.find(
+    //   day => !this.props.days.find(d => d.date.diff(day, 'days') === 0),
+    // );
+    // console.log('unloadedDay:', unloadedDay);
+    // if (unloadedDay) {
+    //   if (!this.props.days.length) {
+    //     this.props.requestCallback([unloadedDay]);
+    //     this.updateCurrentDayData(0);
+    //   } else
+    //     setTimeout(() => {
+    //       this.props.requestCallback([unloadedDay]);
+    //     });
+    //   this.lazyLoadDays.splice(this.lazyLoadDays.indexOf(unloadedDay), 1);
+    // }
   }
 
   public turnPage(delta: -1 | 1) {
@@ -890,7 +899,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     this.pageTurnEmitter.emit('freeze');
     this.isScrolling = true;
-    rootStore.uiStore.setScrolling(true);
+    // rootStore.uiStore.setScrolling(true);
 
     const callback = () => {
       clearTimeout(this.scrollingUpdateTimeout);
@@ -912,10 +921,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
       this.pageTurnEmitter.emit('resume');
 
-      this.scrollingUpdateTimeout = setTimeout(
-        () => rootStore.uiStore.setScrolling(false),
-        200,
-      );
+      // this.scrollingUpdateTimeout = setTimeout(
+      //   () => rootStore.uiStore.setScrolling(false),
+      //   200,
+      // );
     };
 
     callback();
@@ -1071,7 +1080,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     const cellWidthGetter = () => this.state.cellWidth;
 
-    console.log('card render');
+    // console.log('card render');
 
     return (
       <Card
@@ -1138,31 +1147,35 @@ export default class CalendarCard extends React.Component<IProps, IState> {
             {this.state.gridsContainer}
             {/* <div className="daysContainer">{this.state.renderedDays}</div> */}
             <div className="daysContainer">
-              {days.map((day, i) => (
-                <Day
-                  startLoadSide={
-                    this.currentLeftColumnIndex <= this.state.columnsPerDay * i
-                      ? 'left'
-                      : 'right'
-                  }
-                  getCellWidth={cellWidthGetter}
-                  isDisplaying={this.visibilityMap[day.id]}
-                  key={day.date.toString()}
-                  rows={positionCount}
-                  cols={columnsPerDay || 0}
-                  dayData={day}
-                  stamps={stamps}
-                  dayWidth={dayWidth}
-                  cellHeight={calendarCellHeight}
-                  shifts={this.shifts[day.id]}
-                  shiftsHash={this.shiftsHash[day.id]}
-                  updateAppointment={this.props.updateAppointment}
-                  subGridColumns={subGridColumns}
-                  mainColumnStep={mainColumnStep}
-                  movingId={this.movingId}
-                  instantRender={instantRender}
-                />
-              ))}
+              {days.map((day, i) => {
+                console.log(day.id, this.visibilityMap[day.id]);
+                return (
+                  <Day
+                    startLoadSide={
+                      this.currentLeftColumnIndex <=
+                      this.state.columnsPerDay * i
+                        ? 'left'
+                        : 'right'
+                    }
+                    getCellWidth={cellWidthGetter}
+                    isDisplaying={this.visibilityMap[day.id]}
+                    key={day.date.toString()}
+                    rows={positionCount}
+                    cols={columnsPerDay || 0}
+                    dayData={day}
+                    stamps={stamps}
+                    dayWidth={dayWidth}
+                    cellHeight={calendarCellHeight}
+                    shifts={this.shifts[day.id]}
+                    shiftsHash={this.shiftsHash[day.id]}
+                    updateAppointment={this.props.updateAppointment}
+                    subGridColumns={subGridColumns}
+                    mainColumnStep={mainColumnStep}
+                    movingId={this.movingId}
+                    instantRender={instantRender}
+                  />
+                );
+              })}
             </div>
           </div>
         </div>

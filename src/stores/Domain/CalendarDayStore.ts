@@ -25,6 +25,7 @@ export default class CalendarDayStore {
 
   @action.bound
   public async loadDays(dates: IMoment[]): Promise<CalendarDay[]> {
+    console.log('load', dates.map(d => d.format('DD:MM')));
     // return transaction(() => {
     // performance.mark('load days start');
 

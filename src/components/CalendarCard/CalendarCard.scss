@@ -4,8 +4,8 @@
 
 $scale: 0.7;
 $time-column-width: 50px * $scale;
-$calendar-cell-height: 60px * $scale;
-$calendar-cell-width-min: 220px * $scale;
+$calendar-cell-height: 80px * $scale;
+$calendar-cell-width-min: 250px * $scale;
 $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
   $dateRow-padding * 2 + $thin-width;
 
