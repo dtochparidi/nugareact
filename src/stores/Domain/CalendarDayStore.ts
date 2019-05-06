@@ -25,19 +25,14 @@ export default class CalendarDayStore {
 
   @action.bound
   public async loadDays(dates: IMoment[]) {
-    // console.log('load', dates.map(d => d.format('DD:MM')));
-    // return transaction(() => {
-    // performance.mark('load days start');
-
     // let pushes = 0;
-    const loadDataPromises: Array<Promise<void>> = [];
-    dates.map(date => {
+    const loadDataPromises: Array<Promise<CalendarDay>> = dates.map(date => {
       const day = new CalendarDay(date.startOf('day'));
 
       const promise = this.loadDayData(day);
-      loadDataPromises.push(promise);
+      console.log('a promise for', day.id);
 
-      if (day.id in this.daysMap) return day;
+      if (day.id in this.daysMap) return promise;
 
       this.daysMap[day.id] = day;
 
@@ -55,7 +50,7 @@ export default class CalendarDayStore {
         // pushes++;
       }
 
-      return day;
+      return promise;
     });
 
     // console.log('pushes:', pushes);
@@ -63,7 +58,8 @@ export default class CalendarDayStore {
     // performance.mark('load days end');
     // performance.measure('load days', 'load days start', 'load days end');
 
-    return Promise.race(loadDataPromises);
+    console.log('promises to load:', loadDataPromises);
+    return Promise.all(loadDataPromises);
     // });
   }
 
@@ -200,13 +196,28 @@ export default class CalendarDayStore {
       },
     );
 
-    const appointments = await Promise.all(promises);
+    // const appointments = await Promise.all(promises);
 
-    day.setAppointments(
-      appointments.reduce((acc, app) => {
-        acc[app.uniqueId] = app;
-        return acc;
-      }, {}),
-    );
+    // day.setAppointments(
+    //   appointments.reduce((acc, app) => {
+    //     acc[app.uniqueId] = app;
+    //     return acc;
+    //   }, {}),
+    // );
+
+    // console.log('loaded', day.id);
+
+    return Promise.all(promises).then(appointments => {
+      day.setAppointments(
+        appointments.reduce((acc, app) => {
+          acc[app.uniqueId] = app;
+          return acc;
+        }, {}),
+      );
+
+      console.log('loaded', day.id);
+
+      return day;
+    });
   }
 }

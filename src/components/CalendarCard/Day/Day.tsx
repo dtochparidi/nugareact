@@ -49,7 +49,7 @@ export interface IProps {
   visibilityStore: VisibilityStore;
   shiftsHash: string;
   updateAppointment: (props: IUpdateAppProps) => void;
-  instantRender: boolean;
+  instantRender: { value: boolean };
   startLoadSide: 'left' | 'right';
 }
 
@@ -62,6 +62,7 @@ export interface IState {
 export default class Day extends React.Component<IProps, IState> {
   @observable
   public displayMap: { [key: string]: { value: boolean } } = {};
+  public dayElemRef = React.createRef<HTMLDivElement>();
 
   public moizedRenderer = moize.reactSimple(
     ({ props, stateIndex }: { props: IProps; stateIndex: number }) => {
@@ -76,6 +77,7 @@ export default class Day extends React.Component<IProps, IState> {
             { '--columns-count': cols, width: dayWidth } as React.CSSProperties
           }
           id={`${dayData.id}`}
+          ref={this.dayElemRef}
         >
           <div className="day">{this.state.apps}</div>
         </div>
@@ -105,18 +107,18 @@ export default class Day extends React.Component<IProps, IState> {
         //   this.props.dayData.stateIndex,
         //   Object.keys(this.props.dayData.appointments).length,
         // );
-        // console.log('check to update', this.props.dayData.stateIndex);
+        console.log('check to update', this.props.dayData.stateIndex);
         return this.props.dayData.stateIndex;
       },
       apps => {
-        this.updateApps(this.props.instantRender);
-        // console.log('apps updated');
+        console.log('!!!!!!!!!!!!!!!! apps updated');
+        this.updateApps(this.props.instantRender.value);
       },
     );
 
     const r2 = reaction(
       () => this.props.visibilityStore.isVisible(this.props.dayData.id),
-      () => this.updateVisibility(),
+      () => this.turnOnVisibility(),
     );
     this.reactions = [r1, r2];
 
@@ -131,21 +133,51 @@ export default class Day extends React.Component<IProps, IState> {
   }
 
   public componentDidMount() {
-    // this.updateApps(this.props.instantRender);
+    this.updateApps(this.props.instantRender.value);
   }
 
-  public updateVisibility() {
-    Object.values(this.props.dayData.appointments).forEach(app => {
-      if (this.displayMap[app.uniqueId].value === false)
+  public turnOnVisibility() {
+    const { dayData, instantRender } = this.props;
+
+    console.log(`turn on visibility (instantly: ${instantRender.value})`);
+    if (instantRender.value)
+      runInAction(() => {
+        Object.values(dayData.appointments).forEach(app => {
+          this.displayMap[app.uniqueId].value = true;
+        });
+      });
+    else
+      Object.values(dayData.appointments).forEach(app => {
         lazyTaskManager.addTask(
-          new LazyTask(() => {
-            runInAction(() => {
-              this.displayMap[app.uniqueId].value = true;
-            });
-          }),
+          new LazyTask(
+            () => {
+              runInAction(() => {
+                this.displayMap[app.uniqueId].value = true;
+              });
+            },
+            undefined,
+            () => {
+              const condition = !(this.dayElemRef
+                .current as HTMLDivElement).classList.contains('hidden');
+              // console.log(condition);
+              return condition;
+            },
+          ),
           false,
         );
-    });
+      });
+
+    // Object.values(this.props.dayData.appointments).forEach(app => {
+    //   if (this.displayMap[app.uniqueId].value === false)
+    //     lazyTaskManager.addTask(
+    //       new LazyTask(() => {
+    //         runInAction(() => {
+    //           this.displayMap[app.uniqueId].value = true;
+    //         });
+    //       }),
+    //       false,
+    //     );
+    // });
   }
 
   public updateApps(instant = false) {
@@ -230,28 +262,17 @@ export default class Day extends React.Component<IProps, IState> {
       return acc;
     }, this.displayMap);
 
-    const newApps = apps.map(app => generateAppElement(app));
-    this.setState({ apps: newApps, stateIndex: this.state.stateIndex + 1 });
+    const func = () => {
+      const newApps = apps.map(app => generateAppElement(app));
+      this.setState({ apps: newApps, stateIndex: this.state.stateIndex + 1 });
 
-    // console.log('-----------------------', instant);
-    if (this.props.visibilityStore.isVisible(this.props.dayData.id))
-      if (instant)
-        runInAction(() => {
-          Object.values(dayData.appointments).forEach(app => {
-            this.displayMap[app.uniqueId].value = true;
-          });
-        });
-      else
-        Object.values(dayData.appointments).forEach(app => {
-          lazyTaskManager.addTask(
-            new LazyTask(() => {
-              runInAction(() => {
-                this.displayMap[app.uniqueId].value = true;
-              });
-            }),
-            false,
-          );
-        });
+      console.log('do instantly:', instant);
+      if (this.props.visibilityStore.isVisible(this.props.dayData.id))
+        this.turnOnVisibility();
+    };
+
+    if (instant) func();
+    else lazyTaskManager.addTask(new LazyTask(func));
 
     // this.setState({ apps: [] });
     // Object.values(dayData.appointments).forEach(app => {
@@ -273,11 +294,11 @@ export default class Day extends React.Component<IProps, IState> {
     renderCounts[this.props.dayData.id] =
       (renderCounts[this.props.dayData.id] || 0) + 1;
 
-    console.log('---');
-    const vals = Object.values(renderCounts)
-      .sort()
-      .join('\n');
-    console.log(vals);
+    // console.log('---');
+    // const vals = Object.values(renderCounts)
+    //   .sort()
+    //   .join('\n');
+    // console.log(vals);
 
     return this.moizedRenderer({
       props: this.props,

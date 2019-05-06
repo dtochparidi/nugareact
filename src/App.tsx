@@ -93,7 +93,7 @@ class App extends React.Component {
         <CalendarCard
           fastMode={uiStore.fastMode}
           subGridColumns={uiStore.subGridColumns || 0}
-          days={calendarDayStore.days}
+          // days={calendarDayStore.days}
           requestCallback={calendarDayStore.loadDays}
           removeDays={calendarDayStore.removeDays}
           positionCount={uiStore.positionCount || 0}
