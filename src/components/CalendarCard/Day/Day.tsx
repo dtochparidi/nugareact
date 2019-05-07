@@ -1,5 +1,4 @@
 // import { LazyTask } from '@levabala/lazytask/build/dist';
-// import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
 import { LazyTask } from '@levabala/lazytask/build/dist';
 import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
@@ -16,6 +15,7 @@ import AppointmentCell from './AppointmentCell';
 
 import './AppointmentCell/AppointmentCell.scss';
 
+// import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
 // import Grid from './Grid';
 // import { GridP } from '.';
 
@@ -168,12 +168,12 @@ export default class Day extends React.Component<IProps, IState> {
               });
             },
             undefined,
-            () => {
-              const condition = !(this.dayElemRef
-                .current as HTMLDivElement).classList.contains('hidden');
-              // console.log(condition);
-              return condition;
-            },
+            () =>
+              !!this.dayElemRef.current &&
+              !(this.dayElemRef.current as HTMLDivElement).classList.contains(
+                'hidden',
+              ),
+            () => !this.dayElemRef.current,
           ),
           false,
         );

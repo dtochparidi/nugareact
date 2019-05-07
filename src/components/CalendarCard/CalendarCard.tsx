@@ -127,7 +127,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   private dropzoneConfig = generateDropzoneConfig.bind(this)();
   private firstLoadDays: IMoment[] = [];
   private fullfilledDays: string[] = [];
-  private renderedDays: string[] = [];
+  private renderedDaysIds: string[] = [];
   private daysContainerRef = React.createRef<HTMLDivElement>();
   private instantRender = { value: true };
 
@@ -710,7 +710,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       />
     );
 
-    this.renderedDays.push(day.id);
+    this.renderedDaysIds.push(day.id);
+
+    // console.log('rendered push');
 
     const keyTransformer = moize((s: string) => moment(s).valueOf());
     const newRenderedDays = this.state.renderedDays
@@ -722,17 +724,23 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           : -1,
       );
 
-    this.setState({ renderedDays: newRenderedDays });
+    return new Promise(resolve => {
+      this.setState({ renderedDays: newRenderedDays }, () => {
+        // console.log('resolved!!');
+        resolve();
+      });
+    });
   }
 
   public renderNewDays(newAllDays: CalendarDay[]) {
     const newSpecialDays = newAllDays.filter(
-      ({ id }) => !this.renderedDays.includes(id),
+      ({ id }) => !this.renderedDaysIds.includes(id),
     );
     // console.log(newSpecialDays.map(d => d.date.format('DD.MM')));
-    newSpecialDays.forEach(day =>
+    const promises = newSpecialDays.map(day =>
       this.renderDay(day, daysStore.days.findIndex(({ id }) => id === day.id)),
     );
+    return Promise.all(promises);
   }
 
   public renderAllDays() {
@@ -769,7 +777,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       this.fullfilledDays.includes(id),
     );
 
-    this.renderNewDays(loadedDays);
+    const promise = this.renderNewDays(loadedDays);
 
     if (this.state.firstLoad) {
       const isLoaded =
@@ -780,6 +788,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         );
       if (isLoaded) this.processFirstLoad();
     }
+
+    return promise;
   }
 
   public processFirstLoad() {
@@ -1020,6 +1030,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     this.currentLeftColumnIndex = 0;
     this.props.removeDays(0, daysStore.days.length);
 
+    this.renderedDaysIds = [];
     const requiredDays = [targetDate]; // .clone().subtract(1, 'day')
     // this.lazyLoadDays = requiredDays.map(m => m);
 
@@ -1105,6 +1116,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     return dayWidth <= 0 ? '100%' : `${dayWidth}px`;
   }
   public render() {
+    // console.log('rendered');
     const { stamps, dayWidth } = this.state;
     const { subGridColumns, positionCount } = this.props;
 

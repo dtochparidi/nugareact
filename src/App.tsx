@@ -111,7 +111,7 @@ class App extends React.Component {
             zIndex: 100000,
           }}
         >
-          <LazyWidget updateInterval={100} />
+          <LazyWidget updateInterval={400} />
         </div>
         <VersionLabel
           major={currentVersion.major}
