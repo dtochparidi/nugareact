@@ -8,12 +8,12 @@ import { observer } from 'mobx-react';
 import moize from 'moize';
 import * as moment from 'moment';
 import * as React from 'react';
+import VisibilityStore from 'stores/UI/VisibilityStote';
 import Appointment from 'structures/Appointment';
 import CalendarDay from 'structures/CalendarDay';
 
 import AppointmentCell from './AppointmentCell';
 
-import VisibilityStore from 'stores/UI/VisibilityStote';
 import './AppointmentCell/AppointmentCell.scss';
 
 // import Grid from './Grid';
@@ -107,11 +107,13 @@ export default class Day extends React.Component<IProps, IState> {
         //   this.props.dayData.stateIndex,
         //   Object.keys(this.props.dayData.appointments).length,
         // );
-        console.log('check to update', this.props.dayData.stateIndex);
+        // console.log('check to update', this.props.dayData.stateIndex);
         return this.props.dayData.stateIndex;
       },
       apps => {
-        console.log('!!!!!!!!!!!!!!!! apps updated');
+        // console.log('!!!!!!!!!!!!!!!! apps updated');
+
+        this.registerNewApps();
         this.updateApps(this.props.instantRender.value);
       },
     );
@@ -133,13 +135,23 @@ export default class Day extends React.Component<IProps, IState> {
   }
 
   public componentDidMount() {
-    this.updateApps(this.props.instantRender.value);
+    setTimeout(() => this.updateApps(this.props.instantRender.value));
+  }
+
+  public registerNewApps() {
+    const apps = Object.values(this.props.dayData.appointments);
+    apps.forEach(app => {
+      if (!(app.uniqueId in this.displayMap))
+        this.displayMap[app.uniqueId] = { value: false };
+    });
   }
 
   public turnOnVisibility() {
     const { dayData, instantRender } = this.props;
 
-    console.log(`turn on visibility (instantly: ${instantRender.value})`);
+    this.registerNewApps();
+
+    // console.log(`turn on visibility (instantly: ${instantRender.value})`);
     if (instantRender.value)
       runInAction(() => {
         Object.values(dayData.appointments).forEach(app => {
@@ -257,18 +269,26 @@ export default class Day extends React.Component<IProps, IState> {
     };
 
     const apps = Object.values(dayData.appointments);
-    this.displayMap = apps.reduce((acc, val) => {
-      acc[val.uniqueId] = { value: false };
-      return acc;
-    }, this.displayMap);
+    this.registerNewApps();
 
     const func = () => {
+      const markPrefix = `generateAppElements (count: ${apps.length})`;
+      performance.mark(`${markPrefix}-start`);
+
       const newApps = apps.map(app => generateAppElement(app));
+      performance.mark(`${markPrefix}-end`);
+
       this.setState({ apps: newApps, stateIndex: this.state.stateIndex + 1 });
 
-      console.log('do instantly:', instant);
+      // console.log('do instantly:', instant);
       if (this.props.visibilityStore.isVisible(this.props.dayData.id))
         this.turnOnVisibility();
+
+      performance.measure(
+        markPrefix,
+        `${markPrefix}-start`,
+        `${markPrefix}-end`,
+      );
     };
 
     if (instant) func();

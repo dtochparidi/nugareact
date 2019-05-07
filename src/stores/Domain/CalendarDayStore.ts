@@ -30,7 +30,7 @@ export default class CalendarDayStore {
       const day = new CalendarDay(date.startOf('day'));
 
       const promise = this.loadDayData(day);
-      console.log('a promise for', day.id);
+      // console.log('a promise for', day.id);
 
       if (day.id in this.daysMap) return promise;
 
@@ -58,7 +58,7 @@ export default class CalendarDayStore {
     // performance.mark('load days end');
     // performance.measure('load days', 'load days start', 'load days end');
 
-    console.log('promises to load:', loadDataPromises);
+    // console.log('promises to load:', loadDataPromises);
     return Promise.all(loadDataPromises);
     // });
   }
@@ -215,7 +215,7 @@ export default class CalendarDayStore {
         }, {}),
       );
 
-      console.log('loaded', day.id);
+      // console.log('loaded', day.id);
 
       return day;
     });
