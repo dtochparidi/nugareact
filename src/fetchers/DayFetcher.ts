@@ -134,21 +134,26 @@ async function generateAppointments(
     return new Appointment(app);
   };
 
-  return (await Promise.all(
+  const generatedApps = await Promise.all(
     new Array(random(255, 250))
-      // new Array(random(5, 5))
-      // new Array(random(0, 0))
-      // appointments: new Array(random(3, 2))
       .fill(null)
       .map(
         async () => await lazyTaskManager.addTask(new LazyTask(generateApp)),
       ),
-  ))
-    .filter(app => app !== null)
-    .reduce((acc, app: Appointment) => {
-      acc[app.uniqueId] = toJSON ? app.toJSON() : app;
-      return acc;
-    }, {});
+  );
+
+  const finalTask = new LazyTask(() =>
+    generatedApps
+      .filter(app => app !== null)
+      .reduce((acc, app: Appointment) => {
+        acc[app.uniqueId] = toJSON ? app.toJSON() : app;
+        return acc;
+      }, {}),
+  );
+
+  const data = await lazyTaskManager.addTask(finalTask);
+
+  return data;
 }
 
 export async function generateRandomDay(date: IMoment): Promise<ICalendarDay> {

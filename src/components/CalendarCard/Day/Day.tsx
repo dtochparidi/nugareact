@@ -63,6 +63,7 @@ export default class Day extends React.Component<IProps, IState> {
   @observable
   public displayMap: { [key: string]: { value: boolean } } = {};
   public dayElemRef = React.createRef<HTMLDivElement>();
+  public visibility = false;
 
   public moizedRenderer = moize.reactSimple(
     ({ props, stateIndex }: { props: IProps; stateIndex: number }) => {
@@ -120,7 +121,7 @@ export default class Day extends React.Component<IProps, IState> {
 
     const r2 = reaction(
       () => this.props.visibilityStore.isVisible(this.props.dayData.id),
-      () => this.turnOnVisibility(),
+      () => (!this.visibility ? this.turnOnVisibility() : null),
     );
     this.reactions = [r1, r2];
 
@@ -147,6 +148,8 @@ export default class Day extends React.Component<IProps, IState> {
   }
 
   public turnOnVisibility() {
+    this.visibility = true;
+
     const { dayData, instantRender } = this.props;
 
     this.registerNewApps();
