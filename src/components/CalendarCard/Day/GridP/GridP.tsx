@@ -1,6 +1,6 @@
 import { LazyTask } from '@levabala/lazytask/build/dist';
 import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
-import moize from 'moize';
+// import moize from 'moize';
 import * as PIXI from 'pixi.js';
 import * as React from 'react';
 
@@ -26,8 +26,15 @@ export interface IState {
 // setInterval(() => console.log(moize.getStats('generateGraphics')), 1500);
 
 export default class GridP extends React.Component<IProps, IState> {
-  private static generateGraphics = moize(
-    (width, cellHeight, cols, rows, subGridColumns) => {
+  private static generateGraphics =
+    // moize(
+    (
+      width: number,
+      cellHeight: number,
+      cols: number,
+      rows: number,
+      subGridColumns: number,
+    ) => {
       const container = new PIXI.Container();
 
       const xStep = width / cols;
@@ -73,9 +80,9 @@ export default class GridP extends React.Component<IProps, IState> {
       container.addChild(secondaryGrid);
 
       return container;
-    },
-    { profileName: 'generateGraphics' },
-  );
+    };
+  //   { profileName: 'generateGraphics' },
+  // );
 
   private wrapperRef = React.createRef<HTMLDivElement>();
   private renderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer;
@@ -87,6 +94,8 @@ export default class GridP extends React.Component<IProps, IState> {
     this.state = {
       a: null,
     };
+
+    console.log('new GRIDP');
   }
 
   public componentDidMount() {

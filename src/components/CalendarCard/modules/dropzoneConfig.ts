@@ -1,14 +1,15 @@
 import { Interactable, InteractEvent } from 'levabala_interactjs';
 import { Duration as IDuration, Moment as IMoment } from 'moment';
-import * as Moment from 'moment';
-import { DateRange, extendMoment } from 'moment-range';
+// import * as Moment from 'moment';
+// import { DateRange, extendMoment } from 'moment-range';
+import { DateRange } from 'moment-range';
 import Appointment from 'structures/Appointment';
 import CalendarDay from 'structures/CalendarDay';
 
 import CalendarCard from '..';
-import { freePlaceToDrop } from './freePlaceToDrop';
+// import { freePlaceToDrop } from './freePlaceToDrop';
 
-const moment = extendMoment(Moment);
+// const moment = extendMoment(Moment);
 
 function getStampByRelativePosition(
   x: number,
@@ -66,7 +67,7 @@ interface IDragEvent extends InteractEvent {
 export function generateDropzoneConfig(this: CalendarCard) {
   return ((): interact.DropZoneOptions => {
     let lastLittleGridChunk: HTMLElement[] | null = null;
-    let placeIsFree: boolean = true;
+    // let placeIsFree: boolean = true;
     let lastPosition: number;
     let lastStamp: IMoment;
     let appInfo: {
@@ -88,30 +89,26 @@ export function generateDropzoneConfig(this: CalendarCard) {
         if (lastLittleGridChunk)
           lastLittleGridChunk.forEach(chunk => chunk.classList.remove('enter'));
 
-        this.clearShifts();
+        // this.clearShifts();
       },
       ondrop: (e: IDragEvent) => {
-        if (placeIsFree && appInfo) {
-          this.lockShifts();
-
-          this.props.updateAppointment({
-            date: appInfo.date,
-            targetDate: lastStamp,
-            targetPosition: lastPosition,
-            uniqueId: appInfo.uniqueId,
-          });
-
-          this.checkForOverlaps(lastStamp);
-
-          if (lastLittleGridChunk)
-            lastLittleGridChunk.forEach(chunk =>
-              chunk.classList.remove('enter'),
-            );
-          appInfo = null;
-        }
-
-        // this.updateMovingId('');
-        setTimeout(() => this.updateMovingId(''), 500);
+        // if (placeIsFree && appInfo) {
+        //   this.lockShifts();
+        //   this.props.updateAppointment({
+        //     date: appInfo.date,
+        //     targetDate: lastStamp,
+        //     targetPosition: lastPosition,
+        //     uniqueId: appInfo.uniqueId,
+        //   });
+        //   this.checkForOverlaps(lastStamp);
+        //   if (lastLittleGridChunk)
+        //     lastLittleGridChunk.forEach(chunk =>
+        //       chunk.classList.remove('enter'),
+        //     );
+        //   appInfo = null;
+        // }
+        // // this.updateMovingId('');
+        // setTimeout(() => this.updateMovingId(''), 500);
       },
       ondropactivate: (e: IDragEvent) => {
         //
@@ -188,17 +185,17 @@ export function generateDropzoneConfig(this: CalendarCard) {
         )
           return;
 
-        const isFree = freePlaceToDrop(
-          {
-            dateRange: moment.range(
-              roundedStamp,
-              roundedStamp.clone().add(appInfo.duration),
-            ),
-            position,
-            uniqueId: appInfo.uniqueId,
-          },
-          this,
-        );
+        // const isFree = freePlaceToDrop(
+        //   {
+        //     dateRange: moment.range(
+        //       roundedStamp,
+        //       roundedStamp.clone().add(appInfo.duration),
+        //     ),
+        //     position,
+        //     uniqueId: appInfo.uniqueId,
+        //   },
+        //   this,
+        // );
 
         const x = roundedOffset / largeStep;
         const endX = roundedEndOffset / largeStep;
@@ -233,7 +230,7 @@ export function generateDropzoneConfig(this: CalendarCard) {
           lastLittleGridChunk.forEach(chunk => chunk.classList.remove('enter'));
         chunks.forEach(chunk => chunk.classList.add('enter'));
 
-        placeIsFree = isFree;
+        // placeIsFree = isFree;
         lastPosition = position;
         lastStamp = roundedStamp;
         lastLittleGridChunk = chunks;

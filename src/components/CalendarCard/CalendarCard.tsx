@@ -4,7 +4,6 @@ import { Duration as IDuration, Moment as IMoment } from 'moment';
 import { DateRange, extendMoment } from 'moment-range';
 import * as React from 'react';
 import * as ReactCSSTransitionReplace from 'react-css-transition-replace';
-import { v4 } from 'uuid';
 
 import ICalendarDay from '../../interfaces/ICalendarDay';
 import Card from '../Card';
@@ -36,7 +35,6 @@ import {
   calcColumnsCount,
   calcDaySize,
   calcGridsCount,
-  getCellInfo,
   updateStickyElements,
 } from './modules/staticMethods';
 
@@ -91,11 +89,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   @observable
   public shifts: {
     [dayId: string]: {
-      [x: number]: {
-        [y: number]: {
-          dx: number;
-          dy: number;
-        };
+      [uniqueId: string]: {
+        dx: number;
+        dy: number;
       };
     };
   } = {};
@@ -197,10 +193,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     );
 
     this.updateMovingId(appCell.id);
-
-    this.shiftsCache = {};
-
-    this.clearShifts();
   }
 
   public onAppointmentDraggingEnd(e: interact.InteractEvent) {
@@ -210,21 +202,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       .parentNode as Element).parentNode as Element).classList.remove(
       'dragOrigin',
     );
-  }
-
-  public unshiftWholeColumn(target: HTMLElement) {
-    const { stamp } = getCellInfo(target);
-    const day = this.getDayByStamp(stamp);
-    const column = this.getColumnByStamp(stamp, day);
-
-    const x = parseInt(target.dataset.x || '0', 10);
-
-    const changed = column.reduce(
-      (acc, app) => this.unShiftCell(day.id, x, app.position, true) || acc,
-      false,
-    );
-
-    if (changed) this.shiftsHash[day.id] = v4();
   }
 
   public checkForOverlaps(dayStamp: IMoment) {
@@ -321,169 +298,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     return appointments;
   }
 
-  @action
-  public clearShifts() {
-    let shiftsIsEmpty = true;
-
-    Object.entries(this.shifts).forEach(entrie0 => {
-      const [dayId] = entrie0;
-
-      if (Object.keys(this.shifts[dayId]).length) {
-        for (const x in this.shifts[dayId])
-          for (const y in this.shifts[dayId][x])
-            this.shifts[dayId][x][y] = { dx: 0, dy: 0 };
-
-        shiftsIsEmpty = false;
-        this.shiftsHash[dayId] = v4();
-      }
-    });
-    return shiftsIsEmpty;
-  }
-
-  @action
-  public lockShifts() {
-    const { shifts } = this;
-    let shiftsIsEmpty = true;
-
-    Object.entries(shifts).forEach(entrie0 => {
-      const [dayId, dayShifts] = entrie0;
-      Object.entries(dayShifts).forEach(entrie1 => {
-        const [x, row] = entrie1;
-        Object.entries(row).forEach(entrie2 => {
-          const [y] = entrie2;
-          const elem: { dx: number; dy: number } = row[y];
-
-          const day = (this.calendarContainerRef
-            .current as HTMLElement).querySelector(`#${dayId}`) as HTMLElement;
-          const gridCell = day.querySelector(
-            `[data-x="${x}"][data-y="${y}"]`,
-          ) as HTMLElement;
-
-          const appCells = gridCell.querySelectorAll('.appointmentCell');
-
-          appCells.forEach(appCell => {
-            const appointmentId = appCell.id;
-            const app = Appointment.fromIdentifier(appointmentId);
-            const { stamp: targetStamp, position } = getCellInfo(gridCell);
-
-            targetStamp.hour(app.date.hour()).minute(app.date.minute());
-
-            this.props.updateAppointment({
-              date: app.date,
-              targetDate: targetStamp.add(
-                this.props.mainColumnStep.asMinutes() * elem.dx,
-                'minute',
-              ),
-              targetPosition: position + elem.dy,
-              uniqueId: app.uniqueId,
-            });
-          });
-        });
-      });
-
-      if (Object.keys(this.shifts[dayId]).length) {
-        this.shifts[dayId] = {};
-        shiftsIsEmpty = false;
-
-        this.shiftsHash[dayId] = v4();
-      }
-    });
-
-    return shiftsIsEmpty;
-  }
-
-  @action
-  public mergeShifts(
-    dayId: string,
-    shifts: Array<{ x: number; y: number; dx: number; dy: number }>,
-  ) {
-    if (!(dayId in this.shifts)) this.shifts[dayId] = {};
-
-    Object.entries(this.shifts[dayId]).forEach(entrie0 => {
-      const [x, row] = entrie0;
-      const ix = parseInt(x, 10);
-      Object.keys(row).forEach(y => {
-        const iy = parseInt(y, 10);
-        if (!shifts.find(shift => shift.x === ix && shift.y === iy))
-          shifts.push({ x: ix, y: iy, dx: 0, dy: 0 });
-      });
-    });
-
-    shifts.forEach(({ x, y, dx, dy }) => {
-      if (!(x in this.shifts[dayId])) this.shifts[dayId][x] = {};
-
-      if (!this.shifts[dayId][x][y])
-        this.shifts[dayId][x][y] = { dx: 0, dy: 0 };
-      const shift = this.shifts[dayId][x][y];
-
-      if (shift.dx !== dx || shift.dy !== dy) {
-        this.shifts[dayId][x][y].dx = dx;
-        this.shifts[dayId][x][y].dy = dy;
-      }
-    });
-
-    this.shiftsHash[dayId] = v4();
-  }
-
-  @action
-  public shiftMultipleCells(
-    dayId: string,
-    shifts: Array<{ x: number; y: number; dx: number; dy: number }>,
-  ) {
-    if (!shifts.length) return;
-
-    if (!(dayId in this.shifts)) this.shifts[dayId] = {};
-
-    shifts.forEach(({ x, y, dx, dy }) => {
-      if (!(x in this.shifts[dayId])) this.shifts[dayId][x] = {};
-
-      this.shifts[dayId][x][y] = { dx, dy };
-    });
-
-    this.shiftsHash[dayId] = v4();
-  }
-
-  @action
-  public shiftCell(
-    dayId: string,
-    x: number,
-    y: number,
-    dx: number,
-    dy: number,
-  ) {
-    if (!(dayId in this.shifts)) this.shifts[dayId] = {};
-
-    if (!(x in this.shifts[dayId])) this.shifts[dayId][x] = {};
-
-    this.shifts[dayId][x][y] = { dx, dy };
-  }
-
-  public unShiftCell(dayId: string, x: number, y: number, stack = false) {
-    if (x in this.shifts[dayId]) {
-      if (!(y in this.shifts[dayId][x])) return;
-
-      this.unShitsCellActually.apply(this, arguments);
-
-      return true;
-    }
-
-    return false;
-  }
-
-  @action
-  public unShitsCellActually(
-    dayId: string,
-    x: number,
-    y: number,
-    stack = false,
-  ) {
-    delete this.shifts[dayId][x][y];
-    if (!Object.keys(this.shifts[dayId][x]).length)
-      delete this.shifts[dayId][x];
-
-    if (!stack) this.shiftsHash[dayId] = v4();
-  }
-
   public updateDropzones(minDay: number, maxDay: number) {
     interact('.day').dropzone(this.dropzoneConfig);
   }
@@ -511,8 +325,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       </div>
     );
 
-    if (this.state.gridsCount !== gridsCount)
-      this.setState({ gridsCount, gridsContainer });
+    // if (this.state.gridsCount !== gridsCount)
+    this.setState({ gridsCount, gridsContainer });
   }
 
   public async updateRequiredDays(
@@ -706,6 +520,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         resolve();
       });
     });
+  }
+
+  public clearRenderedDays() {
+    this.setState({ renderedDays: [] });
   }
 
   public renderNewDays(newAllDays: CalendarDay[]) {
@@ -1211,9 +1029,12 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           this.currentLeftColumnIndex,
           this.currentLeftColumnIndex + this.state.columnsPerPage,
         ]);
-        // this.updateParalaxGrids(true);
+        this.updateParalaxGrids(true);
 
         updateStickyElements(true);
+
+        this.clearRenderedDays();
+        this.renderAllDays();
 
         // setTimeout(() => this.updateParalaxGrids(true), 3500);
       }, boundTime);

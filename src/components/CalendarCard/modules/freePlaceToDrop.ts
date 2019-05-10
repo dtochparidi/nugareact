@@ -1,6 +1,6 @@
 import { DateRange } from 'moment-range';
 import Appointment from 'structures/Appointment';
-import CalendarDay from 'structures/CalendarDay';
+// import CalendarDay from 'structures/CalendarDay';
 
 import CalendarCard, { Direction } from '../CalendarCard';
 
@@ -16,19 +16,19 @@ export function freePlaceToDrop(
     [uniqueId: string]: { dx: number; dy: number };
   }
 
-  const applyShifts = (currentDay: CalendarDay, offsets: IOffsetMap) => {
-    const shifts = Object.entries(offsets).map(([id, deltas]) => {
-      const app = currentDay.appointments[id];
-      return {
-        dx: 0,
-        dy: deltas.dy,
-        x: context.getColumnIndex(app.date),
-        y: app.position,
-      };
-    });
+  // const applyShifts = (currentDay: CalendarDay, offsets: IOffsetMap) => {
+  //   const shifts = Object.entries(offsets).map(([id, deltas]) => {
+  //     const app = currentDay.appointments[id];
+  //     return {
+  //       dx: 0,
+  //       dy: deltas.dy,
+  //       x: context.getColumnIndex(app.date),
+  //       y: app.position,
+  //     };
+  //   });
 
-    context.mergeShifts(currentDay.id, shifts);
-  };
+  //   context.mergeShifts(currentDay.id, shifts);
+  // };
 
   const day = context.getDayByStamp(movingApp.dateRange.start);
 
@@ -211,14 +211,14 @@ export function freePlaceToDrop(
     return finalOffsets;
   };
 
-  const offsetMap = calcOffsetMap(movingApp, {});
+  // const offsetMap = calcOffsetMap(movingApp, {});
 
-  if (!offsetMap) {
-    context.clearShifts();
-    return false;
-  }
+  // if (!offsetMap) {
+  //   context.clearShifts();
+  //   return false;
+  // }
 
-  applyShifts(day, offsetMap);
+  // applyShifts(day, offsetMap);
 
   return true;
 }
