@@ -58,7 +58,7 @@ export interface IProps {
   requestCallback: (date: Moment.Moment[]) => Promise<CalendarDay[]>;
   removeDays: (indexStart: number, indexEnd: number) => void;
   mainColumnStep: IDuration;
-  updateAppointment: (props: IUpdateAppProps) => void;
+  updateAppointment: (props: IUpdateAppProps, weightful?: boolean) => void;
 }
 
 export interface IState {
@@ -612,6 +612,74 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     //     // setTimeout(() => this.updateScroll(true), 1000);
     //   });
     // }
+  }
+
+  @action
+  public lockShifts() {
+    const { shifts } = this;
+
+    Object.entries(shifts).forEach(([dayId, dayShifts]) => {
+      const day: CalendarDay =
+        rootStore.domainStore.calendarDayStore.daysMap[dayId];
+      const apps = day.appointments;
+
+      Object.entries(dayShifts).forEach(([appId, deltas]) => {
+        const { dx, dy } = deltas;
+        if (dx === 0 && dy === 0) return;
+
+        console.log(dx, dy);
+
+        const app = apps[appId];
+
+        this.props.updateAppointment(
+          {
+            date: app.date,
+            targetDate: app.date
+              .clone()
+              .add(this.props.mainColumnStep.asMinutes() * dx, 'minute'),
+            targetPosition: app.position + dy,
+            uniqueId: app.uniqueId,
+          },
+          false,
+        );
+      });
+    });
+
+    this.clearShifts();
+  }
+
+  @action
+  public clearShifts() {
+    Object.values(this.shifts).forEach(appIds =>
+      Object.keys(appIds).forEach(id => {
+        appIds[id].dx = 0;
+        appIds[id].dy = 0;
+      }),
+    );
+  }
+
+  @action
+  public mergeShifts(
+    dayId: string,
+    shifts: Array<{ appId: string; dx: number; dy: number }>,
+  ) {
+    if (!(dayId in this.shifts)) {
+      this.shifts[dayId] = shifts.reduce((acc, val) => {
+        acc[val.appId] = { dx: val.dx, dy: val.dy };
+        return acc;
+      }, {});
+
+      return;
+    }
+
+    const dayShifts = this.shifts[dayId];
+    shifts.forEach(({ appId, dx, dy }) => {
+      if (!(appId in dayShifts)) dayShifts[appId] = { dx, dy };
+      else {
+        dayShifts[appId].dx = dx;
+        dayShifts[appId].dy = dy;
+      }
+    });
   }
 
   public async turnPage(delta: -1 | 1) {

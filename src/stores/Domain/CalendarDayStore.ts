@@ -70,14 +70,17 @@ export default class CalendarDayStore {
   }
 
   @action.bound
-  public updateAppointment({
-    targetDate,
-    targetPosition,
-    targetDuration,
-    appointment,
-    uniqueId,
-    date,
-  }: IUpdateAppProps) {
+  public updateAppointment(
+    {
+      targetDate,
+      targetPosition,
+      targetDuration,
+      appointment,
+      uniqueId,
+      date,
+    }: IUpdateAppProps,
+    weightful = true,
+  ) {
     date = date || (appointment as Appointment).date;
     targetDate = targetDate || date;
 
@@ -162,16 +165,19 @@ export default class CalendarDayStore {
         ),
         targetDate ? { date: targetDate } : {},
       ),
+      false,
     );
 
-    // if day wasn't changed
-    if (currentDay.date.diff(newDay.date, 'day') === 0) return;
+    // if day was changed
+    if (currentDay.date.diff(newDay.date, 'day') !== 0) {
+      // remove from current day
+      delete currentDay.appointments[appointment.uniqueId];
+      (currentDay as CalendarDay).registerStateUpdate(false);
 
-    // remove from current day
-    delete currentDay.appointments[appointment.uniqueId];
-
-    // append to new day
-    newDay.appointments[appointment.uniqueId] = appointment;
+      // append to new day
+      newDay.appointments[appointment.uniqueId] = appointment;
+      newDay.registerStateUpdate(false);
+    }
   }
 
   private async loadDayData(day: CalendarDay) {

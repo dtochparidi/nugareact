@@ -94,8 +94,6 @@ export default class GridP extends React.Component<IProps, IState> {
     this.state = {
       a: null,
     };
-
-    console.log('new GRIDP');
   }
 
   public componentDidMount() {

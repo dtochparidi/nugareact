@@ -1,15 +1,15 @@
 import { Interactable, InteractEvent } from 'levabala_interactjs';
 import { Duration as IDuration, Moment as IMoment } from 'moment';
-// import * as Moment from 'moment';
-// import { DateRange, extendMoment } from 'moment-range';
-import { DateRange } from 'moment-range';
+import * as Moment from 'moment';
+import { DateRange, extendMoment } from 'moment-range';
+// import { DateRange } from 'moment-range';
 import Appointment from 'structures/Appointment';
 import CalendarDay from 'structures/CalendarDay';
 
 import CalendarCard from '..';
-// import { freePlaceToDrop } from './freePlaceToDrop';
+import { freePlaceToDrop } from './freePlaceToDrop';
 
-// const moment = extendMoment(Moment);
+const moment = extendMoment(Moment);
 
 function getStampByRelativePosition(
   x: number,
@@ -66,8 +66,7 @@ interface IDragEvent extends InteractEvent {
 
 export function generateDropzoneConfig(this: CalendarCard) {
   return ((): interact.DropZoneOptions => {
-    let lastLittleGridChunk: HTMLElement[] | null = null;
-    // let placeIsFree: boolean = true;
+    let placeIsFree: boolean = true;
     let lastPosition: number;
     let lastStamp: IMoment;
     let appInfo: {
@@ -86,28 +85,27 @@ export function generateDropzoneConfig(this: CalendarCard) {
         appInfo = Appointment.fromIdentifier(appCell.id);
       },
       ondragleave: (e: IDragEvent) => {
-        if (lastLittleGridChunk)
-          lastLittleGridChunk.forEach(chunk => chunk.classList.remove('enter'));
-
-        // this.clearShifts();
+        this.clearShifts();
       },
       ondrop: (e: IDragEvent) => {
-        // if (placeIsFree && appInfo) {
-        //   this.lockShifts();
-        //   this.props.updateAppointment({
-        //     date: appInfo.date,
-        //     targetDate: lastStamp,
-        //     targetPosition: lastPosition,
-        //     uniqueId: appInfo.uniqueId,
-        //   });
-        //   this.checkForOverlaps(lastStamp);
-        //   if (lastLittleGridChunk)
-        //     lastLittleGridChunk.forEach(chunk =>
-        //       chunk.classList.remove('enter'),
-        //     );
-        //   appInfo = null;
-        // }
-        // // this.updateMovingId('');
+        if (placeIsFree && appInfo) {
+          this.lockShifts();
+
+          this.props.updateAppointment(
+            {
+              date: appInfo.date,
+              targetDate: lastStamp,
+              targetPosition: lastPosition,
+              uniqueId: appInfo.uniqueId,
+            },
+            false,
+          );
+
+          this.checkForOverlaps(lastStamp);
+          appInfo = null;
+        }
+
+        // this.updateMovingId('');
         // setTimeout(() => this.updateMovingId(''), 500);
       },
       ondropactivate: (e: IDragEvent) => {
@@ -116,14 +114,12 @@ export function generateDropzoneConfig(this: CalendarCard) {
       ondropdeactivate: (e: IDragEvent) => {
         this.shiftsCache = {};
 
-        if (lastLittleGridChunk)
-          lastLittleGridChunk.forEach(chunk => chunk.classList.remove('enter'));
         appInfo = null;
       },
       ondropmove: (e: IDragEvent) => {
         if (!appInfo) return;
 
-        console.log('dropmove');
+        // console.log('dropmove');
 
         const {
           target: dayElement,
@@ -140,7 +136,7 @@ export function generateDropzoneConfig(this: CalendarCard) {
         const {
           position: absPosition,
           stamp: abstractStamp,
-          endStamp: abstractEndStamp,
+          // endStamp: abstractEndStamp,
         } = getInfo(appCell, dayElement, dayTimeRangeActual, positionCount);
 
         const position = Math.max(Math.min(absPosition, positionCount - 1), 0);
@@ -152,19 +148,19 @@ export function generateDropzoneConfig(this: CalendarCard) {
           .clone()
           .hour(abstractStamp.hour())
           .minute(abstractStamp.minute());
-        const endStamp = dayStart
-          .clone()
-          .hour(abstractEndStamp.hour())
-          .minute(abstractEndStamp.minute());
+        // const endStamp = dayStart
+        //   .clone()
+        //   .hour(abstractEndStamp.hour())
+        //   .minute(abstractEndStamp.minute());
 
         const { mainColumnStep } = this.props;
         const largeStep = mainColumnStep.asMilliseconds();
         const littleStep = largeStep / this.props.subGridColumns;
         const offset = stamp.valueOf() - dayStart.valueOf();
-        const endOffset = endStamp.valueOf() - dayStart.valueOf();
+        // const endOffset = endStamp.valueOf() - dayStart.valueOf();
         const roundedOffset = Math.round(offset / littleStep) * littleStep;
-        const roundedEndOffset =
-          Math.round(endOffset / littleStep) * littleStep;
+        // const roundedEndOffset =
+        //   Math.round(endOffset / littleStep) * littleStep;
         const roundedStamp = dayStart.clone().add(roundedOffset);
 
         const dayEnd = dayStart.clone().add(dayTimeRangeActual.duration());
@@ -185,55 +181,55 @@ export function generateDropzoneConfig(this: CalendarCard) {
         )
           return;
 
-        // const isFree = freePlaceToDrop(
-        //   {
-        //     dateRange: moment.range(
-        //       roundedStamp,
-        //       roundedStamp.clone().add(appInfo.duration),
-        //     ),
-        //     position,
-        //     uniqueId: appInfo.uniqueId,
-        //   },
-        //   this,
-        // );
+        const isFree = freePlaceToDrop(
+          {
+            dateRange: moment.range(
+              roundedStamp,
+              roundedStamp.clone().add(appInfo.duration),
+            ),
+            position,
+            uniqueId: appInfo.uniqueId,
+          },
+          this,
+        );
 
-        const x = roundedOffset / largeStep;
-        const endX = roundedEndOffset / largeStep;
-        const chunks: HTMLElement[] = [];
+        // const x = roundedOffset / largeStep;
+        // const endX = roundedEndOffset / largeStep;
+        // const chunks: HTMLElement[] = [];
 
-        let currentX = x;
-        let index = 0;
-        while (currentX < endX) {
-          const gridX = Math.floor(
-            currentX + (1 / this.props.subGridColumns) * 0.9,
-          );
-          const gridY = position;
-          const selector = `[data-x="${gridX}"][data-y="${gridY}"]`;
-          const gridCell = dayElement.querySelector(selector) as HTMLElement;
+        // let currentX = x;
+        // let index = 0;
+        // while (currentX < endX) {
+        //   const gridX = Math.floor(
+        //     currentX + (1 / this.props.subGridColumns) * 0.9,
+        //   );
+        //   const gridY = position;
+        //   const selector = `[data-x="${gridX}"][data-y="${gridY}"]`;
+        //   const gridCell = dayElement.querySelector(selector) as HTMLElement;
 
-          if (!gridCell) return;
+        //   if (!gridCell) return;
 
-          const littleChunkIndex = Math.round(
-            (currentX - gridX) / (1 / this.props.subGridColumns),
-          );
-          const littleGridChunk = (gridCell.querySelector(
-            '.subGrid',
-          ) as HTMLElement).children[littleChunkIndex] as HTMLElement;
+        //   const littleChunkIndex = Math.round(
+        //     (currentX - gridX) / (1 / this.props.subGridColumns),
+        //   );
+        //   const littleGridChunk = (gridCell.querySelector(
+        //     '.subGrid',
+        //   ) as HTMLElement).children[littleChunkIndex] as HTMLElement;
 
-          if (littleGridChunk) chunks.push(littleGridChunk);
+        //   if (littleGridChunk) chunks.push(littleGridChunk);
 
-          index++;
-          currentX = x + (1 / this.props.subGridColumns) * index;
-        }
+        //   index++;
+        //   currentX = x + (1 / this.props.subGridColumns) * index;
+        // }
 
-        if (lastLittleGridChunk)
-          lastLittleGridChunk.forEach(chunk => chunk.classList.remove('enter'));
-        chunks.forEach(chunk => chunk.classList.add('enter'));
+        // if (lastLittleGridChunk)
+        //   lastLittleGridChunk.forEach(chunk => chunk.classList.remove('enter'));
+        // chunks.forEach(chunk => chunk.classList.add('enter'));
 
-        // placeIsFree = isFree;
+        placeIsFree = isFree;
         lastPosition = position;
         lastStamp = roundedStamp;
-        lastLittleGridChunk = chunks;
+        // lastLittleGridChunk = chunks;
       },
       overlap: 'leftCenter',
     };

@@ -1,1 +1,1 @@
-export { default } from "./AppsBlock";
+export { default } from './AppsBlock';

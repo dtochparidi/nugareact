@@ -79,7 +79,9 @@ export default class Appointment implements IAppointment {
 
   public uniqueId: string;
   public dateRange: DateRange;
-  public updateListeners: { [key: string]: (app: Appointment) => void } = {};
+  public updateListeners: {
+    [key: string]: (app: Appointment, weightful: boolean) => void;
+  } = {};
 
   constructor(obj: {
     date: IMoment;
@@ -89,40 +91,28 @@ export default class Appointment implements IAppointment {
     duration: IDuration;
   }) {
     this.uniqueId = v4();
-
-    // this.date = obj.date;
-    // this.position = obj.position;
-    // this.personId = obj.personId;
-    // this.personInstance = obj.personInstance;
-    // this.duration = obj.duration;
-
-    // this.identifier = Appointment.calcId(
-    //   this.date,
-    //   this.position,
-    //   this.personId,
-    //   this.duration,
-    //   this.uniqueId,
-    // );
-
     this.update(obj);
   }
 
   @action
-  public update({
-    date,
-    position,
-    personId,
-    personInstance,
-    duration,
-    overlapping,
-  }: {
-    date?: IMoment;
-    position?: number;
-    personId?: string;
-    personInstance?: IPerson | IPersonLoading;
-    duration?: IDuration;
-    overlapping?: boolean;
-  }) {
+  public update(
+    {
+      date,
+      position,
+      personId,
+      personInstance,
+      duration,
+      overlapping,
+    }: {
+      date?: IMoment;
+      position?: number;
+      personId?: string;
+      personInstance?: IPerson | IPersonLoading;
+      duration?: IDuration;
+      overlapping?: boolean;
+    },
+    weightful = true,
+  ) {
     if (date) this.date = date;
     if (position || position === 0) this.position = position;
     if (personId) this.personId = personId;
@@ -144,8 +134,8 @@ export default class Appointment implements IAppointment {
     this.stateHash = Appointment.getStateHash();
 
     Object.values(this.updateListeners).forEach(listener => {
-      console.log('call');
-      listener(this);
+      console.log('app updated');
+      listener(this, weightful);
     });
   }
 
@@ -158,7 +148,10 @@ export default class Appointment implements IAppointment {
     };
   }
 
-  public registerListener(key: string, listener: (app: Appointment) => void) {
+  public registerListener(
+    key: string,
+    listener: (app: Appointment, weightful: boolean) => void,
+  ) {
     this.updateListeners[key] = listener;
   }
 }

@@ -23,6 +23,7 @@ export default class CalendarDay implements ICalendarDay {
 
   public date: IMoment;
   public id: string;
+  public weightfulUpdates: Set<number> = new Set();
 
   @observable
   public stateIndex: number = 0;
@@ -32,12 +33,9 @@ export default class CalendarDay implements ICalendarDay {
     appointments: { [uniqueId: string]: Appointment } = {},
   ) {
     this.date = date;
-    this.appointments = appointments;
     this.id = CalendarDay.calcId(date);
 
-    Object.values(this.appointments).forEach(app =>
-      app.registerListener('dayHandler', this.appointmentDidUpdated),
-    );
+    this.setAppointments(appointments);
   }
 
   @action
@@ -48,10 +46,17 @@ export default class CalendarDay implements ICalendarDay {
       app.registerListener('dayHandler', this.appointmentDidUpdated),
     );
 
-    this.stateIndex++;
+    this.registerStateUpdate();
   }
 
-  public appointmentDidUpdated = (app: Appointment) => {
-    this.stateIndex++;
+  public appointmentDidUpdated = (app: Appointment, weightful: boolean) => {
+    this.registerStateUpdate(weightful);
   };
+
+  @action
+  public registerStateUpdate(weightful: boolean = true) {
+    this.stateIndex++;
+
+    if (weightful) this.weightfulUpdates.add(this.stateIndex);
+  }
 }

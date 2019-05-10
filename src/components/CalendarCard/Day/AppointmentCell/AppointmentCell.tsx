@@ -6,6 +6,7 @@ import * as React from 'react';
 
 import Appointment from '../../../../structures/Appointment';
 
+import { Lambda, observe } from 'mobx';
 import './AppointmentCell.scss';
 
 // import * as StyleVariables from '../../../../common/variables.scss';
@@ -18,20 +19,43 @@ export interface IProps {
   subGridColumns: number;
   gridColumnDuration: moment.Duration;
   getCellWidth: () => number;
-  updateAppointment: (props: IUpdateAppProps) => void;
+  updateAppointment: (props: IUpdateAppProps, weightful?: boolean) => void;
   isDisplaying: { value: boolean };
+  shiftObservable: { dx: number; dy: number };
+  cellHeight: number;
+}
+
+export interface IState {
+  shift: { dx: number; dy: number };
 }
 
 @observer
-export default class AppointmentCell extends React.Component<IProps> {
+export default class AppointmentCell extends React.Component<IProps, IState> {
   public onMouseWheelHandler: (e: React.WheelEvent<any> | WheelEvent) => void;
   public mouseWheelStep: number = 150;
   private mouseDeltaBuffer: number = 0;
+  private reactions: Lambda[] = [];
+  private unmounted = false;
 
   constructor(props: IProps) {
     super(props);
 
     this.onMouseWheelHandler = this.onMouseWheel.bind(this);
+
+    const r = observe(this.props.shiftObservable, () => {
+      if (!this.unmounted) this.setState({ shift: this.props.shiftObservable });
+    });
+
+    this.reactions = [r];
+
+    this.state = {
+      shift: { dx: 0, dy: 0 },
+    };
+  }
+
+  public componentWillUnmount() {
+    this.unmounted = true;
+    this.reactions.forEach(r => r());
   }
 
   public onMouseWheel(e: React.WheelEvent<any> | WheelEvent) {
@@ -81,23 +105,29 @@ export default class AppointmentCell extends React.Component<IProps> {
     if (!isDisplaying.value) return null;
 
     let { translateX, translateY } = this.props;
-    const { moving, getCellWidth } = this.props;
+    const { moving, getCellWidth, cellHeight } = this.props;
 
     if (!personInstance) {
       console.warn('missing instance');
       return null;
     }
 
-    translateX = translateX || 0;
-    translateY = translateY || 0;
+    const { dx, dy } = this.state.shift;
+
+    const cellWidth = getCellWidth();
+    const coeffX = cellWidth * dx;
+    const coeffY = cellHeight * dy;
+
+    translateX = (translateX || 0) + coeffX;
+    translateY = (translateY || 0) + coeffY;
 
     const translated = true;
 
     const widthScale = 1;
-    const cellWidth = getCellWidth();
     const width = `${cellWidth * widthScale}px`;
 
     const person = personInstance as IPerson;
+    const transformString = `translate3d(${translateX}px, ${translateY}px, 0px)`;
 
     return (
       <div
@@ -106,7 +136,10 @@ export default class AppointmentCell extends React.Component<IProps> {
         } ${overlapping ? 'overlapping' : ''}`}
         id={identifier}
         onWheel={this.onMouseWheelHandler}
-        style={Object.assign({ width }, this.props.style || {})}
+        style={Object.assign(
+          { width, transform: transformString },
+          this.props.style || {},
+        )}
       >
         {!person || !person.loaded ? (
           <div className="loadingMask">
