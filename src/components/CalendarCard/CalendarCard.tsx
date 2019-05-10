@@ -120,9 +120,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   private currentDaysCount: number = 0;
   private isScrolling: boolean = false;
   private pageTurnEmitter: Emitter;
-  // private clientRect: ClientRect;
   private scrollingUpdateTimeout: NodeJS.Timeout;
-  private activatedDropzones: string[] = [];
   private jumpToDayHandler: (index: number) => void;
   private dropzoneConfig = generateDropzoneConfig.bind(this)();
   private firstLoadDays: IMoment[] = [];
@@ -152,7 +150,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     );
 
     if (clientSide)
-      interact('.appointmentCell .container .containerTempWidth')
+      interact('.appointmentCell')
         .draggable(
           createDragConfig(
             this.onAppointmentDraggingStart.bind(this),
@@ -193,10 +191,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public onAppointmentDraggingStart(e: interact.InteractEvent) {
-    const appCell = ((e.target as Element).parentNode as Element)
-      .parentNode as Element;
-    ((((appCell.parentNode as Element).parentNode as Element)
-      .parentNode as Element).parentNode as Element).classList.add(
+    const appCell = e.target as Element;
+    ((appCell.parentNode as Element).parentNode as Element).classList.add(
       'dragOrigin',
     );
 
@@ -489,27 +485,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public updateDropzones(minDay: number, maxDay: number) {
-    const buffer = 1;
-
-    Array.from(
-      (this.calendarContainerRef.current as HTMLDivElement).querySelectorAll(
-        '.dayWrapper',
-      ),
-    ).forEach((child, index) => {
-      const selector = `#${child.id} .grid`;
-
-      const includes = this.activatedDropzones.includes(selector);
-      if (index >= minDay - buffer && index <= maxDay + buffer && !includes) {
-        interact(selector).dropzone(this.dropzoneConfig);
-        this.activatedDropzones.push(selector);
-      } else if (includes) {
-        interact(selector).dropzone({});
-        this.activatedDropzones.splice(
-          this.activatedDropzones.indexOf(selector),
-          1,
-        );
-      }
-    });
+    interact('.day').dropzone(this.dropzoneConfig);
   }
 
   public updateParalaxGrids(force = false) {
@@ -1015,9 +991,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         child.classList.add('hidden');
         this.visibilityStore.makeUnvisible(day.id);
       }
-
-      // if (index >= minDay && index <= maxDay) child.classList.remove('hidden');
-      // else child.classList.add('hidden');
     });
 
     this.updateDropzones(minDay, maxDay);

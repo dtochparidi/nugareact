@@ -184,9 +184,9 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
             display: none;
           }
 
-          // &.dragOrigin > .day > .grid {
-          //   display: grid;
-          // }
+          &.dragOrigin > .day {
+            display: grid;
+          }
 
           .day {
             position: relative;

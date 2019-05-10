@@ -71,7 +71,6 @@ export default class Appointment implements IAppointment {
   public personId: string;
   @observable
   public personInstance?: IPerson | IPersonLoading;
-  @observable
   public identifier: string;
   @observable
   public overlapping: boolean = false;
@@ -91,11 +90,21 @@ export default class Appointment implements IAppointment {
   }) {
     this.uniqueId = v4();
 
-    this.date = obj.date;
-    this.position = obj.position;
-    this.personId = obj.personId;
-    this.personInstance = obj.personInstance;
-    this.duration = obj.duration;
+    // this.date = obj.date;
+    // this.position = obj.position;
+    // this.personId = obj.personId;
+    // this.personInstance = obj.personInstance;
+    // this.duration = obj.duration;
+
+    // this.identifier = Appointment.calcId(
+    //   this.date,
+    //   this.position,
+    //   this.personId,
+    //   this.duration,
+    //   this.uniqueId,
+    // );
+
+    this.update(obj);
   }
 
   @action

@@ -32,12 +32,12 @@ function getPositionByRelativePosition(
 
 function getInfo(
   appElement: HTMLElement,
-  gridElement: HTMLElement,
+  dayElement: HTMLElement,
   dateRange: DateRange,
   positions: number,
 ): { position: number; stamp: IMoment; endStamp: IMoment } {
   const appRect = appElement.getBoundingClientRect();
-  const gridRect = gridElement.getBoundingClientRect();
+  const gridRect = dayElement.getBoundingClientRect();
   const x = appRect.left - gridRect.left;
   const y = appRect.top - gridRect.top + appRect.height / 2;
   const { width, height } = gridRect;
@@ -78,12 +78,9 @@ export function generateDropzoneConfig(this: CalendarCard) {
     } | null;
 
     return {
-      accept: '.appointmentCell .container .containerTempWidth',
+      accept: '.appointmentCell',
       ondragenter: (e: IDragEvent) => {
-        const { relatedTarget }: { relatedTarget: HTMLElement } = e;
-
-        const appCell = (relatedTarget.parentNode as HTMLElement)
-          .parentNode as HTMLElement;
+        const { relatedTarget: appCell }: { relatedTarget: HTMLElement } = e;
 
         appInfo = Appointment.fromIdentifier(appCell.id);
       },
@@ -129,15 +126,16 @@ export function generateDropzoneConfig(this: CalendarCard) {
       ondropmove: (e: IDragEvent) => {
         if (!appInfo) return;
 
+        console.log('dropmove');
+
         const {
-          target: gridElement,
+          target: dayElement,
           relatedTarget,
         }: { target: HTMLElement; relatedTarget: HTMLElement } = e;
 
         const appCell = relatedTarget;
 
-        const dayWrapper = (gridElement.parentNode as HTMLElement)
-          .parentNode as HTMLElement;
+        const dayWrapper = dayElement.parentNode as HTMLElement;
         const { date: dayDate } = CalendarDay.fromId(dayWrapper.id);
 
         const { dayTimeRangeActual, positionCount } = this.props;
@@ -146,7 +144,7 @@ export function generateDropzoneConfig(this: CalendarCard) {
           position: absPosition,
           stamp: abstractStamp,
           endStamp: abstractEndStamp,
-        } = getInfo(appCell, gridElement, dayTimeRangeActual, positionCount);
+        } = getInfo(appCell, dayElement, dayTimeRangeActual, positionCount);
 
         const position = Math.max(Math.min(absPosition, positionCount - 1), 0);
 
@@ -214,7 +212,7 @@ export function generateDropzoneConfig(this: CalendarCard) {
           );
           const gridY = position;
           const selector = `[data-x="${gridX}"][data-y="${gridY}"]`;
-          const gridCell = gridElement.querySelector(selector) as HTMLElement;
+          const gridCell = dayElement.querySelector(selector) as HTMLElement;
 
           if (!gridCell) return;
 
