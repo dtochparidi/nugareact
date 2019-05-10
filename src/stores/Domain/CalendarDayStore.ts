@@ -24,27 +24,43 @@ export default class CalendarDayStore {
   }
 
   @action.bound
-  public loadDay(date: IMoment): CalendarDay {
-    const day = new CalendarDay(date.startOf('day'));
+  public async loadDays(dates: IMoment[]) {
+    // let pushes = 0;
+    const loadDataPromises: Array<Promise<CalendarDay>> = dates.map(date => {
+      const day = new CalendarDay(date.startOf('day'));
 
-    this.loadDayData(day);
+      const promise = this.loadDayData(day);
+      // console.log('a promise for', day.id);
 
-    if (day.id in this.daysMap) return day;
+      if (day.id in this.daysMap) return promise;
 
-    this.daysMap[day.id] = day;
+      this.daysMap[day.id] = day;
 
-    if (this.days.length === 0) this.days.push(day);
-    else {
-      let i = -1;
-      let insertIndex = null;
-      while (++i < this.days.length && insertIndex === null)
-        if (this.days[i].date.diff(day.date) > 0) insertIndex = i;
+      if (this.days.length === 0) this.days.push(day);
+      // pushes++;
+      else {
+        let i = -1;
+        let insertIndex = null;
+        while (++i < this.days.length && insertIndex === null)
+          if (this.days[i].date.diff(day.date) > 0) insertIndex = i;
 
-      if (insertIndex !== null) this.days.splice(insertIndex, 0, day);
-      else this.days.push(day);
-    }
+        if (insertIndex !== null) this.days.splice(insertIndex, 0, day);
+        else this.days.push(day);
 
-    return day;
+        // pushes++;
+      }
+
+      return promise;
+    });
+
+    // console.log('pushes:', pushes);
+
+    // performance.mark('load days end');
+    // performance.measure('load days', 'load days start', 'load days end');
+
+    // console.log('promises to load:', loadDataPromises);
+    return Promise.all(loadDataPromises);
+    // });
   }
 
   @action.bound
@@ -114,7 +130,7 @@ export default class CalendarDayStore {
 
     // check if we need to load day
     if (!newDay) {
-      this.loadDay(targetDate.clone().startOf('day'));
+      this.loadDays([targetDate.clone().startOf('day')]);
       return;
     }
 
@@ -180,13 +196,28 @@ export default class CalendarDayStore {
       },
     );
 
-    const appointments = await Promise.all(promises);
+    // const appointments = await Promise.all(promises);
 
-    day.setAppointments(
-      appointments.reduce((acc, app) => {
-        acc[app.uniqueId] = app;
-        return acc;
-      }, {}),
-    );
+    // day.setAppointments(
+    //   appointments.reduce((acc, app) => {
+    //     acc[app.uniqueId] = app;
+    //     return acc;
+    //   }, {}),
+    // );
+
+    // console.log('loaded', day.id);
+
+    return Promise.all(promises).then(appointments => {
+      day.setAppointments(
+        appointments.reduce((acc, app) => {
+          acc[app.uniqueId] = app;
+          return acc;
+        }, {}),
+      );
+
+      // console.log('loaded', day.id);
+
+      return day;
+    });
   }
 }

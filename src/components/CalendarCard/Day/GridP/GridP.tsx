@@ -4,6 +4,9 @@ import moize from 'moize';
 import * as PIXI from 'pixi.js';
 import * as React from 'react';
 
+import * as StyleVariables from '../../../../common/variables.scss';
+const thinWidth = parseFloat(StyleVariables.thinWidth);
+
 export interface IProps {
   children?: React.ReactNode;
   width: number;
@@ -12,6 +15,7 @@ export interface IProps {
   rows: number;
   subGridColumns: number;
   instantRender: boolean;
+  style?: React.CSSProperties;
 }
 
 export interface IState {
@@ -34,7 +38,7 @@ export default class GridP extends React.Component<IProps, IState> {
       const mainGrid = new PIXI.Graphics();
       mainGrid.lineStyle(2, 0xd3d3d3, 1);
       for (let x = 0; x <= cols; x++) {
-        const xCoord = x * xStep;
+        const xCoord = x * xStep + thinWidth;
         mainGrid.moveTo(xCoord, 0);
         mainGrid.lineTo(xCoord, cellHeight * rows);
       }
@@ -44,14 +48,26 @@ export default class GridP extends React.Component<IProps, IState> {
         mainGrid.moveTo(0, yCoord);
         mainGrid.lineTo(width, yCoord);
       }
+
       // second grid
       const secondaryGrid = new PIXI.Graphics();
       secondaryGrid.lineStyle(1, 0xd3d3d3, 1);
       for (let x = 0; x <= cols * subGridColumns; x++) {
-        const xCoord = x * xSecondStep;
+        const xCoord = x * xSecondStep + thinWidth;
         secondaryGrid.moveTo(xCoord, 0);
         secondaryGrid.lineTo(xCoord, cellHeight * rows);
       }
+
+      // mark
+      const mark = new PIXI.Graphics();
+      mark.beginFill(0xf4e842);
+      mark.moveTo(0, 0);
+      mark.lineTo(100, 0);
+      mark.lineTo(100, 100);
+      mark.lineTo(0, 100);
+      mark.lineTo(0, 0);
+      mark.endFill();
+      container.addChild(mark);
 
       container.addChild(mainGrid);
       container.addChild(secondaryGrid);
@@ -109,6 +125,10 @@ export default class GridP extends React.Component<IProps, IState> {
     }
   }
 
+  public componentWillUnmount() {
+    this.renderer.destroy(true);
+  }
+
   public renderPIXI() {
     const { width, cellHeight, cols, rows, subGridColumns } = this.props;
     const container = GridP.generateGraphics(
@@ -122,6 +142,6 @@ export default class GridP extends React.Component<IProps, IState> {
   }
 
   public render() {
-    return <div ref={this.wrapperRef} />;
+    return <div ref={this.wrapperRef} style={this.props.style} />;
   }
 }

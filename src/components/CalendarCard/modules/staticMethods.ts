@@ -70,8 +70,14 @@ export function calcDaySize(
   leftColumnWidth: number,
 ) {
   const dayWidth =
-    ((containerWidth - leftColumnWidth) / columnsPerPage) * columnsPerDay -
-    thinWidth;
+    ((containerWidth - leftColumnWidth) / columnsPerPage) * columnsPerDay;
+
+  // console.log({
+  //   columnsPerDay,
+  //   columnsPerPage,
+  //   containerWidth,
+  //   leftColumnWidth,
+  // });
   return dayWidth;
 }
 
@@ -95,4 +101,8 @@ export function getCellInfo(target: HTMLElement) {
   stamp.hour(hour);
   stamp.minute(minute);
   return { stamp, position };
+}
+
+export function calcGridsCount(clientWidth: number, dayWidth: number) {
+  return Math.ceil(clientWidth / dayWidth) * 4;
 }

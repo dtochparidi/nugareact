@@ -22,6 +22,7 @@ export default class UIStore {
       .hour(8),
     moment()
       .startOf('day')
+      // .hour(9),
       .hour(17),
   );
   @observable
@@ -29,6 +30,9 @@ export default class UIStore {
 
   @action
   public setScrolling(scrolling: boolean) {
+    if (this.isScrollingUnbinded === scrolling) return;
+
+    console.log(`set scrolling ${this.isScrollingUnbinded} -> ${scrolling}`);
     this.isScrolling = scrolling;
     this.isScrollingUnbinded = scrolling;
   }
