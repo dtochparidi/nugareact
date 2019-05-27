@@ -626,9 +626,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       Object.entries(dayShifts).forEach(([appId, deltas]) => {
         const { dx, dy } = deltas;
         if (dx === 0 && dy === 0) return;
-
-        console.log(dx, dy);
-
         const app = apps[appId];
 
         this.props.updateAppointment(

@@ -131,10 +131,11 @@ export default class Appointment implements IAppointment {
       this.duration,
       this.uniqueId,
     );
+
     this.stateHash = Appointment.getStateHash();
 
     Object.values(this.updateListeners).forEach(listener => {
-      console.log('app updated');
+      // console.log('app updated');
       listener(this, weightful);
     });
   }

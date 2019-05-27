@@ -4,7 +4,7 @@ import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
 import { IReactionDisposer, observable, reaction, runInAction } from 'mobx';
 import { observer } from 'mobx-react';
-// import moize from 'moize';
+import moize from 'moize';
 import * as moment from 'moment';
 import * as React from 'react';
 import VisibilityStore from 'stores/UI/VisibilityStote';
@@ -19,11 +19,11 @@ import './AppointmentCell/AppointmentCell.scss';
 // import Grid from './Grid';
 // import { GridP } from '.';
 
-// moize.collectStats();
+moize.collectStats();
 
-// setInterval(() => {
-//   // console.log((moize.getStats().profiles as any).appCellGenerator);
-// }, 3000);
+setInterval(() => {
+  console.log((moize.getStats().profiles as any).generateApp);
+}, 3000);
 
 const renderCounts = {};
 
@@ -60,11 +60,86 @@ export interface IState {
 export default class Day extends React.Component<IProps, IState> {
   @observable
   public displayMap: { [key: string]: { value: boolean } } = {};
+
   public dayElemRef = React.createRef<HTMLDivElement>();
   public visibility = false;
 
   private reactions: IReactionDisposer[] = [];
   private unmounted = false;
+
+  private generateAppElement = moize(
+    ({
+      app,
+      stamps,
+      minutesStep,
+      shifts,
+      shiftsCloned,
+      cellWidth,
+      cellHeight,
+      getCellWidth,
+      updateAppointment,
+      subGridColumns,
+      gridColumnDuration,
+    }) => {
+      const x = Math.floor(
+        (app.date.hour() * 60 +
+          app.date.minute() -
+          (stamps[0].hour() * 60 + stamps[0].minute())) /
+          minutesStep,
+      );
+      const y = app.position;
+
+      if (!(app.uniqueId in shifts)) shifts[app.uniqueId] = { dx: 0, dy: 0 };
+
+      const shift = shifts[app.uniqueId];
+
+      const left = x * cellWidth;
+      const top = y * cellHeight;
+
+      return (
+        <AppointmentCell
+          shiftObservable={observable(shift)}
+          getCellWidth={getCellWidth}
+          isDisplaying={this.displayMap[app.uniqueId]}
+          // isDisplaying={{ value: true }}
+          moving={false}
+          key={app.uniqueId}
+          translateX={left}
+          translateY={top}
+          cellHeight={cellHeight}
+          appointment={app as Appointment}
+          updateAppointment={updateAppointment}
+          subGridColumns={subGridColumns}
+          gridColumnDuration={gridColumnDuration}
+        />
+      );
+    },
+    {
+      equals: (
+        {
+          app: appPrev,
+          shiftsCloned: shiftsPrev,
+        }: { app: Appointment; shiftsCloned: object },
+        {
+          app: appNow,
+          shiftsCloned: shiftsNow,
+        }: { app: Appointment; shiftsCloned: object },
+      ) => {
+        if (!appPrev.stateHash || !appNow.stateHash) return false;
+
+        const shiftPrev = shiftsPrev[appPrev.uniqueId];
+        const shiftNow = shiftsNow[appNow.uniqueId];
+        const equal =
+          appPrev.stateHash === appNow.stateHash &&
+          ((!shiftPrev && !shiftNow) ||
+            (shiftPrev.dx === shiftNow.dx && shiftPrev.dy === shiftNow.dy));
+
+        // if (!equal) (() => true)();
+        return equal;
+      },
+      profileName: 'generateApp',
+    },
+  );
 
   constructor(props: IProps) {
     super(props);
@@ -185,66 +260,36 @@ export default class Day extends React.Component<IProps, IState> {
 
     const cellWidth = getCellWidth();
 
-    const generateAppElement = (app: Appointment) => {
-      const x = Math.floor(
-        (app.date.hour() * 60 +
-          app.date.minute() -
-          (stamps[0].hour() * 60 + stamps[0].minute())) /
-          minutesStep,
-      );
-      const y = app.position;
-
-      if (!(app.uniqueId in shifts)) shifts[app.uniqueId] = { dx: 0, dy: 0 };
-
-      const shift = shifts[app.uniqueId];
-
-      // const stamp = this.props.stamps[x];
-      // const { dx, dy } = shift;
-      // const d = app.date;
-      // const s = d
-      //   .clone()
-      //   .hour(stamp.hour())
-      //   .minute(stamp.minute());
-
-      // const coeffX = d.diff(s, 'second') / gridColumnDuration.asSeconds() + dx;
-      // const coeffY = dy;
-
-      // const left = (x + coeffX) * cellWidth;
-      // const top = (y + coeffY) * cellHeight;
-
-      const left = x * cellWidth;
-      const top = y * cellHeight;
-
-      return (
-        <AppointmentCell
-          // style={{
-          //   transform: `translate3d(${left}px, ${top}px, 0px)`,
-          // }}
-          shiftObservable={observable(shift)}
-          getCellWidth={getCellWidth}
-          isDisplaying={this.displayMap[app.uniqueId]}
-          // isDisplaying={{ value: true }}
-          moving={false}
-          key={app.uniqueId}
-          translateX={left}
-          translateY={top}
-          cellHeight={cellHeight}
-          appointment={app as Appointment}
-          updateAppointment={updateAppointment}
-          subGridColumns={subGridColumns}
-          gridColumnDuration={gridColumnDuration}
-        />
-      );
-    };
-
     const apps = Object.values(dayData.appointments);
     this.registerNewApps();
+
+    const shiftsCloned = Object.entries(shifts).reduce(
+      (acc, [key, { dx, dy }]: [string, { dx: number; dy: number }]) => {
+        acc[key] = { dx, dy };
+        return acc;
+      },
+      {},
+    );
 
     const func = () => {
       const markPrefix = `generateAppElements (count: ${apps.length})`;
       performance.mark(`${markPrefix}-start`);
 
-      const newApps = apps.map(app => generateAppElement(app));
+      const newApps = apps.map(app =>
+        this.generateAppElement({
+          app,
+          cellHeight,
+          cellWidth,
+          getCellWidth,
+          gridColumnDuration,
+          minutesStep,
+          shifts,
+          shiftsCloned,
+          stamps,
+          subGridColumns,
+          updateAppointment,
+        }),
+      );
       performance.mark(`${markPrefix}-end`);
 
       this.setState({ apps: newApps, stateIndex: this.state.stateIndex + 1 });
@@ -286,33 +331,7 @@ export default class Day extends React.Component<IProps, IState> {
     renderCounts[this.props.dayData.id] =
       (renderCounts[this.props.dayData.id] || 0) + 1;
 
-    // console.log('---');
-    // const vals = Object.values(renderCounts)
-    //   .sort()
-    //   .join('\n');
-    // console.log(vals);
-
-    // return this.moizedRenderer({
-    //   props: this.props,
-    //   stateIndex: this.state.stateIndex,
-    // });
-
-    return this.renderer({
-      props: this.props,
-      stateIndex: this.state.stateIndex,
-    });
-  }
-
-  public renderer = ({
-    props,
-    stateIndex,
-  }: {
-    props: IProps;
-    stateIndex: number;
-  }) => {
-    const { cols, dayData, dayWidth } = props;
-
-    // // console.log('render');
+    const { cols, dayData, dayWidth } = this.props;
 
     return (
       <div
@@ -326,21 +345,7 @@ export default class Day extends React.Component<IProps, IState> {
         <div className="day">{this.state.apps}</div>
       </div>
     );
-  };
-
-  // public moizedRenderer = moize.reactSimple(
-  //   this.renderer,
-  //   {
-  //     equals: (
-  //       { props: p1, stateIndex: s1 }: { props: IProps; stateIndex: number },
-  //       { props: p2, stateIndex: s2 }: { props: IProps; stateIndex: number },
-  //     ) =>
-  //       s1 === s2 &&
-  //       p1.cols === p2.cols &&
-  //       p1.dayData.stateIndex === p2.dayData.stateIndex &&
-  //       p1.dayWidth === p2.dayWidth,
-  //   },
-  // );
+  }
 
   private mountCondition = () => !this.unmounted;
 }
