@@ -649,6 +649,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   @action
+  public deleteShifts() {
+    Object.keys(this.shifts).forEach(key => delete this.shifts[key]);
+  }
+
+  @action
   public clearShifts() {
     Object.values(this.shifts).forEach(appIds =>
       Object.keys(appIds).forEach(id => {
@@ -891,6 +896,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     this.renderedDaysIds = [];
     const requiredDays = [targetDate]; // .clone().subtract(1, 'day')
+    this.deleteShifts();
     // this.lazyLoadDays = requiredDays.map(m => m);
 
     this.instantRender.value = true;
