@@ -893,6 +893,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const requiredDays = [targetDate]; // .clone().subtract(1, 'day')
     // this.lazyLoadDays = requiredDays.map(m => m);
 
+    this.instantRender.value = true;
     this.setState(
       {
         // loading: true,
@@ -903,7 +904,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         await this.daysDidUpdate();
 
         setTimeout(() => {
-          this.updateRequiredDays(false);
+          this.updateRequiredDays(false).then(() => {
+            setTimeout(() => (this.instantRender.value = false));
+          });
           this.updateScroll(true);
 
           // this.setState({ loading: false });
