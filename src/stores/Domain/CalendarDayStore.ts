@@ -1,10 +1,11 @@
 import fetchDay from 'fetchers/DayFetcher';
 import IAppointment from 'interfaces/IAppointment';
 import ICalendarDay from 'interfaces/ICalendarDay';
+import IUpdateAppFunction from 'interfaces/IUpdateAppFunction';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
 import { action, observable } from 'mobx';
-import { Moment as IMoment } from 'moment';
 import * as moment from 'moment';
+import { Moment as IMoment } from 'moment';
 import Appointment from 'structures/Appointment';
 import CalendarDay from 'structures/CalendarDay';
 
@@ -70,7 +71,7 @@ export default class CalendarDayStore {
   }
 
   @action.bound
-  public updateAppointment(
+  public updateAppointment: IUpdateAppFunction = (
     {
       targetDate,
       targetPosition,
@@ -80,7 +81,8 @@ export default class CalendarDayStore {
       date,
     }: IUpdateAppProps,
     weightful = true,
-  ) {
+    final = true,
+  ) => {
     date = date || (appointment as Appointment).date;
     targetDate = targetDate || date;
 
@@ -165,7 +167,8 @@ export default class CalendarDayStore {
         ),
         targetDate ? { date: targetDate } : {},
       ),
-      false,
+      weightful,
+      final,
     );
 
     // if day was changed
@@ -178,7 +181,7 @@ export default class CalendarDayStore {
       newDay.appointments[appointment.uniqueId] = appointment;
       newDay.registerStateUpdate(false);
     }
-  }
+  };
 
   private async loadDayData(day: CalendarDay) {
     const data = await fetchDay(day.date);

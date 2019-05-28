@@ -49,8 +49,12 @@ export default class CalendarDay implements ICalendarDay {
     this.registerStateUpdate();
   }
 
-  public appointmentDidUpdated = (app: Appointment, weightful: boolean) => {
-    this.registerStateUpdate(weightful);
+  public appointmentDidUpdated = (
+    app: Appointment,
+    weightful: boolean,
+    final: boolean,
+  ) => {
+    if (final) this.registerStateUpdate(weightful);
   };
 
   @action

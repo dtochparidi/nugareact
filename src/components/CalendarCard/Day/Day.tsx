@@ -1,7 +1,7 @@
 // import { LazyTask } from '@levabala/lazytask/build/dist';
 import { LazyTask } from '@levabala/lazytask/build/dist';
 import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
-import IUpdateAppProps from 'interfaces/IUpdateAppProps';
+import IUpdateAppFunction from 'interfaces/IUpdateAppFunction';
 import { IReactionDisposer, observable, reaction, runInAction } from 'mobx';
 import { observer } from 'mobx-react';
 import moize from 'moize';
@@ -19,11 +19,11 @@ import './AppointmentCell/AppointmentCell.scss';
 // import Grid from './Grid';
 // import { GridP } from '.';
 
-moize.collectStats();
+// moize.collectStats();
 
-setInterval(() => {
-  console.log((moize.getStats().profiles as any).generateApp);
-}, 3000);
+// setInterval(() => {
+//   console.log((moize.getStats().profiles as any).generateApp);
+// }, 3000);
 
 const renderCounts = {};
 
@@ -46,7 +46,7 @@ export interface IProps {
   };
   visibilityStore: VisibilityStore;
   shiftsHash: string;
-  updateAppointment: (props: IUpdateAppProps, weightful?: boolean) => void;
+  updateAppointment: IUpdateAppFunction;
   instantRender: { value: boolean };
   startLoadSide: 'left' | 'right';
 }
@@ -67,79 +67,51 @@ export default class Day extends React.Component<IProps, IState> {
   private reactions: IReactionDisposer[] = [];
   private unmounted = false;
 
-  private generateAppElement = moize(
-    ({
-      app,
-      stamps,
-      minutesStep,
-      shifts,
-      shiftsCloned,
-      cellWidth,
-      cellHeight,
-      getCellWidth,
-      updateAppointment,
-      subGridColumns,
-      gridColumnDuration,
-    }) => {
-      const x = Math.floor(
-        (app.date.hour() * 60 +
-          app.date.minute() -
-          (stamps[0].hour() * 60 + stamps[0].minute())) /
-          minutesStep,
-      );
-      const y = app.position;
-
-      if (!(app.uniqueId in shifts)) shifts[app.uniqueId] = { dx: 0, dy: 0 };
-
-      const shift = shifts[app.uniqueId];
-
-      const left = x * cellWidth;
-      const top = y * cellHeight;
-
-      return (
-        <AppointmentCell
-          shiftObservable={observable(shift)}
-          getCellWidth={getCellWidth}
-          isDisplaying={this.displayMap[app.uniqueId]}
-          // isDisplaying={{ value: true }}
-          moving={false}
-          key={app.uniqueId}
-          translateX={left}
-          translateY={top}
-          cellHeight={cellHeight}
-          appointment={app as Appointment}
-          updateAppointment={updateAppointment}
-          subGridColumns={subGridColumns}
-          gridColumnDuration={gridColumnDuration}
-        />
-      );
-    },
-    {
-      equals: (
-        {
-          app: appPrev,
-          shiftsCloned: shiftsPrev,
-        }: { app: Appointment; shiftsCloned: object },
-        {
-          app: appNow,
-          shiftsCloned: shiftsNow,
-        }: { app: Appointment; shiftsCloned: object },
-      ) => {
-        if (!appPrev.stateHash || !appNow.stateHash) return false;
-
-        const shiftPrev = shiftsPrev[appPrev.uniqueId];
-        const shiftNow = shiftsNow[appNow.uniqueId];
-        const equal =
-          appPrev.stateHash === appNow.stateHash &&
-          ((!shiftPrev && !shiftNow) ||
-            (shiftPrev.dx === shiftNow.dx && shiftPrev.dy === shiftNow.dy));
-
-        // if (!equal) (() => true)();
-        return equal;
+  private generateAppElementMoized = moize(this.generateAppElement, {
+    equals: (
+      {
+        app: appPrev,
+        shiftsCloned: shiftsPrev,
+        appStateHash: appStateHashPrev,
+      }: {
+        app: Appointment;
+        shiftsCloned: object;
+        appStateHash: string;
       },
-      profileName: 'generateApp',
+      {
+        app: appNow,
+        shiftsCloned: shiftsNow,
+        appStateHash: appStateHashNow,
+      }: {
+        app: Appointment;
+        shiftsCloned: object;
+        appStateHash: string;
+      },
+    ) => {
+      if (!appStateHashPrev || !appStateHashNow) return false;
+      const shiftPrev = shiftsPrev[appPrev.uniqueId];
+      const shiftNow = shiftsNow[appNow.uniqueId];
+      const equal =
+        appStateHashPrev === appStateHashNow &&
+        ((!shiftPrev && !shiftNow) ||
+          (shiftPrev &&
+            shiftNow &&
+            shiftPrev.dx === shiftNow.dx &&
+            shiftPrev.dy === shiftNow.dy)); // const equal = appStateHashPrev === appStateHashNow;
+
+      return equal;
     },
-  );
+    onCacheHit: () => this.generateAppElemenetHits++,
+
+    profileName: 'generateApp',
+  });
+
+  private generateAppElemenetCalls = 0;
+  private generateAppElemenetHits = 0;
+
+  get appElementsStateIndex() {
+    return this.generateAppElemenetCalls - this.generateAppElemenetHits;
+  }
 
   constructor(props: IProps) {
     super(props);
@@ -168,6 +140,54 @@ export default class Day extends React.Component<IProps, IState> {
       apps: [],
       stateIndex: 0,
     };
+  }
+
+  public generateAppElement({
+    app,
+    stamps,
+    minutesStep,
+    shifts,
+    cellWidth,
+    cellHeight,
+    getCellWidth,
+    updateAppointment,
+    subGridColumns,
+    gridColumnDuration,
+  }: {
+    [key: string]: any;
+  }) {
+    const x = Math.floor(
+      (app.date.hour() * 60 +
+        app.date.minute() -
+        (stamps[0].hour() * 60 + stamps[0].minute())) /
+        minutesStep,
+    );
+    const y = app.position;
+
+    if (!(app.uniqueId in shifts)) shifts[app.uniqueId] = { dx: 0, dy: 0 };
+
+    const shift = shifts[app.uniqueId];
+
+    const left = x * cellWidth;
+    const top = y * cellHeight;
+
+    return (
+      <AppointmentCell
+        shiftObservable={observable(shift)}
+        getCellWidth={getCellWidth}
+        isDisplaying={this.displayMap[app.uniqueId]}
+        // isDisplaying={{ value: true }}
+        moving={false}
+        key={app.uniqueId}
+        translateX={left}
+        translateY={top}
+        cellHeight={cellHeight}
+        appointment={app as Appointment}
+        updateAppointment={updateAppointment}
+        subGridColumns={subGridColumns}
+        gridColumnDuration={gridColumnDuration}
+      />
+    );
   }
 
   public componentWillUnmount() {
@@ -275,9 +295,12 @@ export default class Day extends React.Component<IProps, IState> {
       const markPrefix = `generateAppElements (count: ${apps.length})`;
       performance.mark(`${markPrefix}-start`);
 
-      const newApps = apps.map(app =>
-        this.generateAppElement({
+      const stateIndexBefore = this.appElementsStateIndex;
+      const newApps = apps.map(app => {
+        this.generateAppElemenetCalls++;
+        return this.generateAppElementMoized({
           app,
+          appStateHash: app.stateHash,
           cellHeight,
           cellWidth,
           getCellWidth,
@@ -288,10 +311,18 @@ export default class Day extends React.Component<IProps, IState> {
           stamps,
           subGridColumns,
           updateAppointment,
-        }),
-      );
+        });
+      });
       performance.mark(`${markPrefix}-end`);
 
+      // const stats = (moize.getStats().profiles as any).generateApp;
+      // console.log(stats.calls - stats.hits);
+
+      console.log(this.appElementsStateIndex, this.props.dayData.id);
+      if (this.appElementsStateIndex === stateIndexBefore) {
+        console.log('unchanged');
+        return;
+      }
       this.setState({ apps: newApps, stateIndex: this.state.stateIndex + 1 });
 
       // console.log('do instantly:', instant);

@@ -80,7 +80,11 @@ export default class Appointment implements IAppointment {
   public uniqueId: string;
   public dateRange: DateRange;
   public updateListeners: {
-    [key: string]: (app: Appointment, weightful: boolean) => void;
+    [key: string]: (
+      app: Appointment,
+      weightful: boolean,
+      final: boolean,
+    ) => void;
   } = {};
 
   constructor(obj: {
@@ -112,6 +116,7 @@ export default class Appointment implements IAppointment {
       overlapping?: boolean;
     },
     weightful = true,
+    final = true,
   ) {
     if (date) this.date = date;
     if (position || position === 0) this.position = position;
@@ -136,7 +141,7 @@ export default class Appointment implements IAppointment {
 
     Object.values(this.updateListeners).forEach(listener => {
       // console.log('app updated');
-      listener(this, weightful);
+      listener(this, weightful, final);
     });
   }
 
@@ -151,7 +156,7 @@ export default class Appointment implements IAppointment {
 
   public registerListener(
     key: string,
-    listener: (app: Appointment, weightful: boolean) => void,
+    listener: (app: Appointment, weightful: boolean, final: boolean) => void,
   ) {
     this.updateListeners[key] = listener;
   }

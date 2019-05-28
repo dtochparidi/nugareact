@@ -23,7 +23,7 @@ import createDragConfig from './modules/dragConfig';
 import ToggleArea from './ToggleArea';
 
 import * as Emitter from 'events';
-import IUpdateAppProps from 'interfaces/IUpdateAppProps';
+import IUpdateAppFunction from 'interfaces/IUpdateAppFunction';
 import { action, observable } from 'mobx';
 import moize from 'moize';
 import rootStore from 'stores/RootStore';
@@ -58,7 +58,7 @@ export interface IProps {
   requestCallback: (date: Moment.Moment[]) => Promise<CalendarDay[]>;
   removeDays: (indexStart: number, indexEnd: number) => void;
   mainColumnStep: IDuration;
-  updateAppointment: (props: IUpdateAppProps, weightful?: boolean) => void;
+  updateAppointment: IUpdateAppFunction;
 }
 
 export interface IState {
@@ -623,7 +623,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         rootStore.domainStore.calendarDayStore.daysMap[dayId];
       const apps = day.appointments;
 
-      Object.entries(dayShifts).forEach(([appId, deltas]) => {
+      Object.entries(dayShifts).forEach(([appId, deltas], i, { length }) => {
         const { dx, dy } = deltas;
         if (dx === 0 && dy === 0) return;
         const app = apps[appId];
@@ -638,6 +638,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
             uniqueId: app.uniqueId,
           },
           false,
+          !(i === length - 1),
         );
       });
     });
