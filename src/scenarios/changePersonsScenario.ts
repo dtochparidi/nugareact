@@ -1,5 +1,6 @@
 import rootStore from 'stores/RootStore';
 import { serverDaysData } from 'fetchers/DayFetcher';
+import Person from 'structures/Person';
 
 function shuffle(a: any[]) {
   for (let i = a.length - 1; i > 0; i--) {
@@ -9,7 +10,7 @@ function shuffle(a: any[]) {
   return a;
 }
 
-export default function removeAppsScenario(percentagePerDays: number) {
+export default function changePersonsScenario(percentagePerDays: number) {
   Object.entries(serverDaysData).forEach(([dayId, day]) => {
     const keys = Object.keys(day.appointments);
     const shuffledKeys = shuffle(keys);
@@ -18,7 +19,9 @@ export default function removeAppsScenario(percentagePerDays: number) {
       Math.floor(shuffledKeys.length * percentagePerDays),
     );
 
-    keysToRemove.forEach(key => delete day.appointments[key]);
+    keysToRemove.forEach(key =>
+      day.appointments[key].update({ personId: Person.generateRandomId() }),
+    );
   });
 
   rootStore.domainStore.calendarDayStore.updateDays();

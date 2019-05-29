@@ -50,10 +50,29 @@ export default class CalendarDay implements ICalendarDay {
   }
 
   @action
-  public removeAppointment(uniqueId: string) {
-    delete this.appointments[uniqueId];
-
+  public removeAppointments(ids: string[]) {
+    ids.forEach(uniqueId => {
+      delete this.appointments[uniqueId];
+    });
     this.registerStateUpdate();
+  }
+
+  @action
+  public mergeAppointments(apps: Appointment[]) {
+    const newApps = apps.filter(app => !(app.uniqueId in this.appointments));
+    const updatedApps = apps.filter(app => app.uniqueId in this.appointments);
+
+    const newIds = apps.map(app => app.uniqueId);
+    const removedAppIds = Object.keys(this.appointments).filter(
+      appId => !newIds.includes(appId),
+    );
+
+    this.addAppointments(newApps);
+    updatedApps.forEach(app => {
+      this.appointments[app.uniqueId].update(app);
+    });
+
+    if (removedAppIds.length) this.removeAppointments(removedAppIds);
   }
 
   @action

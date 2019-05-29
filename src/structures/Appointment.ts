@@ -12,7 +12,7 @@ const moment = extendMoment(Moment);
 export default class Appointment implements IAppointment {
   public static fromJSON(json: string) {
     const parsed = JSON.parse(json);
-    const { personId, position } = parsed;
+    const { personId, position, uniqueId } = parsed;
     let { duration, date } = parsed;
 
     duration = Moment.duration(duration);
@@ -23,6 +23,7 @@ export default class Appointment implements IAppointment {
       duration,
       personId,
       position,
+      uniqueId,
     });
   }
 
@@ -93,8 +94,9 @@ export default class Appointment implements IAppointment {
     personId: string;
     personInstance?: IPerson | IPersonLoading;
     duration: IDuration;
+    uniqueId: string;
   }) {
-    this.uniqueId = v4();
+    this.uniqueId = obj.uniqueId;
     this.update(obj);
   }
 

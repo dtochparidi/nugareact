@@ -2,6 +2,7 @@ import * as Moment from 'moment';
 // import { Duration as IDuration, Moment as IMoment } from 'moment';
 import { Moment as IMoment } from 'moment';
 import { DateRange, extendMoment } from 'moment-range';
+import { v4 } from 'uuid';
 import * as store from 'store';
 
 const moment = extendMoment(Moment);
@@ -13,6 +14,8 @@ import IAppointment from 'interfaces/IAppointment';
 import ICalendarDay from '../interfaces/ICalendarDay';
 import IFetcher from '../interfaces/IFetcher';
 import Appointment from '../structures/Appointment';
+import CalendarDay from 'structures/CalendarDay';
+import Person from 'structures/Person';
 
 function random(to: number, from: number = 0) {
   return Math.floor(Math.random() * (to - from)) + from;
@@ -21,6 +24,8 @@ function random(to: number, from: number = 0) {
 const littleStepMinutes = 9;
 const largeStepMinutes = 45;
 const daysCache = {};
+
+export const serverDaysData: { [dayId: string]: ICalendarDay } = {};
 
 // const daysDeepCache = JSON.parse(store.get('cachedDays', '{}'));
 
@@ -43,51 +48,7 @@ function cacheDays(from: string, to: string) {
   store.set('cachedDays', json);
 }
 
-// function restoreDay(date: IMoment): ICalendarDay | undefined {
-//   const floorDate = date.startOf('day');
-//   const cachedDay: { [key: string]: {} } = daysDeepCache[floorDate.valueOf()];
-
-//   if (cachedDay)
-//     return {
-//       appointments: Object.entries(cachedDay).reduce(
-//         (
-//           acc,
-//           [key, val]: [
-//             string,
-//             {
-//               date: IMoment;
-//               position: number;
-//               personId: string;
-//               duration: IDuration;
-//             }
-//           ],
-//         ) => {
-//           acc[key] = new Appointment({
-//             date: Moment(val.date),
-//             duration: Moment.duration(val.duration),
-//             personId: val.personId,
-//             position: val.position,
-//           });
-
-//           return acc;
-//         },
-//         {},
-//       ),
-//       date,
-//     } as ICalendarDay;
-
-//   return;
-// }
-
 (window as any).cacheDays = cacheDays;
-
-// function appsToJSON(apps: Appointment[]) {
-//   return JSON.stringify(apps.map(app => app.toJSON()));
-// }
-
-// function appsFromJSON(json: string): Appointment[] {
-//   return Object.values(JSON.parse(json)).map((text: string) => Appointment.fromJSON(text))
-// }
 
 export async function generateAppointments(
   date: IMoment,
@@ -118,10 +79,9 @@ export async function generateAppointments(
           'minute',
         ),
       duration: Moment.duration(largeStepMinutes, 'minutes'),
-      personId: `${random(99)
-        .toString()
-        .padStart(3, '0')}`,
+      personId: Person.generateRandomId(),
       position: random(0, positions),
+      uniqueId: v4(),
       // position: random(0, 4),
     };
 
@@ -163,11 +123,6 @@ export async function generateRandomDay(date: IMoment): Promise<ICalendarDay> {
   const key = date.format('DD:MM:YYYY');
   if (key in daysCache) return daysCache[key];
 
-  // const data = restoreDay(date) || {
-  //   appointments: await generateAppointments(date, 8, 17, 24),
-  //   date,
-  // };
-
   const data = {
     appointments: await generateAppointments(date, 8, 17, 24),
     date,
@@ -178,12 +133,20 @@ export async function generateRandomDay(date: IMoment): Promise<ICalendarDay> {
   return data;
 }
 
+async function getDayFromServer(date: IMoment) {
+  const id = CalendarDay.calcId(date);
+  const day =
+    serverDaysData[id] || (serverDaysData[id] = await generateRandomDay(date));
+
+  return day;
+}
+
 const fetchDay: IFetcher<IMoment, ICalendarDay> = async function DayFetcher(
   date,
 ) {
   // await new Promise(resolve => setTimeout(resolve, 300));
 
-  return generateRandomDay(date);
+  return getDayFromServer(date);
 };
 
 export default fetchDay;

@@ -24,6 +24,16 @@ export default class CalendarDayStore {
     this.rootStore = rootStore;
   }
 
+  @action
+  public async updateDays() {
+    await Promise.all(
+      this.days.map(async day => {
+        const apps = await this.loadDayApps(day);
+        day.mergeAppointments(apps);
+      }),
+    );
+  }
+
   @action.bound
   public async loadDays(dates: IMoment[]) {
     // let pushes = 0;
@@ -183,7 +193,7 @@ export default class CalendarDayStore {
     }
   };
 
-  private async loadDayData(day: CalendarDay) {
+  private async loadDayApps(day: CalendarDay) {
     const data = await fetchDay(day.date);
     const { personStore } = this.rootStore.domainStore;
 
@@ -201,22 +211,16 @@ export default class CalendarDayStore {
           personId: app.personId,
           personInstance: person,
           position: app.position,
+          uniqueId: app.uniqueId,
         });
       },
     );
 
-    // const appointments = await Promise.all(promises);
+    return await Promise.all(promises);
+  }
 
-    // day.setAppointments(
-    //   appointments.reduce((acc, app) => {
-    //     acc[app.uniqueId] = app;
-    //     return acc;
-    //   }, {}),
-    // );
-
-    // console.log('loaded', day.id);
-
-    return Promise.all(promises).then(appointments => {
+  private async loadDayData(day: CalendarDay) {
+    return this.loadDayApps(day).then(appointments => {
       day.setAppointments(
         appointments.reduce((acc, app) => {
           acc[app.uniqueId] = app;

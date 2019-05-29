@@ -9,4 +9,5 @@ export default interface IAppointment {
   position: number;
   personId: string;
   personInstance?: IPerson | IPersonLoading;
+  uniqueId: string;
 }

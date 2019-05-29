@@ -2,7 +2,17 @@ import { IPerson } from 'interfaces/IPerson';
 import { action, observable } from 'mobx';
 import { Moment as IMoment } from 'moment';
 
+function random(to: number, from: number = 0) {
+  return Math.floor(Math.random() * (to - from)) + from;
+}
+
 export default class Person implements IPerson {
+  public static generateRandomId() {
+    return `${random(99)
+      .toString()
+      .padStart(3, '0')}`;
+  }
+
   @observable
   public id: string;
   @observable
