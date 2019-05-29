@@ -81,7 +81,7 @@ class App extends React.Component {
 
   public componentDidMount() {
     function a() {
-      modifyPersonsScenario(0.3);
+      modifyPersonsScenario(0.1);
     }
 
     (function b() {
