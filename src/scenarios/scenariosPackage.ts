@@ -1,9 +1,11 @@
 import addAppsScenario from './addAppsScenario';
-import removeAppsScenario from './removeAppsScenario';
+import allInScenario from './allInScenario';
 import changePersonsScenario from './changePersonsScenario';
+import removeAppsScenario from './removeAppsScenario';
 
 (window as any).scenarios = {
   addAppsScenario,
+  allInScenario,
   changePersonsScenario,
   removeAppsScenario,
 };

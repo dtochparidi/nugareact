@@ -68,10 +68,8 @@ export async function generateAppointments(
   const generateApp = () => {
     const app: IAppointment = {
       date: date
-        .clone()
-        // .hour(random(17, 8))
-        .hour(fromHour)
-        // .add(littleStepMinutes * random(maxStepsCount, 0), 'minute'),
+        .clone() // .hour(random(17, 8))
+        .hour(fromHour) // .add(littleStepMinutes * random(maxStepsCount, 0), 'minute'),
         .add(
           Math.floor(
             (littleStepMinutes * random(maxStepsCount, 0)) / largeStepMinutes,
@@ -81,8 +79,8 @@ export async function generateAppointments(
       duration: Moment.duration(largeStepMinutes, 'minutes'),
       personId: Person.generateRandomId(),
       position: random(0, positions),
-      uniqueId: v4(),
-      // position: random(0, 4),
+      stateHash: Appointment.getStateHash(),
+      uniqueId: v4(), // position: random(0, 4),
     };
 
     const range = moment.range(app.date, app.date.clone().add(app.duration));

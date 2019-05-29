@@ -10,6 +10,9 @@ function shuffle(a: any[]) {
 }
 
 export default function removeAppsScenario(percentagePerDays: number) {
+  const prefix = `removeApps ${percentagePerDays}%`;
+  performance.mark(`${prefix}-start`);
+
   Object.entries(serverDaysData).forEach(([dayId, day]) => {
     const keys = Object.keys(day.appointments);
     const shuffledKeys = shuffle(keys);
@@ -21,5 +24,8 @@ export default function removeAppsScenario(percentagePerDays: number) {
     keysToRemove.forEach(key => delete day.appointments[key]);
   });
 
-  rootStore.domainStore.calendarDayStore.updateDays();
+  rootStore.domainStore.calendarDayStore.updateDays(true);
+
+  performance.mark(`${prefix}-end`);
+  performance.measure(prefix, `${prefix}-start`, `${prefix}-end`);
 }

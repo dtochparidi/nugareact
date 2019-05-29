@@ -12,7 +12,7 @@ const moment = extendMoment(Moment);
 export default class Appointment implements IAppointment {
   public static fromJSON(json: string) {
     const parsed = JSON.parse(json);
-    const { personId, position, uniqueId } = parsed;
+    const { personId, position, uniqueId, stateHash } = parsed;
     let { duration, date } = parsed;
 
     duration = Moment.duration(duration);
@@ -23,6 +23,7 @@ export default class Appointment implements IAppointment {
       duration,
       personId,
       position,
+      stateHash,
       uniqueId,
     });
   }
@@ -43,7 +44,7 @@ export default class Appointment implements IAppointment {
     });
   }
 
-  private static getStateHash() {
+  public static getStateHash() {
     return v4();
   }
 
@@ -95,6 +96,7 @@ export default class Appointment implements IAppointment {
     personInstance?: IPerson | IPersonLoading;
     duration: IDuration;
     uniqueId: string;
+    stateHash: string;
   }) {
     this.uniqueId = obj.uniqueId;
     this.update(obj);
@@ -109,6 +111,7 @@ export default class Appointment implements IAppointment {
       personInstance,
       duration,
       overlapping,
+      stateHash,
     }: {
       date?: IMoment;
       position?: number;
@@ -116,6 +119,7 @@ export default class Appointment implements IAppointment {
       personInstance?: IPerson | IPersonLoading;
       duration?: IDuration;
       overlapping?: boolean;
+      stateHash?: string;
     },
     weightful = true,
     final = true,
@@ -128,6 +132,8 @@ export default class Appointment implements IAppointment {
     if (overlapping === true || overlapping === false)
       this.overlapping = overlapping;
 
+    this.stateHash = stateHash || Appointment.getStateHash();
+
     this.endDate = this.date.clone().add(this.duration);
     this.dateRange = moment.range(this.date, this.endDate);
 
@@ -138,8 +144,6 @@ export default class Appointment implements IAppointment {
       this.duration,
       this.uniqueId,
     );
-
-    this.stateHash = Appointment.getStateHash();
 
     Object.values(this.updateListeners).forEach(listener => {
       // console.log('app updated');

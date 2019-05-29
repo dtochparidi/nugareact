@@ -10,6 +10,8 @@ import Appointment from 'structures/Appointment';
 import CalendarDay from 'structures/CalendarDay';
 
 import { RootStore } from '../RootStore';
+import { LazyTask } from '@levabala/lazytask/build/dist';
+import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
 
 export default class CalendarDayStore {
   @observable
@@ -25,13 +27,29 @@ export default class CalendarDayStore {
   }
 
   @action
-  public async updateDays() {
-    await Promise.all(
-      this.days.map(async day => {
-        const apps = await this.loadDayApps(day);
-        day.mergeAppointments(apps);
-      }),
-    );
+  public async updateDays(lazy = false) {
+    if (lazy)
+      await Promise.all(
+        this.days.map(async day => {
+          await lazyTaskManager.addTask(
+            new LazyTask(async () => {
+              const apps = await this.loadDayApps(day);
+              await lazyTaskManager.addTask(
+                new LazyTask(async () => {
+                  day.mergeAppointments(apps);
+                }),
+              );
+            }),
+          );
+        }),
+      );
+    else
+      await Promise.all(
+        this.days.map(async day => {
+          const apps = await this.loadDayApps(day);
+          day.mergeAppointments(apps);
+        }),
+      );
   }
 
   @action.bound
@@ -185,11 +203,14 @@ export default class CalendarDayStore {
     if (currentDay.date.diff(newDay.date, 'day') !== 0) {
       // remove from current day
       delete currentDay.appointments[appointment.uniqueId];
-      (currentDay as CalendarDay).registerStateUpdate(false);
+      (currentDay as CalendarDay).registerStateUpdate(
+        [appointment.uniqueId],
+        false,
+      );
 
       // append to new day
       newDay.appointments[appointment.uniqueId] = appointment;
-      newDay.registerStateUpdate(false);
+      newDay.registerStateUpdate([appointment.uniqueId], false);
     }
   };
 
@@ -201,6 +222,15 @@ export default class CalendarDayStore {
       async (app: IAppointment): Promise<Appointment> => {
         if (!app) throw Error('app is undefined');
 
+        // check if the same app already exists
+        if (
+          day.id in this.daysMap &&
+          app.uniqueId in this.daysMap[day.id].appointments &&
+          app.stateHash ===
+            this.daysMap[day.id].appointments[app.uniqueId].stateHash
+        )
+          return this.daysMap[day.id].appointments[app.uniqueId];
+
         const person =
           app.personId in personStore.persons
             ? personStore.persons[app.personId]
@@ -211,6 +241,7 @@ export default class CalendarDayStore {
           personId: app.personId,
           personInstance: person,
           position: app.position,
+          stateHash: app.stateHash,
           uniqueId: app.uniqueId,
         });
       },

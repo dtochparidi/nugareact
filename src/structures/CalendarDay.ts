@@ -24,9 +24,12 @@ export default class CalendarDay implements ICalendarDay {
   public date: IMoment;
   public id: string;
   public weightfulUpdates: Set<number> = new Set();
+  public updateMarks: string[][] = [[]];
 
   @observable
   public stateIndex: number = 0;
+
+  private unfinalUpdatesStack: string[] = [];
 
   constructor(
     date: IMoment,
@@ -46,7 +49,7 @@ export default class CalendarDay implements ICalendarDay {
       app.registerListener('dayHandler', this.appointmentDidUpdated),
     );
 
-    this.registerStateUpdate();
+    this.registerStateUpdate(Object.keys(apps));
   }
 
   @action
@@ -54,7 +57,7 @@ export default class CalendarDay implements ICalendarDay {
     ids.forEach(uniqueId => {
       delete this.appointments[uniqueId];
     });
-    this.registerStateUpdate();
+    this.registerStateUpdate(ids);
   }
 
   @action
@@ -68,8 +71,13 @@ export default class CalendarDay implements ICalendarDay {
     );
 
     this.addAppointments(newApps);
-    updatedApps.forEach(app => {
-      this.appointments[app.uniqueId].update(app);
+    updatedApps.forEach((app, i, { length }) => {
+      if (this.appointments[app.uniqueId].stateHash !== app.stateHash)
+        this.appointments[app.uniqueId].update(
+          app,
+          undefined,
+          i === length - 1,
+        );
     });
 
     if (removedAppIds.length) this.removeAppointments(removedAppIds);
@@ -83,7 +91,7 @@ export default class CalendarDay implements ICalendarDay {
       app.registerListener('dayHandler', this.appointmentDidUpdated),
     );
 
-    this.registerStateUpdate();
+    this.registerStateUpdate(apps.map(app => app.uniqueId));
   }
 
   public appointmentDidUpdated = (
@@ -91,12 +99,23 @@ export default class CalendarDay implements ICalendarDay {
     weightful: boolean,
     final: boolean,
   ) => {
-    if (final) this.registerStateUpdate(weightful);
+    if (final) {
+      this.registerStateUpdate(
+        [app.uniqueId].concat(this.unfinalUpdatesStack),
+        weightful,
+      );
+      this.unfinalUpdatesStack = [];
+    } else this.unfinalUpdatesStack.push(app.uniqueId);
   };
 
   @action
-  public registerStateUpdate(weightful: boolean = true) {
+  public registerStateUpdate(
+    updatedAppIds: string[],
+    weightful: boolean = true,
+  ) {
     this.stateIndex++;
+
+    this.updateMarks.push(updatedAppIds);
 
     if (weightful) this.weightfulUpdates.add(this.stateIndex);
   }

@@ -2,6 +2,9 @@ import { generateAppointments, serverDaysData } from 'fetchers/DayFetcher';
 import rootStore from 'stores/RootStore';
 
 export default async function addAppsScenario(countPerDays: number) {
+  const prefix = `addApps ${countPerDays}`;
+  performance.mark(`${prefix}-start`);
+
   const { uiStore } = rootStore;
   await Promise.all(
     Object.entries(serverDaysData).map(async ([dayId, day]) => {
@@ -20,5 +23,8 @@ export default async function addAppsScenario(countPerDays: number) {
     }),
   );
 
-  rootStore.domainStore.calendarDayStore.updateDays();
+  rootStore.domainStore.calendarDayStore.updateDays(true);
+
+  performance.mark(`${prefix}-end`);
+  performance.measure(prefix, `${prefix}-start`, `${prefix}-end`);
 }

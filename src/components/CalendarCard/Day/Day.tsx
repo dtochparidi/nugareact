@@ -107,13 +107,15 @@ export default class Day extends React.Component<IProps, IState> {
     profileName: 'generateApp',
   });
 
-  private generateAppElemenetCalls = 0;
+  private generateAppElementCalls = 0;
   private generateAppElemenetHits = 0;
   private appsCountIndex = 0;
+  private lastDayStateIndex = 0;
+  private lastAppointmentElements: { [uniqueId: string]: JSX.Element } = {};
 
   get appElementsStateIndex() {
     return (
-      this.generateAppElemenetCalls -
+      this.generateAppElementCalls -
       this.generateAppElemenetHits +
       this.appsCountIndex
     );
@@ -291,25 +293,69 @@ export default class Day extends React.Component<IProps, IState> {
       performance.mark(`${markPrefix}-start`);
 
       const stateIndexBefore = this.appElementsStateIndex;
+      const appsToProcess = dayData.updateMarks
+        .slice(this.lastDayStateIndex + 1, dayData.stateIndex + 1)
+        .flat();
+      // const newApps = apps
+      //   .map(app => {
+      //     this.generateAppElemenetCalls++;
+      //     return this.generateAppElementMoized({
+      //       app,
+      //       appStateHash: app.stateHash,
+      //       cellHeight,
+      //       cellWidth,
+      //       getCellWidth,
+      //       gridColumnDuration,
+      //       minutesStep,
+      //       shifts,
+      //       shiftsCloned,
+      //       stamps,
+      //       subGridColumns,
+      //       updateAppointment,
+      //     });
+      //   });
+
+      // console.log(
+      //   appsToProcess.length,
+      //   `[${this.lastDayStateIndex}, ${dayData.stateIndex + 1}]`,
+      //   dayData.updateMarks,
+      // );
+
       const newApps = apps.map(app => {
-        this.generateAppElemenetCalls++;
-        return this.generateAppElementMoized({
-          app,
-          appStateHash: app.stateHash,
-          cellHeight,
-          cellWidth,
-          getCellWidth,
-          gridColumnDuration,
-          minutesStep,
-          shifts,
-          shiftsCloned,
-          stamps,
-          subGridColumns,
-          updateAppointment,
-        });
+        this.generateAppElementCalls++;
+        const element =
+          appsToProcess.includes(app.uniqueId) ||
+          !(app.uniqueId in this.lastAppointmentElements)
+            ? this.generateAppElementMoized({
+                app,
+                appStateHash: app.stateHash,
+                cellHeight,
+                cellWidth,
+                getCellWidth,
+                gridColumnDuration,
+                minutesStep,
+                shifts,
+                shiftsCloned,
+                stamps,
+                subGridColumns,
+                updateAppointment,
+              })
+            : this.lastAppointmentElements[app.uniqueId];
+
+        return [app.uniqueId, element] as [string, JSX.Element];
       });
+
+      this.lastAppointmentElements = newApps.reduce(
+        (acc, [uniqueId, element]) => {
+          acc[uniqueId] = element;
+          return acc;
+        },
+        {},
+      );
+
       performance.mark(`${markPrefix}-end`);
 
+      this.lastDayStateIndex = dayData.stateIndex;
       this.appsCountIndex += +(this.lastAppsCount !== apps.length);
       // console.log('appsCountIndex:', this.appsCountIndex);
 
@@ -320,7 +366,8 @@ export default class Day extends React.Component<IProps, IState> {
       if (this.appElementsStateIndex === stateIndexBefore) return;
       // console.log(newApps.length, this.props.dayData.id);
 
-      this.setState({ apps: newApps, stateIndex: this.state.stateIndex + 1 });
+      const elements = newApps.map(([_, element]) => element);
+      this.setState({ apps: elements, stateIndex: this.state.stateIndex + 1 });
 
       // console.log('do instantly:', instant);
       if (this.props.visibilityStore.isVisible(this.props.dayData.id))
