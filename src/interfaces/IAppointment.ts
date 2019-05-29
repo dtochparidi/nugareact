@@ -11,4 +11,6 @@ export default interface IAppointment {
   personInstance?: IPerson | IPersonLoading;
   uniqueId: string;
   stateHash: string;
+  visits: number;
+  points: number;
 }

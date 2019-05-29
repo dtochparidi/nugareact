@@ -99,7 +99,13 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
   }
 
   public render() {
-    const { personInstance, identifier, overlapping } = this.props.appointment;
+    const {
+      personInstance,
+      identifier,
+      overlapping,
+      visits,
+      points,
+    } = this.props.appointment;
 
     const { isDisplaying } = this.props;
     if (!isDisplaying.value) return null;
@@ -169,7 +175,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
                     <span className="patronymic">{person.patronymic} </span>
                   ) : null}
                   <span className="additionalInfo">
-                    <span className="visits">13</span>{' '}
+                    <span className="visits">{visits}</span>{' '}
                     <span className="grade">A</span>
                   </span>
                 </div>
@@ -179,7 +185,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
               </div>
             </div>
             <div className="pointsWrapper" key="poinsWrapper">
-              <div className="content">19</div>
+              <div className="content">{points}</div>
             </div>
           </div>
         ) : null}

@@ -240,9 +240,11 @@ export default class CalendarDayStore {
           duration: app.duration,
           personId: app.personId,
           personInstance: person,
+          points: app.points,
           position: app.position,
           stateHash: app.stateHash,
           uniqueId: app.uniqueId,
+          visits: app.visits,
         });
       },
     );

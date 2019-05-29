@@ -12,7 +12,7 @@ const moment = extendMoment(Moment);
 export default class Appointment implements IAppointment {
   public static fromJSON(json: string) {
     const parsed = JSON.parse(json);
-    const { personId, position, uniqueId, stateHash } = parsed;
+    const { personId, position, uniqueId, stateHash, points, visits } = parsed;
     let { duration, date } = parsed;
 
     duration = Moment.duration(duration);
@@ -22,9 +22,11 @@ export default class Appointment implements IAppointment {
       date,
       duration,
       personId,
+      points,
       position,
       stateHash,
       uniqueId,
+      visits,
     });
   }
 
@@ -78,6 +80,10 @@ export default class Appointment implements IAppointment {
   public overlapping: boolean = false;
   @observable
   public stateHash: string;
+  @observable
+  public points: number;
+  @observable
+  public visits: number;
 
   public uniqueId: string;
   public dateRange: DateRange;
@@ -97,6 +103,8 @@ export default class Appointment implements IAppointment {
     duration: IDuration;
     uniqueId: string;
     stateHash: string;
+    visits: number;
+    points: number;
   }) {
     this.uniqueId = obj.uniqueId;
     this.update(obj);
@@ -112,6 +120,8 @@ export default class Appointment implements IAppointment {
       duration,
       overlapping,
       stateHash,
+      visits,
+      points,
     }: {
       date?: IMoment;
       position?: number;
@@ -120,6 +130,8 @@ export default class Appointment implements IAppointment {
       duration?: IDuration;
       overlapping?: boolean;
       stateHash?: string;
+      visits?: number;
+      points?: number;
     },
     weightful = true,
     final = true,
@@ -129,6 +141,8 @@ export default class Appointment implements IAppointment {
     if (personId) this.personId = personId;
     if (personInstance) this.personInstance = personInstance;
     if (duration) this.duration = duration;
+    if (points) this.points = points;
+    if (visits) this.visits = visits;
     if (overlapping === true || overlapping === false)
       this.overlapping = overlapping;
 

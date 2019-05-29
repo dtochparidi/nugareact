@@ -78,9 +78,12 @@ export async function generateAppointments(
         ),
       duration: Moment.duration(largeStepMinutes, 'minutes'),
       personId: Person.generateRandomId(),
+      // position: random(0, 4),
+      points: random(20, 1),
       position: random(0, positions),
       stateHash: Appointment.getStateHash(),
-      uniqueId: v4(), // position: random(0, 4),
+      uniqueId: v4(),
+      visits: random(101, 1),
     };
 
     const range = moment.range(app.date, app.date.clone().add(app.duration));
