@@ -66,6 +66,7 @@ export default class Day extends React.Component<IProps, IState> {
 
   private reactions: IReactionDisposer[] = [];
   private unmounted = false;
+  private lastAppsCount = 0;
 
   private generateAppElementMoized = moize(this.generateAppElement, {
     equals: (
@@ -108,9 +109,14 @@ export default class Day extends React.Component<IProps, IState> {
 
   private generateAppElemenetCalls = 0;
   private generateAppElemenetHits = 0;
+  private appsCountIndex = 0;
 
   get appElementsStateIndex() {
-    return this.generateAppElemenetCalls - this.generateAppElemenetHits;
+    return (
+      this.generateAppElemenetCalls -
+      this.generateAppElemenetHits +
+      this.appsCountIndex
+    );
   }
 
   constructor(props: IProps) {
@@ -176,7 +182,6 @@ export default class Day extends React.Component<IProps, IState> {
         shiftObservable={observable(shift)}
         getCellWidth={getCellWidth}
         isDisplaying={this.displayMap[app.uniqueId]}
-        // isDisplaying={{ value: true }}
         moving={false}
         key={app.uniqueId}
         translateX={left}
@@ -241,18 +246,6 @@ export default class Day extends React.Component<IProps, IState> {
           false,
         );
       });
-
-    // Object.values(this.props.dayData.appointments).forEach(app => {
-    //   if (this.displayMap[app.uniqueId].value === false)
-    //     lazyTaskManager.addTask(
-    //       new LazyTask(() => {
-    //         runInAction(() => {
-    //           this.displayMap[app.uniqueId].value = true;
-    //         });
-    //       }),
-    //       false,
-    //     );
-    // });
   }
 
   public updateApps(instant = false) {
@@ -281,6 +274,8 @@ export default class Day extends React.Component<IProps, IState> {
     const cellWidth = getCellWidth();
 
     const apps = Object.values(dayData.appointments);
+    // console.log('apps:', apps.length);
+
     this.registerNewApps();
 
     const shiftsCloned = Object.entries(shifts).reduce(
@@ -315,19 +310,23 @@ export default class Day extends React.Component<IProps, IState> {
       });
       performance.mark(`${markPrefix}-end`);
 
+      this.appsCountIndex += +(this.lastAppsCount !== apps.length);
+      // console.log('appsCountIndex:', this.appsCountIndex);
+
       // const stats = (moize.getStats().profiles as any).generateApp;
       // console.log(stats.calls - stats.hits);
 
-      console.log(this.appElementsStateIndex, this.props.dayData.id);
-      if (this.appElementsStateIndex === stateIndexBefore) {
-        console.log('unchanged');
-        return;
-      }
+      // console.log(this.appElementsStateIndex, this.props.dayData.id);
+      if (this.appElementsStateIndex === stateIndexBefore) return;
+      // console.log(newApps.length, this.props.dayData.id);
+
       this.setState({ apps: newApps, stateIndex: this.state.stateIndex + 1 });
 
       // console.log('do instantly:', instant);
       if (this.props.visibilityStore.isVisible(this.props.dayData.id))
         this.turnOnVisibility();
+
+      this.lastAppsCount = apps.length;
 
       performance.measure(
         markPrefix,
@@ -340,19 +339,8 @@ export default class Day extends React.Component<IProps, IState> {
     else
       lazyTaskManager.addTask(
         new LazyTask(func, undefined, this.mountCondition, this.mountCondition),
+        true,
       );
-
-    // this.setState({ apps: [] });
-    // Object.values(dayData.appointments).forEach(app => {
-    //   lazyTaskManager.addTask(
-    //     new LazyTask(() => {
-    //       const appElem = generateAppElement(app);
-    //       this.state.apps.push(appElem);
-
-    //       this.setState({ apps: this.state.apps });
-    //     }),
-    //   );
-    // });
 
     performance.mark(`${prefix}-end`);
     performance.measure(prefix, `${prefix}-start`, `${prefix}-end`);

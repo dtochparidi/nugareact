@@ -89,12 +89,13 @@ function cacheDays(from: string, to: string) {
 //   return Object.values(JSON.parse(json)).map((text: string) => Appointment.fromJSON(text))
 // }
 
-async function generateAppointments(
+export async function generateAppointments(
   date: IMoment,
   fromHour: number,
   toHour: number,
   positions: number,
   toJSON: boolean = false,
+  count: number = random(255, 250),
 ) {
   const ranges: Array<[number, DateRange]> = [];
   const maxStepsCount = Math.floor(
@@ -134,9 +135,8 @@ async function generateAppointments(
     return new Appointment(app);
   };
 
-  const generatedApps = await Promise.all(
-    new Array(random(255, 250))
-      // new Array(random(14, 15))
+  const generatedApps: Appointment[] = await Promise.all(
+    new Array(count)
       .fill(null)
       .map(
         async () => await lazyTaskManager.addTask(new LazyTask(generateApp)),
@@ -152,7 +152,9 @@ async function generateAppointments(
       }, {}),
   );
 
-  const data = await lazyTaskManager.addTask(finalTask);
+  const data: {
+    [uniqueId: string]: Appointment;
+  } = await lazyTaskManager.addTask(finalTask);
 
   return data;
 }

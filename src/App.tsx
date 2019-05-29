@@ -15,6 +15,7 @@ import rootStore from './stores/RootStore';
 import versions from './versions';
 
 import './App.css';
+import 'scenarios/scenariosPackage';
 
 function noop() {
   //

@@ -14,12 +14,14 @@
     "no-console": false,
     "curly": [true, "as-needed"],
     "no-debugger": false,
-    "jsx-boolean-value": false
+    "jsx-boolean-value": false,
+    "ordered-imports": false
   },
   "jsRules": {
     "no-console": false,
     "curly": [true, "as-needed"],
     "no-debugger": false,
-    "jsx-boolean-value": false
+    "jsx-boolean-value": false,
+    "ordered-imports": false
   }
 }

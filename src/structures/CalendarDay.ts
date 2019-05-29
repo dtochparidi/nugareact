@@ -49,6 +49,24 @@ export default class CalendarDay implements ICalendarDay {
     this.registerStateUpdate();
   }
 
+  @action
+  public removeAppointment(uniqueId: string) {
+    delete this.appointments[uniqueId];
+
+    this.registerStateUpdate();
+  }
+
+  @action
+  public addAppointments(apps: Appointment[]) {
+    apps.forEach(app => (this.appointments[app.uniqueId] = app));
+
+    Object.values(this.appointments).forEach(app =>
+      app.registerListener('dayHandler', this.appointmentDidUpdated),
+    );
+
+    this.registerStateUpdate();
+  }
+
   public appointmentDidUpdated = (
     app: Appointment,
     weightful: boolean,
