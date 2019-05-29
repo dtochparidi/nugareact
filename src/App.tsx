@@ -88,7 +88,7 @@ class App extends React.Component {
       setTimeout(async () => {
         await lazyTaskManager.addFunc(a);
         b();
-      }, random(500, 1000));
+      }, random(100, 500));
     })();
   }
 
