@@ -80,9 +80,15 @@ class App extends React.Component {
   }
 
   public componentDidMount() {
-    (function a() {
-      modifyPersonsScenario(0.1);
-      setTimeout(() => lazyTaskManager.addFunc(a), random(500, 800));
+    function a() {
+      modifyPersonsScenario(0.3);
+    }
+
+    (function b() {
+      setTimeout(async () => {
+        await lazyTaskManager.addFunc(a);
+        b();
+      }, random(500, 1000));
     })();
   }
 
