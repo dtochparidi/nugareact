@@ -29,7 +29,7 @@ export default function modifyPersonsScenario(percentagePerDays: number) {
       const app = day.appointments[key];
       const visits = app.visits + random(2, 0);
       const points = app.points + random(2, 0);
-      day.appointments[key].update({ visits, points });
+      Object.assign(day.appointments[key], { visits, points });
     });
   });
 

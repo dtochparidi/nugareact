@@ -9,6 +9,13 @@ import { v4 } from 'uuid';
 
 const moment = extendMoment(Moment);
 
+type IUpdateAppFun = (
+  app: Appointment,
+  weightful: boolean,
+  final: boolean,
+  serverSide: boolean,
+) => void;
+
 export default class Appointment implements IAppointment {
   public static fromJSON(json: string) {
     const parsed = JSON.parse(json);
@@ -88,11 +95,7 @@ export default class Appointment implements IAppointment {
   public uniqueId: string;
   public dateRange: DateRange;
   public updateListeners: {
-    [key: string]: (
-      app: Appointment,
-      weightful: boolean,
-      final: boolean,
-    ) => void;
+    [key: string]: IUpdateAppFun;
   } = {};
 
   constructor(obj: {
@@ -135,6 +138,7 @@ export default class Appointment implements IAppointment {
     },
     weightful = true,
     final = true,
+    serverSide = false,
   ) {
     if (date) this.date = date;
     if (position || position === 0) this.position = position;
@@ -161,7 +165,7 @@ export default class Appointment implements IAppointment {
 
     Object.values(this.updateListeners).forEach(listener => {
       // console.log('app updated');
-      listener(this, weightful, final);
+      listener(this, weightful, final, serverSide);
     });
   }
 
@@ -174,10 +178,24 @@ export default class Appointment implements IAppointment {
     };
   }
 
-  public registerListener(
-    key: string,
-    listener: (app: Appointment, weightful: boolean, final: boolean) => void,
-  ) {
+  public registerListener(key: string, listener: IUpdateAppFun) {
     this.updateListeners[key] = listener;
+  }
+
+  public clone() {
+    return new Appointment(this);
+  }
+
+  public extractData(): IAppointment {
+    return {
+      date: this.date.clone(),
+      duration: this.duration.clone(),
+      personId: this.personId,
+      points: this.points,
+      position: this.position,
+      stateHash: this.stateHash,
+      uniqueId: this.uniqueId,
+      visits: this.visits,
+    };
   }
 }

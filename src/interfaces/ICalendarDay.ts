@@ -1,8 +1,8 @@
 import * as moment from 'moment';
-import Appointment from 'structures/Appointment';
+import IAppointment from './IAppointment';
 
 export default interface ICalendarDay {
   date: moment.Moment;
-  appointments: { [uniqueId: string]: Appointment };
+  appointments: { [uniqueId: string]: IAppointment };
   loaded?: boolean;
 }

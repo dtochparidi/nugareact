@@ -23,7 +23,9 @@ export default function changePersonsScenario(percentagePerDays: number) {
     );
 
     keysToRemove.forEach(key =>
-      day.appointments[key].update({ personId: Person.generateRandomId() }),
+      Object.assign(day.appointments[key], {
+        personId: Person.generateRandomId(),
+      }),
     );
   });
 

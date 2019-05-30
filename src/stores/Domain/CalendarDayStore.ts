@@ -1,6 +1,5 @@
 import fetchDay from 'fetchers/DayFetcher';
 import IAppointment from 'interfaces/IAppointment';
-import ICalendarDay from 'interfaces/ICalendarDay';
 import IUpdateAppFunction from 'interfaces/IUpdateAppFunction';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
 import { action, observable } from 'mobx';
@@ -36,7 +35,7 @@ export default class CalendarDayStore {
               const apps = await this.loadDayApps(day);
               await lazyTaskManager.addTask(
                 new LazyTask(async () => {
-                  day.mergeAppointments(apps);
+                  day.mergeAppointments(apps, true);
                 }),
               );
             }),
@@ -47,7 +46,7 @@ export default class CalendarDayStore {
       await Promise.all(
         this.days.map(async day => {
           const apps = await this.loadDayApps(day);
-          day.mergeAppointments(apps);
+          day.mergeAppointments(apps, true);
         }),
       );
   }
@@ -110,6 +109,7 @@ export default class CalendarDayStore {
     }: IUpdateAppProps,
     weightful = true,
     final = true,
+    serverSide = false,
   ) => {
     date = date || (appointment as Appointment).date;
     targetDate = targetDate || date;
@@ -148,7 +148,7 @@ export default class CalendarDayStore {
           .clone()
           .startOf('day')
           .diff((date as IMoment).clone().startOf('day'), 'day') === 0,
-    ) as ICalendarDay;
+    ) as CalendarDay;
     const newDay = this.days.find(
       day =>
         day.date
@@ -197,6 +197,7 @@ export default class CalendarDayStore {
       ),
       weightful,
       final,
+      serverSide,
     );
 
     // if day was changed
@@ -206,11 +207,12 @@ export default class CalendarDayStore {
       (currentDay as CalendarDay).registerStateUpdate(
         [appointment.uniqueId],
         false,
+        serverSide,
       );
 
       // append to new day
       newDay.appointments[appointment.uniqueId] = appointment;
-      newDay.registerStateUpdate([appointment.uniqueId], false);
+      newDay.registerStateUpdate([appointment.uniqueId], false, serverSide);
     }
   };
 
@@ -259,6 +261,7 @@ export default class CalendarDayStore {
           acc[app.uniqueId] = app;
           return acc;
         }, {}),
+        true,
       );
 
       // console.log('loaded', day.id);

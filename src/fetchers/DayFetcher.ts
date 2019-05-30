@@ -93,10 +93,10 @@ export async function generateAppointments(
 
     ranges.push([app.position, range]);
 
-    return new Appointment(app);
+    return app;
   };
 
-  const generatedApps: Appointment[] = await Promise.all(
+  const generatedApps: IAppointment[] = await Promise.all(
     new Array(count)
       .fill(null)
       .map(
@@ -107,14 +107,14 @@ export async function generateAppointments(
   const finalTask = new LazyTask(() =>
     generatedApps
       .filter(app => app !== null)
-      .reduce((acc, app: Appointment) => {
-        acc[app.uniqueId] = toJSON ? app.toJSON() : app;
+      .reduce((acc, app: IAppointment) => {
+        acc[app.uniqueId] = app;
         return acc;
       }, {}),
   );
 
   const data: {
-    [uniqueId: string]: Appointment;
+    [uniqueId: string]: IAppointment;
   } = await lazyTaskManager.addTask(finalTask);
 
   return data;
@@ -135,11 +135,24 @@ export async function generateRandomDay(date: IMoment): Promise<ICalendarDay> {
 }
 
 async function getDayFromServer(date: IMoment) {
-  const id = CalendarDay.calcId(date);
+  const dayId = CalendarDay.calcId(date);
   const day =
-    serverDaysData[id] || (serverDaysData[id] = await generateRandomDay(date));
+    serverDaysData[dayId] ||
+    (serverDaysData[dayId] = await generateRandomDay(date));
 
   return day;
+
+  // const clonedDay: ICalendarDay = {
+  //   appointments: Object.keys(day.appointments)
+  //     .map(id => (day.appointments[id] = day.appointments[id].clone()))
+  //     .reduce((acc, val) => {
+  //       acc[val.uniqueId] = val;
+  //       return acc;
+  //     }, {}),
+  //   date: day.date.clone(),
+  // };
+
+  // return clonedDay;
 }
 
 const fetchDay: IFetcher<IMoment, ICalendarDay> = async function DayFetcher(
