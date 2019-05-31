@@ -1,5 +1,6 @@
 import rootStore from 'stores/RootStore';
 import { serverDaysData } from 'fetchers/DayFetcher';
+import { v4 } from 'uuid';
 
 function shuffle(a: any[]) {
   for (let i = a.length - 1; i > 0; i--) {
@@ -29,7 +30,8 @@ export default function modifyPersonsScenario(percentagePerDays: number) {
       const app = day.appointments[key];
       const visits = app.visits + random(2, 0);
       const points = app.points + random(2, 0);
-      Object.assign(day.appointments[key], { visits, points });
+      const stateHash = v4();
+      Object.assign(day.appointments[key], { visits, points, stateHash });
     });
   });
 

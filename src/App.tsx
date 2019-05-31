@@ -16,12 +16,12 @@ import versions from './versions';
 
 import './App.css';
 import 'scenarios/scenariosPackage';
-// import modifyPersonsScenario from 'scenarios/modifyPersonsScenario';
-// import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
+import modifyPersonsScenario from 'scenarios/modifyPersonsScenario';
+import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
 
-// function random(to: number, from: number = 0) {
-//   return Math.floor(Math.random() * (to - from)) + from;
-// }
+function random(to: number, from: number = 0) {
+  return Math.floor(Math.random() * (to - from)) + from;
+}
 
 function noop() {
   //
@@ -80,15 +80,15 @@ class App extends React.Component {
   }
 
   public componentDidMount() {
-    // function a() {
-    //   modifyPersonsScenario(0.1);
-    // }
-    // (function b() {
-    //   setTimeout(async () => {
-    //     await lazyTaskManager.addFunc(a);
-    //     b();
-    //   }, random(100, 500));
-    // })();
+    function a() {
+      modifyPersonsScenario(0.1);
+    }
+    (function b() {
+      setTimeout(async () => {
+        await lazyTaskManager.addFunc(a);
+        b();
+      }, random(700, 1500));
+    })();
   }
 
   public render() {

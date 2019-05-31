@@ -91,6 +91,8 @@ export function generateDropzoneConfig(this: CalendarCard) {
         if (placeIsFree && appInfo) {
           this.lockShifts();
 
+          console.log(lastStamp.hour(), lastStamp.minute());
+
           this.props.updateAppointment(
             {
               date: appInfo.date,
@@ -148,19 +150,14 @@ export function generateDropzoneConfig(this: CalendarCard) {
           .clone()
           .hour(abstractStamp.hour())
           .minute(abstractStamp.minute());
-        // const endStamp = dayStart
-        //   .clone()
-        //   .hour(abstractEndStamp.hour())
-        //   .minute(abstractEndStamp.minute());
 
         const { mainColumnStep } = this.props;
         const largeStep = mainColumnStep.asMilliseconds();
-        const littleStep = largeStep / this.props.subGridColumns;
+
+        // main thing - if you use little steps -> uncomment next line
+        const littleStep = largeStep; // / this.props.subGridColumns;
         const offset = stamp.valueOf() - dayStart.valueOf();
-        // const endOffset = endStamp.valueOf() - dayStart.valueOf();
         const roundedOffset = Math.round(offset / littleStep) * littleStep;
-        // const roundedEndOffset =
-        //   Math.round(endOffset / littleStep) * littleStep;
         const roundedStamp = dayStart.clone().add(roundedOffset);
 
         const dayEnd = dayStart.clone().add(dayTimeRangeActual.duration());

@@ -623,12 +623,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         rootStore.domainStore.calendarDayStore.daysMap[dayId];
       const apps = day.appointments;
 
-      let c = 0;
-
       Object.entries(dayShifts).forEach(([appId, deltas], i, { length }) => {
         const { dx, dy } = deltas;
         if (dx === 0 && dy === 0) return;
-        c++;
+
         const app = apps[appId];
 
         this.props.updateAppointment(
@@ -644,8 +642,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           !(i === length - 1),
         );
       });
-
-      console.log(`lock shifts for ${dayId} => ${c}`);
     });
 
     this.clearShifts();
