@@ -214,15 +214,15 @@ export default class Day extends React.Component<IProps, IState> {
     });
   }
 
-  public turnOnVisibility() {
+  public turnOnVisibility(instant: boolean = this.props.instantRender.value) {
     this.visibility = true;
 
-    const { dayData, instantRender } = this.props;
+    const { dayData } = this.props;
 
     this.registerNewApps();
 
     // console.log(`turn on visibility (instantly: ${instantRender.value})`);
-    if (instantRender.value)
+    if (instant)
       runInAction(() => {
         Object.values(dayData.appointments).forEach(app => {
           this.displayMap[app.uniqueId].value = true;
@@ -371,7 +371,7 @@ export default class Day extends React.Component<IProps, IState> {
 
       // console.log('do instantly:', instant);
       if (this.props.visibilityStore.isVisible(this.props.dayData.id))
-        this.turnOnVisibility();
+        this.turnOnVisibility(instant);
 
       this.lastAppsCount = apps.length;
 

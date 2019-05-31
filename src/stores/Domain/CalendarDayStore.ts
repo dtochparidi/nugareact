@@ -182,6 +182,21 @@ export default class CalendarDayStore {
     )
       targetDuration = possibleDuration;
 
+    // if day was changed
+    if (currentDay.date.diff(newDay.date, 'day') !== 0) {
+      // append to new day
+      newDay.addAppointments([appointment], {
+        serverSide: false,
+        weightful: false,
+      });
+
+      // remove from current day
+      currentDay.removeAppointments([appointment.uniqueId], {
+        serverSide: false,
+        weightful: false,
+      });
+    }
+
     // change the appointment
     appointment.update(
       Object.assign(
@@ -199,21 +214,6 @@ export default class CalendarDayStore {
       final,
       serverSide,
     );
-
-    // if day was changed
-    if (currentDay.date.diff(newDay.date, 'day') !== 0) {
-      // remove from current day
-      currentDay.removeAppointments([appointment.uniqueId], {
-        serverSide: false,
-        weightful: false,
-      });
-
-      // append to new day
-      newDay.addAppointments([appointment], {
-        serverSide: false,
-        weightful: false,
-      });
-    }
   };
 
   private async loadDayApps(day: CalendarDay) {
