@@ -203,16 +203,16 @@ export default class CalendarDayStore {
     // if day was changed
     if (currentDay.date.diff(newDay.date, 'day') !== 0) {
       // remove from current day
-      delete currentDay.appointments[appointment.uniqueId];
-      (currentDay as CalendarDay).registerStateUpdate(
-        [appointment.uniqueId],
-        false,
-        serverSide,
-      );
+      currentDay.removeAppointments([appointment.uniqueId], {
+        serverSide: false,
+        weightful: false,
+      });
 
       // append to new day
-      newDay.appointments[appointment.uniqueId] = appointment;
-      newDay.registerStateUpdate([appointment.uniqueId], false, serverSide);
+      newDay.addAppointments([appointment], {
+        serverSide: false,
+        weightful: false,
+      });
     }
   };
 

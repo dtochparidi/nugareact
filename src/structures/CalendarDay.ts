@@ -57,11 +57,16 @@ export default class CalendarDay implements ICalendarDay {
   }
 
   @action
-  public removeAppointments(ids: string[], serverSide = false) {
+  public removeAppointments(
+    ids: string[],
+    { serverSide, weightful }: { serverSide: boolean; weightful?: boolean } = {
+      serverSide: false,
+    },
+  ) {
     ids.forEach(uniqueId => {
       delete this.appointments[uniqueId];
     });
-    this.registerStateUpdate(ids, undefined, serverSide);
+    this.registerStateUpdate(ids, weightful, serverSide);
   }
 
   @action
@@ -74,7 +79,7 @@ export default class CalendarDay implements ICalendarDay {
       appId => !newIds.includes(appId),
     );
 
-    if (newApps.length) this.addAppointments(newApps, serverSide);
+    if (newApps.length) this.addAppointments(newApps, { serverSide });
 
     updatedApps.forEach((app, i, { length }) => {
       if (this.appointments[app.uniqueId].stateHash !== app.stateHash)
@@ -87,11 +92,16 @@ export default class CalendarDay implements ICalendarDay {
     });
 
     if (removedAppIds.length)
-      this.removeAppointments(removedAppIds, serverSide);
+      this.removeAppointments(removedAppIds, { serverSide });
   }
 
   @action
-  public addAppointments(apps: Appointment[], serverSide = false) {
+  public addAppointments(
+    apps: Appointment[],
+    { serverSide, weightful }: { serverSide: boolean; weightful?: boolean } = {
+      serverSide: false,
+    },
+  ) {
     apps.forEach(app => (this.appointments[app.uniqueId] = app));
 
     apps.forEach(app =>
@@ -100,7 +110,7 @@ export default class CalendarDay implements ICalendarDay {
 
     this.registerStateUpdate(
       apps.map(app => app.uniqueId),
-      undefined,
+      weightful,
       serverSide,
     );
   }
