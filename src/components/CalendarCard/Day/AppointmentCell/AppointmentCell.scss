@@ -20,7 +20,7 @@
 
   width: var(--mainGridColumnWidth);
   // width: 200px;
-  height: #{$calendar-cell-height};
+  height: #{$calendar-cell-height - $thin-width};
 
   touch-action: none;
 

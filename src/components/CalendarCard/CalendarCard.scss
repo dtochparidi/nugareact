@@ -1,4 +1,5 @@
 @import 'src/common/variables.scss';
+@import 'src/common/fonts.scss';
 @import 'src/components/CalendarCard/Day/DateRow/DateRow.scss';
 @import 'src/components/CalendarCard/Day/MonthRow/MonthRow.scss';
 
@@ -36,7 +37,7 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
   background: #fcfcfc;
 
   .item {
-    @extend .borders;
+    // @extend .borders;
 
     display: flex;
     align-items: center;
@@ -73,6 +74,11 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
 
     :first-child {
       visibility: hidden;
+    }
+
+    .item {
+      border-top: none;
+      border-bottom: none;
     }
   }
 
@@ -125,22 +131,36 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
             grid-auto-flow: column;
 
             .topRow {
-              display: grid;
+              display: flex;
               z-index: 101;
 
               height: $calendar-cell-height;
 
               overflow: hidden;
 
-              grid-template-rows: $calendar-cell-height;
-              grid-template-columns: repeat(var(--columns-count), 1fr);
-              grid-auto-flow: column;
-
               will-change: left, width;
 
               // display: flex;
 
               // height: $calendar-cell-height;
+
+              .item {
+                flex: 1 1;
+
+                border-left: none;
+                border-right: none;
+
+                .time {
+                  .hours {
+                    @extend .font-time;
+                  }
+
+                  .minutes {
+                    @extend .font-time-secondary;
+                    vertical-align: top;
+                  }
+                }
+              }
 
               // .item {
               //   flex-grow: 1;
@@ -178,7 +198,7 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
           height: 100%;
           width: 100%;
 
-          outline: solid black 1px;
+          // outline: solid black 1px;
 
           &.hidden > .day {
             display: none;

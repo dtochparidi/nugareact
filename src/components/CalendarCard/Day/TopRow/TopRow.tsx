@@ -22,15 +22,20 @@ export default class TopRow extends React.Component<IProps> {
       <div className="topRow" style={this.props.style}>
         {this.props.visible
           ? this.props.stamps.map((stamp, i, arr) => {
-              const s = stamp.format('HH:mm');
+              const hours = stamp.format('H');
+              const minutes = stamp.format('mm');
+
               return (
                 <div
                   className={`item ${
                     i === 0 ? 'first' : i === arr.length - 1 ? 'last' : ''
                   }`}
-                  key={s}
+                  key={hours + minutes}
                 >
-                  {s}
+                  <div className="time">
+                    <span className="hours">{hours}</span>
+                    <span className="minutes">{minutes}</span>
+                  </div>
                 </div>
               );
             })

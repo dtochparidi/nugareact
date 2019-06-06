@@ -1,12 +1,13 @@
 import { IPerson } from 'interfaces/IPerson';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
+import { Lambda, observe } from 'mobx';
 import { observer } from 'mobx-react';
 import * as moment from 'moment';
 import * as React from 'react';
 
+import * as StyleVariables from '../../../../common/variables.scss';
 import Appointment from '../../../../structures/Appointment';
 
-import { Lambda, observe } from 'mobx';
 import './AppointmentCell.scss';
 
 // import * as StyleVariables from '../../../../common/variables.scss';
@@ -120,12 +121,13 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
 
     const { dx, dy } = this.state.shift;
 
-    const cellWidth = getCellWidth();
+    const cellWidth = getCellWidth() - parseFloat(StyleVariables.thinWidth);
     const coeffX = cellWidth * dx;
     const coeffY = cellHeight * dy;
 
     translateX = (translateX || 0) + coeffX;
-    translateY = (translateY || 0) + coeffY;
+    translateY =
+      (translateY || 0) + coeffY + parseFloat(StyleVariables.thinWidth);
 
     const translated = true;
 

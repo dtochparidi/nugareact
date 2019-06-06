@@ -91,8 +91,6 @@ export function generateDropzoneConfig(this: CalendarCard) {
         if (placeIsFree && appInfo) {
           this.lockShifts();
 
-          console.log(lastStamp.hour(), lastStamp.minute());
-
           this.props.updateAppointment(
             {
               date: appInfo.date,

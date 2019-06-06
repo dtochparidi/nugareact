@@ -1,64 +1,64 @@
-@import "colors.scss";
-@import url("https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700");
+@import 'colors.scss';
+@import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700');
 
 .font-header {
   font-size: 25px;
-  font-family: "Open Sans", sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-weight: 400;
 }
 
 .font-header-semibold {
-  font-family: "Open Sans", sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-size: 25px;
   font-weight: 600;
 }
 
 .font-middle-semibold {
-  font-family: "Open Sans", sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-size: 20px;
   font-weight: 600;
 }
 
 .font-primary {
   font-size: 13px;
-  font-family: "Open Sans", sans-serif;
+  font-family: 'Open Sans', sans-serif;
 }
 
 .font-primary-semibold {
   font-size: 13px;
-  font-family: "Open Sans", sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-weight: 600;
 }
 
 .font-primary-bold {
   font-size: 13px;
-  font-family: "Open Sans", sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-weight: 700;
 }
 
 .font-secondary {
   font-size: 16px;
-  font-family: "Open Sans", sans-serif;
+  font-family: 'Open Sans', sans-serif;
   color: $color-secondary-text;
   font-weight: 300;
 }
 
 .font-points-circle {
   font-size: 11px;
-  font-family: "Open Sans", sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-weight: 600;
 }
 
 .font-secondary-middle {
   font-size: 13px;
-  font-family: "Open Sans", sans-serif;
+  font-family: 'Open Sans', sans-serif;
   color: $color-secondary-text;
   font-weight: 300;
 }
 
 .font-error-middle {
   font-size: 13px;
-  font-family: "Open Sans", sans-serif;
+  font-family: 'Open Sans', sans-serif;
   color: $color-secondary-text;
   font-weight: 300;
 
@@ -67,14 +67,30 @@
 
 .font-secondary-little {
   font-size: 9px;
-  font-family: "Open Sans", sans-serif;
+  font-family: 'Open Sans', sans-serif;
   color: $color-secondary-text;
   font-weight: 300;
 }
 
 .font-secondary-little-semibold {
   font-size: 9px;
-  font-family: "Open Sans SemiBold", sans-serif;
+  font-family: 'Open Sans SemiBold', sans-serif;
   color: $color-secondary-text;
+  font-weight: 600;
+}
+
+// new one
+
+.font-time-secondary {
+  font-size: 10px;
+  font-family: 'Open Sans Semibold', sans-serif;
+  color: $color-time-secondary;
+  font-weight: 300;
+}
+
+.font-time {
+  font-size: 13px;
+  font-family: 'Open Sans Semibold', sans-serif;
+  color: $color-time;
   font-weight: 600;
 }

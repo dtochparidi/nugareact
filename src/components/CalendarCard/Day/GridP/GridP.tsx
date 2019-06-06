@@ -1,10 +1,11 @@
 import { LazyTask } from '@levabala/lazytask/build/dist';
 import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
-// import moize from 'moize';
 import * as PIXI from 'pixi.js';
 import * as React from 'react';
 
 import * as StyleVariables from '../../../../common/variables.scss';
+
+// import moize from 'moize';
 const thinWidth = parseFloat(StyleVariables.thinWidth);
 
 export interface IProps {
@@ -43,7 +44,7 @@ export default class GridP extends React.Component<IProps, IState> {
 
       // main grid
       const mainGrid = new PIXI.Graphics();
-      mainGrid.lineStyle(2, 0xd3d3d3, 1);
+      mainGrid.lineStyle(1, 0xd3d3d3, 1);
       for (let x = 0; x <= cols; x++) {
         const xCoord = x * xStep + thinWidth;
         mainGrid.moveTo(xCoord, 0);
@@ -66,15 +67,15 @@ export default class GridP extends React.Component<IProps, IState> {
       }
 
       // mark
-      const mark = new PIXI.Graphics();
-      mark.beginFill(0xf4e842);
-      mark.moveTo(0, 0);
-      mark.lineTo(100, 0);
-      mark.lineTo(100, 100);
-      mark.lineTo(0, 100);
-      mark.lineTo(0, 0);
-      mark.endFill();
-      container.addChild(mark);
+      // const mark = new PIXI.Graphics();
+      // mark.beginFill(0xf4e842);
+      // mark.moveTo(0, 0);
+      // mark.lineTo(100, 0);
+      // mark.lineTo(100, 100);
+      // mark.lineTo(0, 100);
+      // mark.lineTo(0, 0);
+      // mark.endFill();
+      // container.addChild(mark);
 
       container.addChild(mainGrid);
       container.addChild(secondaryGrid);
