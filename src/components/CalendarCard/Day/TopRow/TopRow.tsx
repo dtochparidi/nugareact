@@ -34,7 +34,7 @@ export default class TopRow extends React.Component<IProps> {
                 >
                   <div className="time">
                     <span className="hours">{hours}</span>
-                    <span className="minutes">{minutes}</span>
+                    <span className="minutes">{' ' + minutes}</span>
                   </div>
                 </div>
               );

@@ -8,6 +8,7 @@ import './DateRow.scss';
 export interface IProps {
   dayChosenIndex: number;
   monthStartDate: IMoment;
+  visitsPerDay: { [dayIndex: number]: number };
   dayJumpCallback: (index: number) => void;
 }
 
@@ -55,13 +56,24 @@ export default class DateRow extends React.Component<IProps> {
               }`}
               onClick={this.indexClickHandler}
             >
-              <span className="name">
-                {this.props.monthStartDate
-                  .clone()
-                  .date(i + 1)
-                  .format('dd')}
+              <span className="main">
+                <span className="name">
+                  <span className="weekdayName">
+                    {this.props.monthStartDate
+                      .clone()
+                      .date(i + 1)
+                      .format('dd')}
+                  </span>
+                </span>
+                <span className="index">{i + 1}</span>
               </span>
-              <span className="index">{i + 1}</span>
+              <span className="secondary">
+                <span className="weekdayVisits">
+                  {i in this.props.visitsPerDay
+                    ? this.props.visitsPerDay[i]
+                    : ''}
+                </span>
+              </span>
             </div>
           ))}
         </div>

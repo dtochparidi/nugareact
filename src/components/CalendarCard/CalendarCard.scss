@@ -150,6 +150,8 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
                 border-left: none;
                 border-right: none;
 
+                justify-content: left;
+
                 .time {
                   .hours {
                     @extend .font-time;

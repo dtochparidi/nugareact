@@ -1,4 +1,5 @@
 @import 'src/common/variables.scss';
+@import 'src/common/fonts.scss';
 
 $dateRow-padding: $thin-width;
 $dateRow-height: 40px;
@@ -31,46 +32,56 @@ $dateRow-height: 40px;
   .dateRow {
     display: grid;
     grid-auto-flow: column;
+    grid-auto-columns: 1fr;
 
     width: 100%;
     height: $dateRow-height;
     padding: $dateRow-padding;
 
     .day {
-      display: flex;
-      flex-flow: column;
-      align-items: center;
-
-      justify-content: space-between;
-
-      height: 100%;
-
-      cursor: default;
-
-      &.chosen > .index {
+      &.chosen > .main > .index {
         color: white;
         background: rgb(71, 58, 255);
       }
 
-      &:not(.chosen):hover > .index {
+      &:not(.chosen):hover > .main > .index {
         color: white;
         background: rgb(132, 123, 255);
 
         cursor: default;
       }
 
-      .index {
-        display: flex;
+      .main {
+        display: inline-flex;
+        flex-flow: column;
         align-items: center;
-        justify-content: center;
 
-        height: $dateRow-height / 2;
-        width: $dateRow-height / 2;
+        justify-content: space-between;
 
-        border-radius: 50%;
+        height: 100%;
 
-        transition-duration: 0.2s;
-        transition-property: color background;
+        cursor: default;
+
+        .index {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          height: $dateRow-height / 2;
+          width: $dateRow-height / 2;
+
+          border-radius: 50%;
+
+          transition-duration: 0.2s;
+          transition-property: color background;
+        }
+      }
+      .secondary {
+        .weekdayVisits {
+          @extend .font-time-secondary;
+          vertical-align: top;
+          margin-right: $medium-width;
+        }
       }
     }
   }

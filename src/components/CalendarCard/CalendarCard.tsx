@@ -1024,6 +1024,12 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                   dayChosenIndex={this.currentDayNumber}
                   monthStartDate={this.monthStartDate}
                   dayJumpCallback={this.jumpToDayHandler}
+                  visitsPerDay={daysStore.days.reduce((acc, val) => {
+                    acc[val.date.date() - 1] = Object.keys(
+                      val.appointments,
+                    ).length;
+                    return acc;
+                  }, {})}
                 />
               </div>
             </ReactCSSTransitionReplace>
