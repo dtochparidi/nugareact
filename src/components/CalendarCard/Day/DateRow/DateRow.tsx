@@ -1,4 +1,4 @@
-import { computed } from 'mobx';
+import { computed, reaction } from 'mobx';
 import { observer } from 'mobx-react';
 import { Moment as IMoment } from 'moment';
 import * as React from 'react';
@@ -6,7 +6,7 @@ import * as React from 'react';
 import './DateRow.scss';
 
 export interface IProps {
-  dayChosenIndex: number;
+  dayChosenIndex: { value: number };
   monthStartDate: IMoment;
   visitsPerDay: { [dayIndex: number]: number };
   dayJumpCallback: (index: number) => void;
@@ -14,6 +14,12 @@ export interface IProps {
 
 @observer
 export default class DateRow extends React.Component<IProps> {
+  constructor(props: IProps) {
+    super(props);
+
+    reaction(() => this.props.dayChosenIndex.value, () => this.forceUpdate());
+  }
+
   @computed
   public get monthLength() {
     return (
@@ -52,7 +58,7 @@ export default class DateRow extends React.Component<IProps> {
             <div
               key={i}
               className={`day ${
-                i + 1 === this.props.dayChosenIndex ? 'chosen' : ''
+                i + 1 === this.props.dayChosenIndex.value ? 'chosen' : ''
               }`}
               onClick={this.indexClickHandler}
             >

@@ -98,7 +98,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   @observable
   public movingId: string = '';
   @observable
-  public currentDayNumber: number;
+  public currentDayNumber: { value: number } = { value: 0 };
   @observable
   public monthStartDate: IMoment = moment();
   public visibilityStore: VisibilityStore = new VisibilityStore();
@@ -722,10 +722,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const newMonthStartDate = daysStore.days[dayIndex].date
       .clone()
       .startOf('month');
-    this.currentDayNumber = daysStore.days[dayIndex].date.date();
-    this.currentDayIndex = dayIndex;
 
-    // // console.log(dayIndex, this.currentDayNumber);
+    this.currentDayNumber.value = daysStore.days[dayIndex].date.date();
+    this.currentDayIndex = dayIndex;
 
     if (
       !this.monthStartDate ||
@@ -889,7 +888,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   public jumpToDay(dayIndex: number) {
     // console.log('jumpTo', dayIndex);
 
-    const targetDate = this.monthStartDate.clone().date(dayIndex);
+    const targetDate = this.monthStartDate.clone().date(dayIndex - 1);
     this.currentLeftColumnIndex = 0;
     this.props.removeDays(0, daysStore.days.length);
 
@@ -910,13 +909,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
         setTimeout(() => {
           this.updateRequiredDays(false).then(() => {
+            this.currentLeftColumnIndex += this.state.columnsPerDay;
+            this.updateScroll(true);
+            this.updateVisibility();
             setTimeout(() => (this.instantRender.value = false));
           });
-          this.updateScroll(true);
-
-          // this.setState({ loading: false });
-
-          this.updateVisibility();
         });
       },
     );
