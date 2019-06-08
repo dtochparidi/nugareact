@@ -4,6 +4,7 @@ import { Moment as IMoment } from 'moment';
 import * as React from 'react';
 
 import './DateRow.scss';
+import CalendarDay from 'structures/CalendarDay';
 
 export interface IProps {
   dayChosenIndex: { value: number };
@@ -43,7 +44,7 @@ export default class DateRow extends React.Component<IProps> {
   };
 
   public goNextMonth = () => {
-    this.props.dayJumpCallback(this.monthLength + 2);
+    this.props.dayJumpCallback(this.monthLength + 1);
   };
 
   public animationEnded = () => {
@@ -51,6 +52,21 @@ export default class DateRow extends React.Component<IProps> {
   };
 
   public render() {
+    const visitsPerDay = Object.entries(this.props.visitsPerDay)
+      .map(([dayId, visitsCount]) => [
+        CalendarDay.fromId(dayId).date,
+        visitsCount,
+      ])
+      .filter(
+        ([date, visitsCount]: [IMoment, number]) =>
+          date.format('MM-YYYY') ===
+          this.props.monthStartDate.format('MM-YYYY'),
+      )
+      .reduce((acc, [date, visitsCount]: [IMoment, number]) => {
+        acc[date.date() - 1] = visitsCount;
+        return acc;
+      }, {});
+
     return (
       <div className="dateRowWrapper">
         <div className="dateRow" key={this.props.monthStartDate.format('MM')}>
@@ -75,9 +91,7 @@ export default class DateRow extends React.Component<IProps> {
               </span>
               <span className="secondary">
                 <span className="weekdayVisits">
-                  {i in this.props.visitsPerDay
-                    ? this.props.visitsPerDay[i]
-                    : ''}
+                  {i in visitsPerDay ? visitsPerDay[i] : ''}
                 </span>
               </span>
             </div>

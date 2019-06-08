@@ -37,6 +37,7 @@ import {
   calcGridsCount,
   updateStickyElements,
 } from './modules/staticMethods';
+import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
 
 const calendarCellMinWidth = parseFloat(CardVariables.calendarCellWidthMin);
 const timeColumnWidth = parseFloat(CardVariables.timeColumnWidth);
@@ -101,6 +102,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   public currentDayNumber: { value: number } = { value: 0 };
   @observable
   public monthStartDate: IMoment = moment();
+
   public visibilityStore: VisibilityStore = new VisibilityStore();
   public currentDayIndex: number = 0;
 
@@ -598,6 +600,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
       // console.log('first load completed');
       this.instantRender.value = false;
+
+      rootStore.uiStore.firstLoadCompeleted();
+      rootStore.domainStore.calendarDayStore.loadVisitsPerDay();
     });
   }
 
@@ -726,14 +731,20 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     this.currentDayNumber.value = daysStore.days[dayIndex].date.date();
     this.currentDayIndex = dayIndex;
 
-    console.log('current day index:', dayIndex);
+    // console.log('current day index:', dayIndex);
 
     if (
       !this.monthStartDate ||
-      newMonthStartDate.format('DD:MM:YYYY') !==
-        this.monthStartDate.format('DD:MM:YYYY')
-    )
+      newMonthStartDate.format('MM:YYYY') !==
+        this.monthStartDate.format('MM:YYYY')
+    ) {
       this.monthStartDate = newMonthStartDate;
+      setTimeout(() =>
+        lazyTaskManager.addFunc(() =>
+          rootStore.domainStore.calendarDayStore.loadVisitsPerDay(),
+        ),
+      );
+    }
   }
 
   public updateScroll(force = false) {
@@ -884,7 +895,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public jumpToDay(dayIndex: number) {
-    console.log('jumpTo', dayIndex);
+    // console.log('jumpTo', dayIndex);
 
     const targetDate = this.monthStartDate.clone().date(dayIndex);
     this.currentLeftColumnIndex = 0;
@@ -1017,12 +1028,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                   dayChosenIndex={this.currentDayNumber}
                   monthStartDate={this.monthStartDate}
                   dayJumpCallback={this.jumpToDayHandler}
-                  visitsPerDay={daysStore.days.reduce((acc, val) => {
-                    acc[val.date.date() - 1] = Object.keys(
-                      val.appointments,
-                    ).length;
-                    return acc;
-                  }, {})}
+                  visitsPerDay={daysStore.visitsPerDay}
                 />
               </div>
             </ReactCSSTransitionReplace>

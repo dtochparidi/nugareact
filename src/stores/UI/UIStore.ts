@@ -5,6 +5,9 @@ import { DateRange, extendMoment } from 'moment-range';
 const moment = extendMoment(Moment);
 
 export default class UIStore {
+  public firstLoadHandlers: Array<() => void> = [];
+  public firstLoadDone = false;
+
   @observable
   public subGridColumns: number = 5;
   @observable
@@ -50,6 +53,11 @@ export default class UIStore {
   @action
   public updateSubGridColumnCount(count: number) {
     this.subGridColumns = count;
+  }
+
+  public firstLoadCompeleted() {
+    this.firstLoadHandlers.forEach(func => func());
+    this.firstLoadDone = true;
   }
 
   @computed

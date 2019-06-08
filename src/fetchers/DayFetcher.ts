@@ -16,6 +16,7 @@ import IFetcher from '../interfaces/IFetcher';
 import Appointment from '../structures/Appointment';
 import CalendarDay from 'structures/CalendarDay';
 import Person from 'structures/Person';
+import rootStore from 'stores/RootStore';
 
 function random(to: number, from: number = 0) {
   return Math.floor(Math.random() * (to - from)) + from;
@@ -25,6 +26,7 @@ const littleStepMinutes = 9;
 const largeStepMinutes = 45;
 const daysCache = {};
 
+export const loadedMonthes: string[] = [];
 export const serverDaysData: { [dayId: string]: ICalendarDay } = {};
 
 // const daysDeepCache = JSON.parse(store.get('cachedDays', '{}'));
@@ -126,7 +128,7 @@ export async function generateRandomDay(date: IMoment): Promise<ICalendarDay> {
 
   const data = {
     appointments: await generateAppointments(date, 8, 17, 24),
-    date,
+    date: date.clone(),
   };
 
   daysCache[key] = data;
@@ -134,12 +136,47 @@ export async function generateRandomDay(date: IMoment): Promise<ICalendarDay> {
   return data;
 }
 
+async function generateDataAboutMonth(date: IMoment): Promise<void> {
+  await Promise.all(
+    new Array(date.daysInMonth())
+      .fill(null)
+      .map(
+        (val, i) =>
+          new LazyTask(
+            () => fetchDayFromServer(date.clone().date(i)),
+            0,
+            () => rootStore.uiStore.firstLoadDone,
+            undefined,
+            true,
+          ),
+      )
+      .map(task => lazyTaskManager.addTask(task)),
+  );
+
+  console.log('month visits loaded', date.format('MM-YYYY'));
+}
+
+export async function fetchDayFromServer(
+  date: IMoment,
+  dayId = CalendarDay.calcId(date),
+) {
+  // console.log('fetch', dayId);
+  return (
+    serverDaysData[dayId] ||
+    (serverDaysData[dayId] = await generateRandomDay(date))
+  );
+}
+
 async function getDayFromServer(date: IMoment) {
   const dayId = CalendarDay.calcId(date);
-  const day =
-    serverDaysData[dayId] ||
-    (serverDaysData[dayId] = await generateRandomDay(date));
+  const day = fetchDayFromServer(date, dayId);
 
+  const monthId = date.format('MM-YYYY');
+
+  if (!loadedMonthes.includes(monthId)) {
+    generateDataAboutMonth(date);
+    loadedMonthes.push(monthId);
+  }
   return day;
 
   // const clonedDay: ICalendarDay = {

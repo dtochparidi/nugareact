@@ -11,8 +11,12 @@ import CalendarDay from 'structures/CalendarDay';
 import { RootStore } from '../RootStore';
 import { LazyTask } from '@levabala/lazytask/build/dist';
 import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
+import fetchVisitsCount from 'fetchers/VisitsCountFetcher';
 
 export default class CalendarDayStore {
+  @observable
+  public visitsPerDay: { [id: string]: number } = {};
+
   @observable
   public daysMap: { [id: string]: CalendarDay } = {};
 
@@ -89,6 +93,28 @@ export default class CalendarDayStore {
     // console.log('promises to load:', loadDataPromises);
     return Promise.all(loadDataPromises);
     // });
+  }
+
+  @action
+  public updateVisitsPerDay(visitsPerDay: { [id: string]: number }) {
+    Object.assign(this.visitsPerDay, visitsPerDay);
+  }
+
+  public async loadVisitsPerDay() {
+    const monthes: { [key: string]: IMoment } = this.days
+      .map(day => [day.date.format('MM-YYYY'), day.date])
+      .reduce((acc, [month, date]: [string, IMoment]) => {
+        acc[month] = date;
+        return acc;
+      }, {});
+
+    console.log(monthes);
+
+    Object.values(monthes).forEach(async date => {
+      const data = await fetchVisitsCount(date);
+      console.log(data);
+      this.updateVisitsPerDay(data);
+    });
   }
 
   @action.bound
