@@ -726,6 +726,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     this.currentDayNumber.value = daysStore.days[dayIndex].date.date();
     this.currentDayIndex = dayIndex;
 
+    console.log('current day index:', dayIndex);
+
     if (
       !this.monthStartDate ||
       newMonthStartDate.format('DD:MM:YYYY') !==
@@ -735,14 +737,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public updateScroll(force = false) {
-    // console.trace();
-    // console.log(`>>>>>>>> update scroll (forced: ${force})`);
     const container = this.calendarContainerRef.current as HTMLDivElement;
     const dayIndex = Math.floor(
       this.currentLeftColumnIndex / this.state.columnsPerDay,
     );
-
-    // // console.log(this.currentLeftColumnIndex / this.state.columnsPerDay);
 
     this.updateCurrentDayData(dayIndex);
 
@@ -886,16 +884,15 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public jumpToDay(dayIndex: number) {
-    // console.log('jumpTo', dayIndex);
+    console.log('jumpTo', dayIndex);
 
-    const targetDate = this.monthStartDate.clone().date(dayIndex - 1);
+    const targetDate = this.monthStartDate.clone().date(dayIndex);
     this.currentLeftColumnIndex = 0;
     this.props.removeDays(0, daysStore.days.length);
 
     this.renderedDaysIds = [];
     const requiredDays = [targetDate]; // .clone().subtract(1, 'day')
     this.deleteShifts();
-    // this.lazyLoadDays = requiredDays.map(m => m);
 
     this.instantRender.value = true;
     this.setState(
@@ -908,8 +905,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         await this.daysDidUpdate();
 
         setTimeout(() => {
-          this.updateRequiredDays(false).then(() => {
-            this.currentLeftColumnIndex += this.state.columnsPerDay;
+          this.updateRequiredDays(true).then(() => {
             this.updateScroll(true);
             this.updateVisibility();
             setTimeout(() => (this.instantRender.value = false));

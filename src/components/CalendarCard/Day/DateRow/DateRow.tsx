@@ -34,7 +34,7 @@ export default class DateRow extends React.Component<IProps> {
         (e.currentTarget.querySelector('.index') as HTMLElement).textContent ||
           '0',
         10,
-      ) + 1,
+      ),
     );
   };
 
