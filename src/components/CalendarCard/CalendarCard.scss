@@ -116,7 +116,7 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
         width: 100%;
         overflow: hidden;
 
-        border-bottom: solid lightgray 1px;
+        // border-bottom: solid lightgray 1px;
 
         .scrollingContainer {
           width: 100%;
@@ -250,7 +250,7 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
                   transition: opacity 0.5s;
 
                   .subGridElem {
-                    border: dotted lightgrey 1px;
+                    // border: dotted lightgrey 1px;
 
                     &.enter {
                       background: rgb(255, 249, 216);

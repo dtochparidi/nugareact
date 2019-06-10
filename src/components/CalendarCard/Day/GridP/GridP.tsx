@@ -51,37 +51,48 @@ function dottedLine(
   }
 }
 
-const generateCellTexture = moize(
-  (
-    width: number,
-    height: number,
-    {
-      top,
-      right,
-      bottom,
-      left,
-    }: {
-      top?: boolean;
-      right?: boolean;
-      bottom?: boolean;
-      left?: boolean;
-    } = {},
-  ) => {
-    const dotStep = 3;
-    const dotRadius = 1;
+const generateLineTexture = moize((width: number, height: number) => {
+  const dotStep = 5;
+  const dotRadius = 0.5;
 
-    const graphics = new PIXI.Graphics();
-    graphics.lineStyle(1, 0xd3d3d3, 1);
-    if (!top) dottedLine(graphics, 0, 0, width, 0, dotStep, dotRadius);
-    if (!right)
-      dottedLine(graphics, width, 0, width, height, dotStep, dotRadius);
-    if (!bottom)
-      dottedLine(graphics, width, height, 0, height, dotStep, dotRadius);
-    if (!left) dottedLine(graphics, 0, height, 0, 0, dotStep, dotRadius);
+  const graphics = new PIXI.Graphics();
+  graphics.lineStyle(1, 0xd3d3d3, 1);
+  dottedLine(graphics, 0, 0, width, height, dotStep, dotRadius);
 
-    return graphics.generateCanvasTexture();
-  },
-);
+  return graphics.generateCanvasTexture();
+});
+
+// const generateCellTexture = moize(
+//   (
+//     width: number,
+//     height: number,
+//     {
+//       top,
+//       right,
+//       bottom,
+//       left,
+//     }: {
+//       top?: boolean;
+//       right?: boolean;
+//       bottom?: boolean;
+//       left?: boolean;
+//     } = {},
+//   ) => {
+//     const dotStep = 3;
+//     const dotRadius = 1;
+
+//     const graphics = new PIXI.Graphics();
+//     graphics.lineStyle(1, 0xd3d3d3, 1);
+//     if (!top) dottedLine(graphics, 0, 0, width, 0, dotStep, dotRadius);
+//     if (!right)
+//       dottedLine(graphics, width, 0, width, height, dotStep, dotRadius);
+//     if (!bottom)
+//       dottedLine(graphics, width, height, 0, height, dotStep, dotRadius);
+//     if (!left) dottedLine(graphics, 0, height, 0, 0, dotStep, dotRadius);
+
+//     return graphics.generateCanvasTexture();
+//   },
+// );
 
 const generateGraphicsTextured = moize(
   (
@@ -97,67 +108,28 @@ const generateGraphicsTextured = moize(
 
     const cellWidth = width / cols;
 
-    const cellTexture = generateCellTexture(cellWidth, cellHeight);
-    const cellTextureTopLeft = generateCellTexture(cellWidth, cellHeight, {
-      left: true,
-      top: true,
-    });
-    const cellTextureTop = generateCellTexture(cellWidth, cellHeight, {
-      top: true,
-    });
-    const cellTextureTopRight = generateCellTexture(cellWidth, cellHeight, {
-      right: true,
-      top: true,
-    });
-    const cellTextureRight = generateCellTexture(cellWidth, cellHeight, {
-      right: true,
-    });
-    const cellTextureRightBottom = generateCellTexture(cellWidth, cellHeight, {
-      bottom: true,
-      right: true,
-    });
-    const cellTextureBottom = generateCellTexture(cellWidth, cellHeight, {
-      bottom: true,
-    });
-    const cellTextureLeftBottom = generateCellTexture(cellWidth, cellHeight, {
-      bottom: true,
-      left: true,
-    });
-    const cellTextureLeft = generateCellTexture(cellWidth, cellHeight, {
-      left: true,
-    });
-
-    const textureMapper = (
-      x: number,
-      y: number,
-      maxX: number,
-      maxY: number,
-    ) => {
-      if (x === 0)
-        if (y === 0) return cellTextureTopLeft;
-        else if (y === maxY) return cellTextureLeftBottom;
-        else return cellTextureLeft;
-      else if (x === maxX)
-        if (y === 0) return cellTextureTopRight;
-        else if (y === maxY) return cellTextureRightBottom;
-        else return cellTextureRight;
-      else if (y === 0) return cellTextureTop;
-      else if (y === maxY) return cellTextureBottom;
-      else return cellTexture;
-    };
+    const lineVerticalTexture = generateLineTexture(0, cellHeight * rows);
+    const lineHorizontalTexture = generateLineTexture(width, 0);
 
     // main grid
     const mainGrid = new PIXI.Graphics();
     const sprites: PIXI.Sprite[] = [];
-    for (let x = 0; x < cols; x++)
-      for (let y = 0; y < rows; y++) {
-        const texture = textureMapper(x, y, cols, rows);
-        const sprite = new PIXI.Sprite(texture);
-        sprite.x = cellWidth * x;
-        sprite.y = cellHeight * y;
 
-        sprites.push(sprite);
-      }
+    for (let x = 0; x < cols; x++) {
+      const sprite = new PIXI.Sprite(lineVerticalTexture);
+      sprite.x = cellWidth * x;
+      sprite.y = 0;
+
+      sprites.push(sprite);
+    }
+
+    for (let y = 0; y < rows; y++) {
+      const sprite = new PIXI.Sprite(lineHorizontalTexture);
+      sprite.x = 0;
+      sprite.y = cellHeight * y;
+
+      sprites.push(sprite);
+    }
 
     mainGrid.addChild(...sprites);
 
