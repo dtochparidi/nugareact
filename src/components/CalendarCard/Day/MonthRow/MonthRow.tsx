@@ -1,16 +1,16 @@
-import ArrowLeft from '@material-ui/icons/KeyboardArrowLeft';
-import ArrowRight from '@material-ui/icons/KeyboardArrowRight';
+// import ArrowLeft from '@material-ui/icons/KeyboardArrowLeft';
+// import ArrowRight from '@material-ui/icons/KeyboardArrowRight';
 import { computed } from 'mobx';
 import { observer } from 'mobx-react';
 import { Moment as IMoment } from 'moment';
-import * as moment from 'moment';
+// import * as moment from 'moment';
 import * as React from 'react';
 
-import * as StyleVariables from '../../../../common/variables.scss';
+// import * as StyleVariables from '../../../../common/variables.scss';
 
 import './MonthRow.scss';
 
-const headerTextFontSize = parseFloat(StyleVariables.headerTextFontSize);
+// const headerTextFontSize = parseFloat(StyleVariables.headerTextFontSize);
 
 export interface IProps {
   monthDate: IMoment;
@@ -21,9 +21,9 @@ export interface IState {
   maxMonthWidth: number;
 }
 
-const maxMonthByWidth = moment
-  .months()
-  .reduce((acc, val) => (val.length > acc.length ? val : acc));
+// const maxMonthByWidth = moment
+//   .months()
+//   .reduce((acc, val) => (val.length > acc.length ? val : acc));
 
 @observer
 export default class MonthRow extends React.Component<IProps, IState> {
@@ -49,7 +49,7 @@ export default class MonthRow extends React.Component<IProps, IState> {
   };
 
   public async componentDidMount() {
-    await this.updateMaxMonthWidth();
+    // await this.updateMaxMonthWidth();
   }
 
   public render() {
@@ -58,40 +58,40 @@ export default class MonthRow extends React.Component<IProps, IState> {
         className="monthRowWrapper"
         key={this.props.monthDate.format('MMMM')}
       >
-        <div className="arrowWrapper">
-          <ArrowLeft onClick={this.goPreviousMonth} />
-        </div>
         <span
           className="monthName"
-          style={{ width: this.state.maxMonthWidth + 'px' }}
+          // style={{ width: this.state.maxMonthWidth + 'px' }}
         >
           {this.props.monthDate.format('MMMM')}
         </span>
+        {/* <div className="arrowWrapper">
+          <ArrowLeft onClick={this.goPreviousMonth} />
+        </div>
         <div className="arrowWrapper">
           <ArrowRight onClick={this.goNextMonth} />
-        </div>
+        </div> */}
       </div>
     );
   }
 
-  private async updateMaxMonthWidth() {
-    const fontSize = headerTextFontSize;
-    const textNode = document.createElement('span');
-    textNode.style.fontSize = fontSize + 'px';
-    textNode.style.visibility = 'hidden';
-    textNode.textContent = maxMonthByWidth;
+  // private async updateMaxMonthWidth() {
+  //   const fontSize = headerTextFontSize;
+  //   const textNode = document.createElement('span');
+  //   textNode.style.fontSize = fontSize + 'px';
+  //   textNode.style.visibility = 'hidden';
+  //   textNode.textContent = maxMonthByWidth;
 
-    document.body.appendChild(textNode);
+  //   document.body.appendChild(textNode);
 
-    await new Promise(resolve =>
-      setTimeout(() => {
-        const width = textNode.offsetWidth;
-        this.setState({ maxMonthWidth: width });
+  //   await new Promise(resolve =>
+  //     setTimeout(() => {
+  //       const width = textNode.offsetWidth;
+  //       this.setState({ maxMonthWidth: width });
 
-        document.body.removeChild(textNode);
+  //       document.body.removeChild(textNode);
 
-        resolve();
-      }),
-    );
-  }
+  //       resolve();
+  //     }),
+  //   );
+  // }
 }

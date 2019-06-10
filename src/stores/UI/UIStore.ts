@@ -9,7 +9,7 @@ export default class UIStore {
   public firstLoadDone = false;
 
   @observable
-  public subGridColumns: number = 5;
+  public subGridColumns: number = 0;
   @observable
   public positionCount: number = 25;
   @observable
