@@ -4,7 +4,7 @@ import * as PIXI from 'pixi.js';
 import * as React from 'react';
 
 // import * as StyleVariables from '../../../../common/variables.scss';
-import moize, { collectStats } from 'moize';
+import moize from 'moize';
 
 // import moize from 'moize';
 // const thinWidth = parseFloat(StyleVariables.thinWidth);
@@ -24,8 +24,8 @@ export interface IState {
   a: any;
 }
 
-collectStats();
-setInterval(() => console.log(moize.getStats('textureGrid')), 1500);
+// collectStats();
+// setInterval(() => console.log(moize.getStats('textureGrid')), 1500);
 
 function dottedLine(
   graphics: PIXI.Graphics,
@@ -138,7 +138,7 @@ const generateGraphicsTextured = moize(
 
     return container;
   },
-  { profileName: 'textureGrid' },
+  // { profileName: 'textureGrid' },
 );
 
 // const generateGraphicsDotted = moize(
