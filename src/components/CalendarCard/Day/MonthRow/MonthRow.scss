@@ -1,22 +1,28 @@
 @import 'src/common/variables.scss';
 @import 'src/common/fonts.scss';
-
-$monthRow-height: 30px;
+@import 'src/components/CalendarCard/CalendarCard.scss';
 
 .monthRowWrapper {
   @extend .font-primary;
 
   display: flex;
 
-  border-top: solid lightgrey 1px;
-
   background: #fcfcfc;
 
   height: $monthRow-height;
-  padding-left: $medium-width;
+  padding-left: $time-column-width - 12px + $time-column-offset;
 
-  justify-content: space-between;
+  margin-top: $monthRow-margin-top;
+  margin-bottom: $monthRow-margin-bottom;
+
+  justify-content: flex-start;
   align-items: center;
+
+  .monthName {
+    @extend .font-header-semibold;
+
+    text-align: center;
+  }
 
   .arrowWrapper {
     display: flex;

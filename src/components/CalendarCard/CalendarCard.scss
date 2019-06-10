@@ -1,17 +1,15 @@
 @import 'src/common/variables.scss';
 @import 'src/common/fonts.scss';
 @import 'src/components/CalendarCard/Day/DateRow/DateRow.scss';
-@import 'src/components/CalendarCard/Day/MonthRow/MonthRow.scss';
 
-$scale: 0.7;
 $avatar-size: 40px;
-$time-column-width: 50px * $scale;
 // $calendar-cell-height: 100px * $scale;
 // $calendar-cell-width-min: 250px * $scale;
 $calendar-cell-height: 70px * $scale;
 $calendar-cell-width-min: 395px * $scale;
 $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
-  $dateRow-padding * 2 + $thin-width;
+  $monthRow-margin-top + $monthRow-margin-bottom + $dateRow-padding * 2 +
+  $thin-width;
 
 :export {
   #{'calendarCellWidthMin'}: $calendar-cell-width-min;
@@ -153,6 +151,8 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
                 justify-content: left;
 
                 .time {
+                  margin-left: $time-column-offset;
+
                   .hours {
                     @extend .font-time;
                   }

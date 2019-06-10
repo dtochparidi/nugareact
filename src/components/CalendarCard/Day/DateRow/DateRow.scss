@@ -2,13 +2,16 @@
 @import 'src/common/fonts.scss';
 
 $dateRow-padding: $thin-width;
-$dateRow-height: 40px;
+$dateRow-height: 60px;
+$index-circle-size: 25px;
 
 .dateRowWrapper {
   display: flex;
 
   // border: solid lightgrey 1px;
   // border-bottom: none;
+
+  padding-left: $time-column-width;
 
   background: #fcfcfc;
 
@@ -62,25 +65,25 @@ $dateRow-height: 40px;
 
         cursor: default;
 
+        .weekdayVisits {
+          @extend .font-time-secondary;
+          vertical-align: top;
+        }
+
         .index {
           display: flex;
           align-items: center;
           justify-content: center;
 
-          height: $dateRow-height / 2;
-          width: $dateRow-height / 2;
+          height: $index-circle-size;
+          width: $index-circle-size;
+
+          padding-top: 1px;
 
           border-radius: 50%;
 
           transition-duration: 0.2s;
           transition-property: color background;
-        }
-      }
-      .secondary {
-        .weekdayVisits {
-          @extend .font-time-secondary;
-          vertical-align: top;
-          margin-right: $medium-width;
         }
       }
     }

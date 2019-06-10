@@ -153,7 +153,7 @@ async function generateDataAboutMonth(date: IMoment): Promise<void> {
       .map(task => lazyTaskManager.addTask(task)),
   );
 
-  console.log('month visits loaded', date.format('MM-YYYY'));
+  // console.log('month visits loaded', date.format('MM-YYYY'));
 }
 
 export async function fetchDayFromServer(

@@ -2,9 +2,9 @@ import { computed, reaction } from 'mobx';
 import { observer } from 'mobx-react';
 import { Moment as IMoment } from 'moment';
 import * as React from 'react';
+import CalendarDay from 'structures/CalendarDay';
 
 import './DateRow.scss';
-import CalendarDay from 'structures/CalendarDay';
 
 export interface IProps {
   dayChosenIndex: { value: number };
@@ -15,10 +15,18 @@ export interface IProps {
 
 @observer
 export default class DateRow extends React.Component<IProps> {
+  private reactions: Array<() => void> = [];
+
   constructor(props: IProps) {
     super(props);
 
-    reaction(() => this.props.dayChosenIndex.value, () => this.forceUpdate());
+    this.reactions.push(
+      reaction(() => this.props.dayChosenIndex.value, () => this.forceUpdate()),
+    );
+  }
+
+  public componentWillUnmount() {
+    this.reactions.forEach(r => r());
   }
 
   @computed
@@ -87,11 +95,10 @@ export default class DateRow extends React.Component<IProps> {
                       .format('dd')}
                   </span>
                 </span>
+
                 <span className="index">{i + 1}</span>
-              </span>
-              <span className="secondary">
                 <span className="weekdayVisits">
-                  {i in visitsPerDay ? visitsPerDay[i] : ''}
+                  {i in visitsPerDay ? visitsPerDay[i] : '0'}
                 </span>
               </span>
             </div>

@@ -30,7 +30,7 @@ import rootStore from 'stores/RootStore';
 import MonthRow from './Day/MonthRow';
 import TopRow from './Day/TopRow';
 import { generateDropzoneConfig } from './modules/dropzoneConfig';
-import { generateResizeConfig } from './modules/resizeConfig';
+// import { generateResizeConfig } from './modules/resizeConfig';
 import {
   calcColumnsCount,
   calcDaySize,
@@ -148,15 +148,14 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     );
 
     if (clientSide)
-      interact('.appointmentCell')
-        .draggable(
-          createDragConfig(
-            this.onAppointmentDraggingStart.bind(this),
-            () => null,
-            this.onAppointmentDraggingEnd.bind(this),
-          ),
-        )
-        .resizable(generateResizeConfig.bind(this)());
+      interact('.appointmentCell').draggable(
+        createDragConfig(
+          this.onAppointmentDraggingStart.bind(this),
+          () => null,
+          this.onAppointmentDraggingEnd.bind(this),
+        ),
+      );
+    // .resizable(generateResizeConfig.bind(this)());
 
     this.state = {
       cellWidth: 0,

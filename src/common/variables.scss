@@ -3,7 +3,18 @@ $padding-large: 25px;
 
 $thin-width: 1px;
 $medium-width: 4px;
+$big-width: 8px;
 $large-width: 10px;
+
+$monthRow-height: 30px;
+$monthRow-margin-top: $large-width;
+$monthRow-margin-bottom: $large-width;
+
+$scale: 0.7;
+$time-column-width: 50px * $scale;
+$time-column-offset: $big-width;
+
+$header-text-font-size: 25px;
 
 :export {
   largeWidth: $large-width;
@@ -11,4 +22,5 @@ $large-width: 10px;
   paddingLarge: $padding-large;
   paddingNormal: $padding-normal;
   thinWidth: $thin-width;
+  headerTextFontSize: $header-text-font-size;
 }

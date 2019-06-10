@@ -51,7 +51,7 @@ export default class GridP extends React.Component<IProps, IState> {
         mainGrid.lineTo(xCoord, cellHeight * rows);
       }
 
-      for (let y = 0; y <= rows; y++) {
+      for (let y = 1; y <= rows; y++) {
         const yCoord = y * yStep;
         mainGrid.moveTo(0, yCoord);
         mainGrid.lineTo(width, yCoord);

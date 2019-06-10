@@ -108,11 +108,8 @@ export default class CalendarDayStore {
         return acc;
       }, {});
 
-    console.log(monthes);
-
     Object.values(monthes).forEach(async date => {
       const data = await fetchVisitsCount(date);
-      console.log(data);
       this.updateVisitsPerDay(data);
     });
   }

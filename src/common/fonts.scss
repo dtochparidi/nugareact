@@ -1,15 +1,16 @@
 @import 'colors.scss';
 @import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700');
+@import 'variables.scss';
 
 .font-header {
-  font-size: 25px;
+  font-size: $header-text-font-size;
   font-family: 'Open Sans', sans-serif;
   font-weight: 400;
 }
 
 .font-header-semibold {
   font-family: 'Open Sans', sans-serif;
-  font-size: 25px;
+  font-size: $header-text-font-size;
   font-weight: 600;
 }
 
@@ -84,7 +85,7 @@
 .font-time-secondary {
   font-size: 10px;
   font-family: 'Open Sans Semibold', sans-serif;
-  color: $color-time-secondary;
+  color: $color-time;
   font-weight: 300;
 }
 
