@@ -45,7 +45,7 @@ function dottedLine(
 
 const generateLineTexture = moize((width: number, height: number) => {
   const dotStep = 3;
-  const dotRadius = 0.3;
+  const dotRadius = 0.5;
 
   const graphics = new PIXI.Graphics();
   graphics.lineStyle(1, 0xd3d3d3, 1);
@@ -62,34 +62,43 @@ const generateGraphicsTextured = moize(
     rows: number,
     subGridColumns: number,
   ) => {
-    console.log(width, cellHeight, cols, rows, subGridColumns);
+    // console.log(width, cellHeight, cols, rows, subGridColumns);
 
     const container = new PIXI.Container();
 
     const cellWidth = width / cols;
+    const height = cellHeight * rows;
 
-    const lineVerticalTexture = generateLineTexture(0, cellHeight * rows);
-    const lineHorizontalTexture = generateLineTexture(width, 0);
+    const maxLineSegmentLength = 2000;
+    const segmentsHorizontal = Math.ceil(width / maxLineSegmentLength);
+    const segmentsVertical = Math.ceil(height / maxLineSegmentLength);
+    const lineSegmentWidth = Math.min(width, width / segmentsHorizontal);
+    const lineSegmentHeight = Math.min(height, height / segmentsVertical);
+
+    const lineVerticalTexture = generateLineTexture(0, lineSegmentHeight);
+    const lineHorizontalTexture = generateLineTexture(lineSegmentWidth, 0);
 
     // main grid
     const mainGrid = new PIXI.Graphics();
     const sprites: PIXI.Sprite[] = [];
 
-    for (let x = 0; x < cols; x++) {
-      const sprite = new PIXI.Sprite(lineVerticalTexture);
-      sprite.x = cellWidth * x;
-      sprite.y = 0;
+    for (let x = 0; x < cols; x++)
+      for (let s = 0; s < segmentsVertical; s++) {
+        const sprite = new PIXI.Sprite(lineVerticalTexture);
+        sprite.x = cellWidth * x;
+        sprite.y = s * lineSegmentHeight;
 
-      sprites.push(sprite);
-    }
+        sprites.push(sprite);
+      }
 
-    for (let y = 0; y < rows; y++) {
-      const sprite = new PIXI.Sprite(lineHorizontalTexture);
-      sprite.x = 0;
-      sprite.y = cellHeight * y;
+    for (let y = 0; y < rows; y++)
+      for (let s = 0; s < segmentsHorizontal; s++) {
+        const sprite = new PIXI.Sprite(lineHorizontalTexture);
+        sprite.x = s * lineSegmentWidth;
+        sprite.y = cellHeight * y;
 
-      sprites.push(sprite);
-    }
+        sprites.push(sprite);
+      }
 
     mainGrid.addChild(...sprites);
     container.addChild(mainGrid);
