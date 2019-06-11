@@ -281,6 +281,7 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
       .gridsContainer {
         width: 100%;
         overflow: hidden;
+        padding-bottom: 1px;
       }
     }
   }
