@@ -1,9 +1,8 @@
 import { LazyTask } from '@levabala/lazytask/build/dist';
 import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
+import moize from 'moize';
 import * as PIXI from 'pixi.js';
 import * as React from 'react';
-
-import moize from 'moize';
 
 export interface IProps {
   children?: React.ReactNode;
@@ -45,8 +44,8 @@ function dottedLine(
 }
 
 const generateLineTexture = moize((width: number, height: number) => {
-  const dotStep = 5;
-  const dotRadius = 0.5;
+  const dotStep = 3;
+  const dotRadius = 0.3;
 
   const graphics = new PIXI.Graphics();
   graphics.lineStyle(1, 0xd3d3d3, 1);
@@ -94,7 +93,7 @@ const generateGraphicsTextured = moize(
 
     mainGrid.addChild(...sprites);
     container.addChild(mainGrid);
-    
+
     return container;
   },
 );
