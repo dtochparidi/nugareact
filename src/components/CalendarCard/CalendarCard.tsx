@@ -36,6 +36,7 @@ import {
   updateStickyElements,
 } from './modules/staticMethods';
 import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
+import { RightColumn } from '.';
 
 const calendarCellMinWidth = parseFloat(CardVariables.calendarCellWidthMin);
 const timeColumnWidth = parseFloat(CardVariables.timeColumnWidth);
@@ -168,6 +169,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       requiredDays: [moment().startOf('day')],
       stamps,
     };
+
+    console.log('main cols:', this.state.columnsPerDay);
   }
   public turnPageRight = () => {
     this.turnPage(1);
@@ -347,7 +350,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const leftBorderOffset =
       firstDayRect.left + buffer - (containerRect.left + pendingOffset);
     const rightBorderOffset = Math.max(buffer - lastDayRect.right + dayWidth);
-  
+
     let leftAddCount = Math.max(
       Math.round(leftBorderOffset / firstDayRect.width),
       0,
@@ -410,9 +413,9 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     setTimeout(() => {
       this.setState({ loading: false });
       this.updateDaysWidth();
-    
+
       this.firstLoadDays = this.state.requiredDays.map(d => d);
-    
+
       this.currentLeftColumnIndex =
         Math.floor((this.state.requiredDays.length - 1) / 2) *
         this.state.columnsPerDay;
@@ -500,7 +503,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const newSpecialDays = newAllDays.filter(
       ({ id }) => !this.renderedDaysIds.includes(id),
     );
-    
+
     const promises = newSpecialDays.map(day =>
       this.renderDay(day, daysStore.days.findIndex(({ id }) => id === day.id)),
     );
@@ -871,8 +874,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   public updateDaysWidth() {
     const dayWidth = this.calcDaysWidth();
 
+    const cellWidth = parseInt(dayWidth, 10) / this.state.columnsPerDay;
+    console.log('main:', cellWidth, dayWidth);
     this.setState({
-      cellWidth: parseInt(dayWidth, 10) / this.state.columnsPerDay,
+      cellWidth,
       dayWidth,
     });
   }
@@ -880,23 +885,23 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   public updateColumnsCount() {
     const containerWidth = (this.calendarContainerRef.current as HTMLDivElement)
       .offsetWidth;
+
     const count = calcColumnsCount(containerWidth, calendarCellMinWidth);
     this.setState({ columnsPerPage: count });
   }
 
   public calcDaysWidth() {
     const { columnsPerDay, columnsPerPage, leftColumnWidth } = this.state;
-    const containerWidth = (this.calendarContainerRef.current as HTMLDivElement)
+    const containerWidth = (this.daysContainerRef.current as HTMLDivElement)
       .offsetWidth;
 
-    const dayWidth =
-      calcDaySize(
-        columnsPerPage,
-        columnsPerDay,
-        containerWidth,
-        thinWidth,
-        leftColumnWidth,
-      );
+    const dayWidth = calcDaySize(
+      columnsPerPage,
+      columnsPerDay,
+      containerWidth,
+      thinWidth,
+      leftColumnWidth,
+    );
 
     return dayWidth <= 0 ? '100%' : `${dayWidth}px`;
   }
@@ -978,6 +983,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           positionCount={positionCount}
           visible={!this.state.firstLoad}
         />
+        <RightColumn visible={!this.state.firstLoad} />
         <ToggleArea
           id="leftToggleArea"
           style={{
@@ -1015,6 +1021,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
+        console.log('resize');
         this.updateColumnsCount();
         this.updateDaysWidth();
         this.updateScroll(true);

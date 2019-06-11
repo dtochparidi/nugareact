@@ -53,6 +53,18 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
     }
   }
 
+  .rightColumn {
+    position: absolute;
+    top: ($top-row-height - $calendar-cell-height);
+    right: 0;
+    height: calc(100% - #{$top-row-height - $calendar-cell-height});
+
+    z-index: 1001;
+    width: $time-column-width;
+
+    background: #fcfcfc;
+  }
+
   .leftColumn {
     position: absolute;
     top: 0;
@@ -183,6 +195,10 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
 
       margin-bottom: $thin-width * -5;
       margin-left: $time-column-width;
+      margin-right: $time-column-width;
+
+      border-right: solid lightgray 1px;
+      border-left: solid lightgray 1px;
 
       .daysContainer {
         overflow: hidden;

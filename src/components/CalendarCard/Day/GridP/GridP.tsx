@@ -69,6 +69,8 @@ const generateGraphicsTextured = moize(
     const cellWidth = width / cols;
     const height = cellHeight * rows;
 
+    console.log('grid:', cellWidth, width);
+
     const maxLineSegmentLength = 2000;
     const segmentsHorizontal = Math.ceil(width / maxLineSegmentLength);
     const segmentsVertical = Math.ceil(height / maxLineSegmentLength);
@@ -82,11 +84,14 @@ const generateGraphicsTextured = moize(
     const mainGrid = new PIXI.Graphics();
     const sprites: PIXI.Sprite[] = [];
 
+    console.log('grid cols:', cols);
     for (let x = 0; x < cols; x++)
       for (let s = 0; s < segmentsVertical; s++) {
         const sprite = new PIXI.Sprite(lineVerticalTexture);
         sprite.x = cellWidth * x;
         sprite.y = s * lineSegmentHeight;
+
+        console.log(sprite.x, sprite.width);
 
         sprites.push(sprite);
       }
