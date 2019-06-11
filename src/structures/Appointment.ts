@@ -164,7 +164,6 @@ export default class Appointment implements IAppointment {
     );
 
     Object.values(this.updateListeners).forEach(listener => {
-      // console.log('app updated');
       listener(this, weightful, final, serverSide);
     });
   }

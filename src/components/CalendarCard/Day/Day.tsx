@@ -1,4 +1,3 @@
-// import { LazyTask } from '@levabala/lazytask/build/dist';
 import { LazyTask } from '@levabala/lazytask/build/dist';
 import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
 import IUpdateAppFunction from 'interfaces/IUpdateAppFunction';
@@ -14,16 +13,6 @@ import CalendarDay from 'structures/CalendarDay';
 import AppointmentCell from './AppointmentCell';
 
 import './AppointmentCell/AppointmentCell.scss';
-
-// import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
-// import Grid from './Grid';
-// import { GridP } from '.';
-
-// moize.collectStats();
-
-// setInterval(() => {
-//   console.log((moize.getStats().profiles as any).generateApp);
-// }, 3000);
 
 const renderCounts = {};
 
@@ -98,7 +87,7 @@ export default class Day extends React.Component<IProps, IState> {
           (shiftPrev &&
             shiftNow &&
             shiftPrev.dx === shiftNow.dx &&
-            shiftPrev.dy === shiftNow.dy)); // const equal = appStateHashPrev === appStateHashNow;
+            shiftPrev.dy === shiftNow.dy));
 
       return equal;
     },
@@ -128,8 +117,6 @@ export default class Day extends React.Component<IProps, IState> {
     const r1 = reaction(
       () => this.props.dayData.stateIndex,
       stateIndex => {
-        // console.log('!!!!!!!!!!!!!!!! apps updated');
-
         const weightful = this.props.dayData.weightfulUpdates.has(stateIndex);
         const instant = !weightful;
 
@@ -221,7 +208,6 @@ export default class Day extends React.Component<IProps, IState> {
 
     this.registerNewApps();
 
-    // console.log(`turn on visibility (instantly: ${instantRender.value})`);
     if (instant)
       runInAction(() => {
         Object.values(dayData.appointments).forEach(app => {
@@ -276,7 +262,6 @@ export default class Day extends React.Component<IProps, IState> {
     const cellWidth = getCellWidth();
 
     const apps = Object.values(dayData.appointments);
-    // console.log('apps:', apps.length);
 
     this.registerNewApps();
 
@@ -296,30 +281,6 @@ export default class Day extends React.Component<IProps, IState> {
       const appsToProcess = dayData.updateMarks
         .slice(this.lastDayStateIndex + 1, dayData.stateIndex + 1)
         .flat();
-      // const newApps = apps
-      //   .map(app => {
-      //     this.generateAppElemenetCalls++;
-      //     return this.generateAppElementMoized({
-      //       app,
-      //       appStateHash: app.stateHash,
-      //       cellHeight,
-      //       cellWidth,
-      //       getCellWidth,
-      //       gridColumnDuration,
-      //       minutesStep,
-      //       shifts,
-      //       shiftsCloned,
-      //       stamps,
-      //       subGridColumns,
-      //       updateAppointment,
-      //     });
-      //   });
-
-      // console.log(
-      //   appsToProcess.length,
-      //   `[${this.lastDayStateIndex}, ${dayData.stateIndex + 1}]`,
-      //   dayData.updateMarks,
-      // );
 
       const newApps = apps.map(app => {
         this.generateAppElementCalls++;
@@ -357,19 +318,12 @@ export default class Day extends React.Component<IProps, IState> {
 
       this.lastDayStateIndex = dayData.stateIndex;
       this.appsCountIndex += +(this.lastAppsCount !== apps.length);
-      // console.log('appsCountIndex:', this.appsCountIndex);
 
-      // const stats = (moize.getStats().profiles as any).generateApp;
-      // console.log(stats.calls - stats.hits);
-
-      // console.log(this.appElementsStateIndex, this.props.dayData.id);
       if (this.appElementsStateIndex === stateIndexBefore) return;
-      // console.log(newApps.length, this.props.dayData.id);
-
+      
       const elements = newApps.map(([_, element]) => element);
       this.setState({ apps: elements, stateIndex: this.state.stateIndex + 1 });
 
-      // console.log('do instantly:', instant);
       if (this.props.visibilityStore.isVisible(this.props.dayData.id))
         this.turnOnVisibility(instant);
 

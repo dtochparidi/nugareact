@@ -3,14 +3,9 @@
 import { computed } from 'mobx';
 import { observer } from 'mobx-react';
 import { Moment as IMoment } from 'moment';
-// import * as moment from 'moment';
 import * as React from 'react';
 
-// import * as StyleVariables from '../../../../common/variables.scss';
-
 import './MonthRow.scss';
-
-// const headerTextFontSize = parseFloat(StyleVariables.headerTextFontSize);
 
 export interface IProps {
   monthDate: IMoment;
@@ -20,10 +15,6 @@ export interface IProps {
 export interface IState {
   maxMonthWidth: number;
 }
-
-// const maxMonthByWidth = moment
-//   .months()
-//   .reduce((acc, val) => (val.length > acc.length ? val : acc));
 
 @observer
 export default class MonthRow extends React.Component<IProps, IState> {
@@ -49,7 +40,7 @@ export default class MonthRow extends React.Component<IProps, IState> {
   };
 
   public async componentDidMount() {
-    // await this.updateMaxMonthWidth();
+    //
   }
 
   public render() {

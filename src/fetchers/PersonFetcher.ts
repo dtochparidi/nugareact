@@ -7,10 +7,6 @@ function takeRandom(array: any[]) {
   return array[Math.floor(Math.random() * array.length)];
 }
 
-// function random(to: number, from: number = 0) {
-//   return Math.floor(Math.random() * (to - from)) + from;
-// }
-
 function generateRandomPerson(id: string): IPerson {
   return {
     address: 'Москва',

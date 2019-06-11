@@ -56,11 +56,6 @@ function createDragConfig(
     const { target }: { target: HTMLElement } = e;
 
     target.classList.remove('moving');
-    // target.style.left = '';
-    // target.style.top = '';
-    // target.style.width = '';
-    // target.style.height = '';
-    // target.style.transform = '';
     target.style.transform = transformBeforeDragging;
 
     onend(e);

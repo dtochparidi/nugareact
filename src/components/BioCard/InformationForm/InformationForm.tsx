@@ -6,15 +6,6 @@ import Label from "./Label";
 import StaticField from "./StaticField";
 import TextField from "./TextField";
 
-// const labelsMap: { [s: string]: string } = {
-//   address: "Адрес",
-//   averageBill: "Средний чек",
-//   birthday: "Возраст",
-//   friends: "Друзья",
-//   invitedBy: "Пригласил/а",
-//   rate: "Рейтинг"
-// };
-
 const fieldsTransoformMap: {
   [s: string]: (val: any) => React.ReactNode;
 } = {
