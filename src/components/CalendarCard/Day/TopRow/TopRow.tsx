@@ -19,7 +19,7 @@ export default class TopRow extends React.Component<IProps> {
 
   public render() {
     return (
-      <div className="topRow" style={this.props.style}>
+      <div className="timeRow" style={this.props.style}>
         {this.props.visible
           ? this.props.stamps.map((stamp, i, arr) => {
               const hours = stamp.format('H');

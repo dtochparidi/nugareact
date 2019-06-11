@@ -716,8 +716,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const daysContainer = container.querySelector(
       '.daysContainer',
     ) as HTMLElement;
-    const topRowsContainer = container.querySelector(
-      '.topRowsContainer .scrollingContainer',
+    const timeRowsContainer = container.querySelector(
+      '.timeRowsContainer .scrollingContainer',
     ) as HTMLElement;
 
     const daysListWidth =
@@ -767,7 +767,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       left,
     });
 
-    topRowsContainer.scrollTo({
+    timeRowsContainer.scrollTo({
       behavior: force || instantScroll ? 'auto' : 'smooth',
       left,
     });
@@ -863,12 +863,12 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const gridsContainer = container.querySelector(
       '.gridsContainer',
     ) as HTMLElement;
-    const topRowsContainer = container.querySelector(
-      '.topRowsContainer .scrollingContainer',
+    const timeRowsContainer = container.querySelector(
+      '.timeRowsContainer .scrollingContainer',
     ) as HTMLElement;
 
     gridsContainer.scrollLeft = 0;
-    topRowsContainer.scrollLeft = 0;
+    timeRowsContainer.scrollLeft = 0;
   }
 
   public updateDaysWidth() {
@@ -926,7 +926,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
           ref={this.calendarContainerRef}
         >
           <div
-            className="topRowsContainer"
+            className="timeRowsContainer"
             style={{
               visibility: !this.state.firstLoad ? 'visible' : 'hidden',
             }}

@@ -12,6 +12,7 @@ $index-circle-size: 23px;
   // border-bottom: none;
 
   padding-left: $time-column-width;
+  padding-right: $time-column-width;
 
   background: #fcfcfc;
 
@@ -42,6 +43,9 @@ $index-circle-size: 23px;
     padding: $dateRow-padding;
 
     .day {
+      display: flex;
+      justify-content: center;
+
       &.chosen > .main > .index {
         color: white;
         background: rgb(71, 58, 255);

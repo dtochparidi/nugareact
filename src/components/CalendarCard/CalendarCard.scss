@@ -6,8 +6,9 @@ $avatar-size: 40px;
 // $calendar-cell-height: 100px * $scale;
 // $calendar-cell-width-min: 250px * $scale;
 $calendar-cell-height: 70px * $scale;
-$calendar-cell-width-min: 395px * $scale;
-$top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
+$calendar-cell-width-min: 400px * $scale;
+$time-row-height: $calendar-cell-height * 2 / 3;
+$top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
   $monthRow-margin-top + $monthRow-margin-bottom + $dateRow-padding * 2 +
   $thin-width;
 
@@ -55,7 +56,7 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
 
   .rightColumn {
     position: absolute;
-    top: ($top-row-height - $calendar-cell-height);
+    top: $top-row-height - $time-row-height;
     right: 0;
     height: calc(100% - #{$top-row-height - $calendar-cell-height});
 
@@ -116,11 +117,11 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
       visibility: hidden;
     }
 
-    &.loading > .mainContainer > .topRowsContainer {
+    &.loading > .mainContainer > .timeRowsContainer {
       visibility: hidden;
     }
 
-    .topRowsContainer {
+    .timeRowsContainer {
       width: 100%;
       overflow: hidden;
 
@@ -140,11 +141,11 @@ $top-row-height: $calendar-cell-height + $dateRow-height + $monthRow-height +
             display: grid;
             grid-auto-flow: column;
 
-            .topRow {
+            .timeRow {
               display: flex;
               z-index: 101;
 
-              height: $calendar-cell-height;
+              height: $time-row-height;
 
               overflow: hidden;
 

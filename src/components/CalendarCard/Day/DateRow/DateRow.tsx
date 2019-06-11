@@ -95,7 +95,6 @@ export default class DateRow extends React.Component<IProps> {
                       .format('dd')}
                   </span>
                 </span>
-
                 <span className="index">{i + 1}</span>
                 <span className="weekdayVisits">
                   {i in visitsPerDay ? visitsPerDay[i] : '0'}
