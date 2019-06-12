@@ -34,9 +34,12 @@ $index-circle-size: 23px;
   }
 
   .dateRow {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: 1fr;
+    // display: grid;
+    // grid-auto-flow: column;
+    // grid-auto-columns: 1fr;
+
+    display: flex;
+    justify-content: space-between;
 
     width: 100%;
     height: $dateRow-height;

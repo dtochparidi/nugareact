@@ -69,7 +69,7 @@ const generateGraphicsTextured = moize(
     const cellWidth = width / cols;
     const height = cellHeight * rows;
 
-    console.log('grid:', cellWidth, width);
+    console.log('grid:', cellWidth, cellHeight, width, height);
 
     const maxLineSegmentLength = 2000;
     const segmentsHorizontal = Math.ceil(width / maxLineSegmentLength);
@@ -81,7 +81,7 @@ const generateGraphicsTextured = moize(
     const lineHorizontalTexture = generateLineTexture(lineSegmentWidth, 0);
 
     // main grid
-    const mainGrid = new PIXI.Graphics();
+    // const mainGrid = new PIXI.Graphics();
     const sprites: PIXI.Sprite[] = [];
 
     console.log('grid cols:', cols);
@@ -91,7 +91,7 @@ const generateGraphicsTextured = moize(
         sprite.x = cellWidth * x;
         sprite.y = s * lineSegmentHeight;
 
-        console.log(sprite.x, sprite.width);
+        console.log(x, sprite.x, sprite.width);
 
         sprites.push(sprite);
       }
@@ -105,8 +105,22 @@ const generateGraphicsTextured = moize(
         sprites.push(sprite);
       }
 
-    mainGrid.addChild(...sprites);
-    container.addChild(mainGrid);
+    // mark
+    const mark = new PIXI.Graphics();
+    mark.beginFill(0xf4e842);
+    mark.moveTo(0, 0);
+    mark.lineTo(200, 0);
+    mark.lineTo(200, 200);
+    mark.lineTo(0, 200);
+    mark.lineTo(0, 0);
+    mark.endFill();
+    container.addChild(mark);
+
+    // mainGrid.addChild(...sprites);
+    // container.addChild(mainGrid);
+    container.addChild(...sprites);
+
+    console.log(container);
 
     return container;
   },
