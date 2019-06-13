@@ -62,14 +62,10 @@ const generateGraphicsTextured = moize(
     rows: number,
     subGridColumns: number,
   ) => {
-    // console.log(width, cellHeight, cols, rows, subGridColumns);
-
     const container = new PIXI.Container();
 
     const cellWidth = width / cols;
     const height = cellHeight * rows;
-
-    console.log('grid:', cellWidth, cellHeight, width, height);
 
     const maxLineSegmentLength = 2000;
     const segmentsHorizontal = Math.ceil(width / maxLineSegmentLength);
@@ -81,17 +77,12 @@ const generateGraphicsTextured = moize(
     const lineHorizontalTexture = generateLineTexture(lineSegmentWidth, 0);
 
     // main grid
-    // const mainGrid = new PIXI.Graphics();
     const sprites: PIXI.Sprite[] = [];
-
-    console.log('grid cols:', cols);
     for (let x = 0; x < cols; x++)
       for (let s = 0; s < segmentsVertical; s++) {
         const sprite = new PIXI.Sprite(lineVerticalTexture);
         sprite.x = cellWidth * x;
         sprite.y = s * lineSegmentHeight;
-
-        console.log(x, sprite.x, sprite.width);
 
         sprites.push(sprite);
       }
@@ -106,21 +97,17 @@ const generateGraphicsTextured = moize(
       }
 
     // mark
-    const mark = new PIXI.Graphics();
-    mark.beginFill(0xf4e842);
-    mark.moveTo(0, 0);
-    mark.lineTo(200, 0);
-    mark.lineTo(200, 200);
-    mark.lineTo(0, 200);
-    mark.lineTo(0, 0);
-    mark.endFill();
-    container.addChild(mark);
+    // const mark = new PIXI.Graphics();
+    // mark.beginFill(0xf4e842);
+    // mark.moveTo(0, 0);
+    // mark.lineTo(200, 0);
+    // mark.lineTo(200, 200);
+    // mark.lineTo(0, 200);
+    // mark.lineTo(0, 0);
+    // mark.endFill();
+    // container.addChild(mark);
 
-    // mainGrid.addChild(...sprites);
-    // container.addChild(mainGrid);
     container.addChild(...sprites);
-
-    console.log(container);
 
     return container;
   },
@@ -130,6 +117,8 @@ export default class GridP extends React.Component<IProps, IState> {
   private wrapperRef = React.createRef<HTMLDivElement>();
   private renderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer;
   private initialized = false;
+  private scaleX = 1;
+  private scaleY = 1;
 
   constructor(props: IProps) {
     super(props);
@@ -151,6 +140,7 @@ export default class GridP extends React.Component<IProps, IState> {
 
       wrapper.appendChild(this.renderer.view);
 
+      this.updateSize();
       this.renderPIXI();
 
       this.initialized = true;
@@ -158,6 +148,12 @@ export default class GridP extends React.Component<IProps, IState> {
 
     if (this.props.instantRender) func();
     else lazyTaskManager.addTask(new LazyTask(func, 5));
+
+    ((window as any).pixiRenderers = (window as any).pixiRenderers || []).push(
+      this.renderer,
+    );
+
+    ((window as any).grids = (window as any).grids || []).push(this);
   }
 
   public componentDidUpdate(prevProps: IProps) {
@@ -166,13 +162,34 @@ export default class GridP extends React.Component<IProps, IState> {
         prevProps.cellHeight !== this.props.cellHeight) &&
       this.initialized
     ) {
-      this.renderer.resize(
-        this.props.width,
-        this.props.cellHeight * this.props.rows,
-      );
+      this.updateSize();
 
       this.renderPIXI();
     }
+  }
+
+  public updateSize() {
+    const { width } = this.props;
+    const height = this.props.cellHeight * this.props.rows;
+
+    const maxSideSize = 4096;
+    const scale = Math.max(Math.max(width, height) / maxSideSize, 1);
+
+    const scaledWidth = width * scale;
+    const scaledHeight = height * scale;
+
+    this.scaleX = width <= maxSideSize ? scale : 1;
+    this.scaleY = height <= maxSideSize ? scale : 1;
+
+    const resolution = 1 / scale;
+    this.setResolution(resolution);
+
+    this.renderer.resize(scaledWidth, scaledHeight);
+  }
+
+  public setResolution(resolution: number) {
+    this.renderer.resolution = resolution;
+    (this.renderer as any).rootRenderTarget.resolution = resolution;
   }
 
   public componentWillUnmount() {
@@ -188,6 +205,11 @@ export default class GridP extends React.Component<IProps, IState> {
       rows,
       subGridColumns,
     );
+
+    ((window as any).pixiContainers =
+      (window as any).pixiContainers || []).push(container);
+
+    container.scale.set(this.scaleX, this.scaleY);
     this.renderer.render(container);
   }
 

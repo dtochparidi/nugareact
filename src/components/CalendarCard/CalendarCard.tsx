@@ -169,8 +169,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       requiredDays: [moment().startOf('day')],
       stamps,
     };
-
-    console.log('main cols:', this.state.columnsPerDay);
   }
   public turnPageRight = () => {
     this.turnPage(1);
@@ -875,7 +873,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     const dayWidth = this.calcDaysWidth();
 
     const cellWidth = parseInt(dayWidth, 10) / this.state.columnsPerDay;
-    console.log('main:', cellWidth, dayWidth);
     this.setState({
       cellWidth,
       dayWidth,
@@ -1021,7 +1018,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
-        console.log('resize');
         this.updateColumnsCount();
         this.updateDaysWidth();
         this.updateScroll(true);

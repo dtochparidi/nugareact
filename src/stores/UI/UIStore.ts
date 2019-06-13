@@ -27,6 +27,7 @@ export default class UIStore {
       .startOf('day')
       // .hour(9),
       .hour(17),
+    // .hour(23),
   );
   @observable
   public mainColumnStep: Moment.Duration = Moment.duration(45, 'minutes');
