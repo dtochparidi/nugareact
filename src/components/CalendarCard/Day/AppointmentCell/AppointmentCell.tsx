@@ -4,6 +4,7 @@ import { Lambda, observe } from 'mobx';
 import { observer } from 'mobx-react';
 import * as moment from 'moment';
 import * as React from 'react';
+import rootStore from 'stores/RootStore';
 
 import * as StyleVariables from '../../../../common/variables.scss';
 import Appointment from '../../../../structures/Appointment';
@@ -135,7 +136,9 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     const width = `${cellWidth * widthScale}px`;
 
     const person = personInstance as IPerson;
-    const transformString = `translate3d(${translateX}px, ${translateY}px, 0px)`;
+    const transformString = rootStore.uiStore.hardwareCSSAcceleration
+      ? `translate3d(${translateX}px, ${translateY}px, 0px)`
+      : `translate(${translateX}px, ${translateY}px)`;
 
     return (
       <div

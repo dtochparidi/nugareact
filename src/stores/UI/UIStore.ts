@@ -19,6 +19,9 @@ export default class UIStore {
   public isScrollingUnbinded: boolean = false;
 
   @observable
+  public hardwareCSSAcceleration = false;
+
+  @observable
   public dayTimeRange: DateRange = moment.range(
     moment()
       .startOf('day')
@@ -44,6 +47,11 @@ export default class UIStore {
   @action
   public setFastMode(enabled: boolean) {
     this.fastMode = enabled;
+  }
+
+  @action
+  public setHardwareCSSAcceleration(enabled: boolean) {
+    this.hardwareCSSAcceleration = enabled;
   }
 
   @action
