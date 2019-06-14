@@ -75,6 +75,7 @@ $index-circle-size: 23px;
         .weekdayVisits {
           @extend .font-time-secondary;
           vertical-align: top;
+          margin-top: 5px;
         }
 
         .index {
