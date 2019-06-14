@@ -33,7 +33,7 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
 
   position: relative;
 
-  background: #fcfcfc;
+  background: $color-calendar-background;
 
   padding-bottom: $monthRow-margin-top;
 
@@ -44,7 +44,7 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
     align-items: center;
     justify-content: center;
 
-    background: #fcfcfc;
+    background: $color-calendar-cell-background;
 
     // &.first {
     //   border-left: none;
@@ -65,7 +65,7 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
     z-index: 1001;
     width: $time-column-width;
 
-    background: #fcfcfc;
+    background: $color-calendar-cell-background;
   }
 
   .leftColumn {
