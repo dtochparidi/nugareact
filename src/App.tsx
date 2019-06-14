@@ -1,5 +1,6 @@
 // import ControlWindow from 'components/ControlWindow';
 import { LazyTaskManager } from '@levabala/lazytask/build/dist';
+import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
 import VersionChangelog from 'components/VersionChangelog';
 import VersionLabel from 'components/VersionLabel';
 import * as Cookies from 'js-cookie';
@@ -7,6 +8,7 @@ import LazyWidget from 'lazytask-widget/lib';
 import { observer } from 'mobx-react';
 import DevTools, { configureDevtool } from 'mobx-react-devtools';
 import * as React from 'react';
+import modifyPersonsScenario from 'scenarios/modifyPersonsScenario';
 
 import CalendarCard from './components/CalendarCard';
 import currentVersion from './CurrentVersion.json';
@@ -16,8 +18,6 @@ import versions from './versions';
 
 import './App.css';
 import 'scenarios/scenariosPackage';
-import modifyPersonsScenario from 'scenarios/modifyPersonsScenario';
-import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
 
 function random(to: number, from: number = 0) {
   return Math.floor(Math.random() * (to - from)) + from;

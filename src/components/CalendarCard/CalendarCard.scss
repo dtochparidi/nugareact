@@ -196,12 +196,14 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
     .mainContainer {
       position: relative;
 
-      margin-bottom: $thin-width * -5;
+      // margin-bottom: $thin-width * -5;
       margin-left: $time-column-width;
       margin-right: $time-column-width;
 
-      border-right: solid lightgray 1px;
-      border-left: solid lightgray 1px;
+      border: dotted lightgray 1px;
+      border-top: none;
+
+      box-sizing: border-box;
 
       .daysContainer {
         overflow: hidden;
@@ -300,7 +302,6 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
       .gridsContainer {
         width: 100%;
         overflow: hidden;
-        padding-bottom: 1px;
       }
     }
   }

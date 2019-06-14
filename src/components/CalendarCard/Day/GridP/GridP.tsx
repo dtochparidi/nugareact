@@ -66,6 +66,7 @@ const generateGraphicsTextured = moize(
 
     const cellWidth = width / cols;
     const height = cellHeight * rows;
+    const yStep = cellHeight;
 
     const maxLineSegmentLength = 2000;
     const segmentsHorizontal = Math.ceil(width / maxLineSegmentLength);
@@ -87,11 +88,11 @@ const generateGraphicsTextured = moize(
         sprites.push(sprite);
       }
 
-    for (let y = 0; y <= rows; y++)
+    for (let y = 0; y < rows; y++)
       for (let s = 0; s < segmentsHorizontal; s++) {
         const sprite = new PIXI.Sprite(lineHorizontalTexture);
         sprite.x = s * lineSegmentWidth;
-        sprite.y = cellHeight * y;
+        sprite.y = yStep * y;
 
         sprites.push(sprite);
       }
