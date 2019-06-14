@@ -170,7 +170,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
         {person && person.loaded ? (
           <div className="realContainer">
             <div className="marker" key="marker" />
-            <div className="avatar" key="avatar" />
+            <img className="avatar" key="avatar" src={person.photo} />
             <div className="mainInfoWrapper" key="mainInfoWrapper">
               <div className="subWrapper">
                 <div className="content">

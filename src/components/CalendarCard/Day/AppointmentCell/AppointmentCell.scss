@@ -141,7 +141,9 @@
 
     // width: $avatar-width;
     width: $avatar-size;
+    height: $avatar-size;
     border-radius: 50%;
+    object-fit: cover;
 
     background: lightgrey;
 

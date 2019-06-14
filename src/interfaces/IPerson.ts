@@ -13,4 +13,5 @@ export interface IPerson {
   averageBill: string;
   invitedBy: string;
   loaded: boolean;
+  photo?: string;
 }

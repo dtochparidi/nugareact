@@ -1,10 +1,38 @@
 import * as moment from 'moment';
 
+import avatar1 from '../assets/mockPhotos/avatar1.png';
+import avatar6 from '../assets/mockPhotos/avatar6.jpg';
+import avatar7 from '../assets/mockPhotos/avatar7.jpg';
 import IFetcher from '../interfaces/IFetcher';
 import { IPerson } from '../interfaces/IPerson';
 
+const avatar2 = require('../assets/mockPhotos/avatar2.jpeg');
+const avatar3 = require('../assets/mockPhotos/avatar3.jpeg');
+const avatar4 = require('../assets/mockPhotos/avatar4.jpeg');
+const avatar5 = require('../assets/mockPhotos/avatar5.jpeg');
+const avatar8 = require('../assets/mockPhotos/avatar8.jpeg');
+const avatar9 = require('../assets/mockPhotos/avatar9.jpeg');
+const avatar10 = require('../assets/mockPhotos/avatar10.jpeg');
+
+const mockAvatars = [
+  avatar1,
+  avatar2,
+  avatar3,
+  avatar4,
+  avatar5,
+  avatar6,
+  avatar7,
+  avatar8,
+  avatar9,
+  avatar10,
+];
+
 function takeRandom(array: any[]) {
   return array[Math.floor(Math.random() * array.length)];
+}
+
+function getRandomPhoto() {
+  return takeRandom(mockAvatars);
 }
 
 function generateRandomPerson(id: string): IPerson {
@@ -25,6 +53,7 @@ function generateRandomPerson(id: string): IPerson {
     ),
     patronymic: '',
     phone: '+371 28481181',
+    photo: getRandomPhoto(),
     rate: 20,
     surname: takeRandom(
       'Долматов Бубликов Смирнов Баженов Святов Вячеславов Куприков Блинов Карамзинов'.split(

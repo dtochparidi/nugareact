@@ -35,6 +35,8 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
 
   background: #fcfcfc;
 
+  padding-bottom: $monthRow-margin-top;
+
   .item {
     // @extend .borders;
 
