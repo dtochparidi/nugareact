@@ -1,11 +1,11 @@
 import * as moment from 'moment';
 
-import avatar1 from '../assets/mockPhotos/avatar1.png';
-import avatar6 from '../assets/mockPhotos/avatar6.jpg';
-import avatar7 from '../assets/mockPhotos/avatar7.jpg';
 import IFetcher from '../interfaces/IFetcher';
 import { IPerson } from '../interfaces/IPerson';
 
+const avatar1 = require('../assets/mockPhotos/avatar1.png');
+const avatar6 = require('../assets/mockPhotos/avatar6.jpg');
+const avatar7 = require('../assets/mockPhotos/avatar7.jpg');
 const avatar2 = require('../assets/mockPhotos/avatar2.jpeg');
 const avatar3 = require('../assets/mockPhotos/avatar3.jpeg');
 const avatar4 = require('../assets/mockPhotos/avatar4.jpeg');

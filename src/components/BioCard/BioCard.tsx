@@ -1,20 +1,19 @@
-import { observer } from "mobx-react";
-import MobxReactForm from "mobx-react-form";
-import { Form } from "mobx-react-form";
-import * as React from "react";
-import { IPerson } from "../../interfaces/IPerson";
-import { IUpdatable } from "../../interfaces/IUpdatable";
+import { observer } from 'mobx-react';
+import MobxReactForm, { Form } from 'mobx-react-form';
+import moment from 'moment';
+import * as React from 'react';
+import * as validatorjs from 'validatorjs';
 
-import * as validatorjs from "validatorjs";
+import { IPerson } from '../../interfaces/IPerson';
+import { IUpdatable } from '../../interfaces/IUpdatable';
+import Card from '../Card';
+import InformationForm from './InformationForm';
 
-validatorjs.useLang("ru");
+import './BioCard.scss';
+
+validatorjs.useLang('ru');
 
 const plugins = { dvr: validatorjs };
-
-import * as moment from "moment";
-import Card from "../Card";
-import "./BioCard.scss";
-import InformationForm from "./InformationForm";
 
 export interface IBioCardProps {
   personData: IUpdatable<IPerson>;
@@ -44,74 +43,74 @@ export default class BioCard extends React.Component<IBioCardProps, any> {
         this.onUpdateHandler(Object.entries(values));
       },
       onError(form: Form) {
-        alert("Form has errors!");
+        alert('Form has errors!');
         // get all form errors
-        console.log("All form errors", form.errors());
-      }
+        console.log('All form errors', form.errors());
+      },
     };
 
     this.fields = {
       address: {
-        label: "Адрес",
-        placeholder: "Введите адрес",
-        rules: "required|string",
-        value: personData.address
+        label: 'Адрес',
+        placeholder: 'Введите адрес',
+        rules: 'required|string',
+        value: personData.address,
       },
       averageBill: {
-        label: "Средний чек",
-        placeholder: "Введите адрес",
-        value: personData.averageBill
+        label: 'Средний чек',
+        placeholder: 'Введите адрес',
+        value: personData.averageBill,
       },
       birthday: {
         input: (value: moment.Moment) => {
-          if (value.format) return value.format("DD.MM.gggg");
+          if (value.format) return value.format('DD.MM.gggg');
           else return value;
         },
-        label: "Возраст",
+        label: 'Возраст',
         output: (value: string) => {
-          const transformed = value.replace(/\./g, "-");
-          const date = moment(transformed, "DD-MM-YYYY");
+          const transformed = value.replace(/\./g, '-');
+          const date = moment(transformed, 'DD-MM-YYYY');
           return date;
         },
-        placeholder: "Введите дату рождения",
-        value: personData.birthdate
+        placeholder: 'Введите дату рождения',
+        value: personData.birthdate,
       },
       friends: {
-        label: "Друзья",
-        value: personData.friends
+        label: 'Друзья',
+        value: personData.friends,
       },
       invitedBy: {
-        label: "Пригласил/а",
-        value: personData.invitedBy
+        label: 'Пригласил/а',
+        value: personData.invitedBy,
       },
       name: {
-        placeholder: "Введите имя",
+        placeholder: 'Введите имя',
         rules: "required|string|regex:/^[a-zA-Zа-яА-Я '.-]*$/",
-        value: personData.name
+        value: personData.name,
       },
       phone: {
-        label: "Телефон",
-        placeholder: "Введите номер телефона",
+        label: 'Телефон',
+        placeholder: 'Введите номер телефона',
         rules:
-          "required|string|regex:/^[+]*[(]{0,1}[0-9]{1,3}[)]{0,1}[-s./0-9]*$/g",
-        value: personData.phone
+          'required|string|regex:/^[+]*[(]{0,1}[0-9]{1,3}[)]{0,1}[-s./0-9]*$/g',
+        value: personData.phone,
       },
       rate: {
-        label: "Рейтинг",
-        value: personData.rate
+        label: 'Рейтинг',
+        value: personData.rate,
       },
       surname: {
-        placeholder: "Введите фамилию",
+        placeholder: 'Введите фамилию',
         rules: "required|string|regex:/^[a-zA-Zа-яА-Я '.-]*$/",
-        value: personData.surname
-      }
+        value: personData.surname,
+      },
     };
   }
 
   public render() {
     const form = new MobxReactForm(
       { fields: this.fields },
-      { plugins, hooks: this.hooks }
+      { plugins, hooks: this.hooks },
     );
 
     return (

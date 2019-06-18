@@ -1,12 +1,9 @@
-// import ControlWindow from 'components/ControlWindow';
 import { LazyTaskManager } from '@levabala/lazytask/build/dist';
 import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
-import VersionChangelog from 'components/VersionChangelog';
 import VersionLabel from 'components/VersionLabel';
-import * as Cookies from 'js-cookie';
 import LazyWidget from 'lazytask-widget/lib';
 import { observer } from 'mobx-react';
-import DevTools, { configureDevtool } from 'mobx-react-devtools';
+import { configureDevtool } from 'mobx-react-devtools';
 import * as React from 'react';
 import modifyPersonsScenario from 'scenarios/modifyPersonsScenario';
 
@@ -14,11 +11,16 @@ import CalendarCard from './components/CalendarCard';
 import currentVersion from './CurrentVersion.json';
 import { clientSide } from './dev/clientSide';
 import rootStore from './stores/RootStore';
-import versions from './versions';
 
 import './App.css';
 import 'scenarios/scenariosPackage';
 
+// import VersionChangelog from 'components/VersionChangelog';
+// import * as Cookies from 'js-cookie';
+// import DevTools, { configureDevtool } from 'mobx-react-devtools';
+// import versions from './versions';
+
+// import ControlWindow from 'components/ControlWindow';
 function random(to: number, from: number = 0) {
   return Math.floor(Math.random() * (to - from)) + from;
 }
@@ -41,9 +43,9 @@ if (process.env.NODE_ENV !== 'development') {
 const { personStore, calendarDayStore } = rootStore.domainStore;
 const { uiStore } = rootStore;
 
-let versionName: string | undefined;
-let lastVersion: [string, string];
-let needToShowChangelog: boolean = false;
+// let versionName: string | undefined;
+// let lastVersion: [string, string];
+// let needToShowChangelog: boolean = false;
 
 // do not do it while testing in jest
 if (clientSide) {
@@ -51,10 +53,10 @@ if (clientSide) {
   (window as any).rootStore = rootStore;
 
   // checking for updates
-  versionName = Cookies.get('version');
-  lastVersion = versions[versions.length - 1];
-  if (versionName && lastVersion[0] !== versionName) needToShowChangelog = true;
-  Cookies.set('version', lastVersion[0]);
+  // versionName = Cookies.get('version');
+  // lastVersion = versions[versions.length - 1];
+  // if (versionName && lastVersion[0] !== versionName) needToShowChangelog = true;
+  // Cookies.set('version', lastVersion[0]);
 
   // configuring mobX dev console
   configureDevtool({
@@ -94,7 +96,7 @@ class App extends React.Component {
   public render() {
     return (
       <div>
-        {clientSide
+        {/* {clientSide
           ? [
               process.env.NODE_ENV === 'development' ? (
                 <DevTools key="devTools" />
@@ -108,7 +110,7 @@ class App extends React.Component {
                 />
               ) : null,
             ]
-          : null}
+          : null} */}
         <CalendarCard
           fastMode={uiStore.fastMode}
           subGridColumns={uiStore.subGridColumns || 0}

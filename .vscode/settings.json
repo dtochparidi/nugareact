@@ -1,5 +1,5 @@
 {
-  "typescriptHero.imports.organizeOnSave": true,
+  "typescriptHero.imports.organizeOnSave": false,
   "typescriptHero.imports.grouping": ["Modules", "Workspace", "Plains"],
   "todohighlight.keywords": [
     {

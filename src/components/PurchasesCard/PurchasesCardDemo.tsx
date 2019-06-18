@@ -1,9 +1,9 @@
-import * as moment from "moment";
-import * as React from "react";
-import IPurchase from "../../interfaces/IPurchase";
+import moment from 'moment';
+import * as React from 'react';
 
-import PurchasesCard from ".";
-import Button from "../Button";
+import PurchasesCard from '.';
+import IPurchase from '../../interfaces/IPurchase';
+import Button from '../Button';
 
 function takeRandom(array: any[]) {
   return array[Math.floor(Math.random() * array.length)];
@@ -20,20 +20,20 @@ const generatePurchase = (): IPurchase => ({
   date: moment({
     day: randomBetween(1, 28),
     month: randomBetween(0, 1),
-    year: 2019
+    year: 2019,
   }),
   deliveryDate: moment({
     day: randomBetween(1, 28),
     month: randomBetween(0, 1),
-    year: 2019
+    year: 2019,
   }),
   name: takeRandom(
-    "Омбудсмен Ъ Перочинный нож Ъ Упаковка чая Ъ Глазурь Ъ Кухонный аппарат Ъ Посуда".split(
-      "Ъ"
-    )
+    'Омбудсмен Ъ Перочинный нож Ъ Упаковка чая Ъ Глазурь Ъ Кухонный аппарат Ъ Посуда'.split(
+      'Ъ',
+    ),
   ),
   price: randomBetween(29, 370),
-  type: takeRandom("Акционный Ъ Обычный".split("Ъ"))
+  type: takeRandom('Акционный Ъ Обычный'.split('Ъ')),
 });
 
 const testPurchases: IPurchase[] = new Array(5)
@@ -53,7 +53,7 @@ export default class PurchasesCardDemo extends React.Component<IProps, IState> {
     super(props);
 
     this.state = {
-      purchases: testPurchases
+      purchases: testPurchases,
     };
 
     this.addPurchase = () => this.onPurchaseAdded(generatePurchase());
@@ -72,7 +72,7 @@ export default class PurchasesCardDemo extends React.Component<IProps, IState> {
         <Button
           value="Add a purchase"
           onClick={this.addPurchase}
-          style={{ position: "absolute", top: "10px", right: "10px" }}
+          style={{ position: 'absolute', top: '10px', right: '10px' }}
         />
         <PurchasesCard purchases={this.state.purchases} />
       </div>
