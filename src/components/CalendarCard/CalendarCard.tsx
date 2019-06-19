@@ -98,7 +98,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   @observable
   public movingId: string = '';
   @observable
-  public currentDayNumber: { value: number } = { value: 0 };
+  public currentDay: IMoment = moment();
   @observable
   public monthStartDate: IMoment = moment();
 
@@ -683,7 +683,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       .clone()
       .startOf('month');
 
-    this.currentDayNumber.value = daysStore.days[dayIndex].date.date();
+    this.currentDay = daysStore.days[dayIndex].date.clone();
     this.currentDayIndex = dayIndex;
 
     if (
@@ -940,8 +940,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
                   dayJumpCallback={this.jumpToDayHandler}
                 />
                 <DateRow
-                  dayChosenIndex={this.currentDayNumber}
-                  monthStartDate={this.monthStartDate}
+                  choosenDay={this.currentDay}
                   dayJumpCallback={this.jumpToDayHandler}
                   visitsPerDay={daysStore.visitsPerDay}
                 />

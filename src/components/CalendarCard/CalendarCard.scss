@@ -58,7 +58,7 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
 
   .rightColumn {
     position: absolute;
-    top: $top-row-height - $time-row-height;
+    top: $top-row-height - $time-row-height - $dateRow-height;
     right: 0;
     height: calc(100% - #{$top-row-height - $calendar-cell-height});
 
@@ -85,9 +85,9 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
         $calendar-cell-height
       );
 
-    :first-child {
-      visibility: hidden;
-    }
+    // :first-child {
+    //   visibility: hidden;
+    // }
 
     .item {
       border-top: none;
