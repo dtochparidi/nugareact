@@ -8,7 +8,7 @@ import * as interact from 'levabala_interactjs';
 import './DateRow.scss';
 import moize from 'moize';
 
-console.log('asd');
+console.log('asdasds');
 // import moize, { collectStats } from 'moize';
 
 // collectStats();
