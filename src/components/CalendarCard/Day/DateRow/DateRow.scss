@@ -1,20 +1,30 @@
 @import 'src/common/variables.scss';
+@import 'src/common/colors.scss';
 @import 'src/common/fonts.scss';
 
 $dateRow-padding: $thin-width;
 $dateRow-height: 60px;
 $index-circle-size: 23px;
+$day-width: 30px;
+$day-space-between-min: 10px;
+
+:export {
+  dayWidth: $day-width;
+  daySpaceBetweenMin: $day-space-between-min;
+}
 
 .dateRowWrapper {
+  --day-space-between: #{$day-space-between-min};
+
   display: flex;
 
   // border: solid lightgrey 1px;
   // border-bottom: none;
 
-  padding-left: $time-column-width;
-  padding-right: $time-column-width;
+  margin-left: $time-column-width;
+  margin-right: $time-column-width;
 
-  background: #fcfcfc;
+  background: $color-calendar-background;
 
   .arrowWrapper {
     display: flex;
@@ -38,16 +48,18 @@ $index-circle-size: 23px;
     // grid-auto-flow: column;
     // grid-auto-columns: 1fr;
 
-    display: flex;
-    justify-content: space-between;
+    // display: flex;
+    // justify-content: space-between;
 
     width: 100%;
     height: $dateRow-height;
     padding: $dateRow-padding;
 
     .day {
-      display: flex;
+      display: inline-flex;
       justify-content: center;
+      width: $day-width;
+      margin-right: var(--day-space-between);
 
       &.chosen > .main > .index {
         color: white;

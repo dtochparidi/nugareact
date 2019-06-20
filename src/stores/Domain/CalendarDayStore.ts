@@ -3,7 +3,11 @@ import IAppointment from 'interfaces/IAppointment';
 import IUpdateAppFunction from 'interfaces/IUpdateAppFunction';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
 import { action, observable } from 'mobx';
-import * as moment from 'moment';
+import * as Moment from 'moment';
+import { extendMoment } from 'moment-range';
+
+const moment = extendMoment(Moment);
+
 import { Moment as IMoment } from 'moment';
 import Appointment from 'structures/Appointment';
 import CalendarDay from 'structures/CalendarDay';
@@ -60,7 +64,7 @@ export default class CalendarDayStore {
     const loadDataPromises: Array<Promise<CalendarDay>> = dates.map(date => {
       const day = new CalendarDay(date.startOf('day'));
       const promise = this.loadDayData(day);
-    
+
       if (day.id in this.daysMap) return promise;
 
       this.daysMap[day.id] = day;
@@ -88,14 +92,16 @@ export default class CalendarDayStore {
   }
 
   public async loadVisitsPerDay() {
-    const monthes: { [key: string]: IMoment } = this.days
-      .map(day => [day.date.format('MM-YYYY'), day.date])
-      .reduce((acc, [month, date]: [string, IMoment]) => {
-        acc[month] = date;
-        return acc;
-      }, {});
+    const monthes = Array.from(
+      moment
+        .range(
+          this.rootStore.uiStore.leftBorderDay,
+          this.rootStore.uiStore.rightBorderDay,
+        )
+        .by('month'),
+    ).reverse();
 
-    Object.values(monthes).forEach(async date => {
+    monthes.forEach(async date => {
       const data = await fetchVisitsCount(date);
       this.updateVisitsPerDay(data);
     });
@@ -178,7 +184,7 @@ export default class CalendarDayStore {
     }
 
     // check duration not overlap the day's end
-    const possibleDuration = moment.duration(
+    const possibleDuration = Moment.duration(
       targetDate
         .clone()
         .hour(dayTimeRangeActual.end.hour())

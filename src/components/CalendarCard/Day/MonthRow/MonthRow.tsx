@@ -1,6 +1,5 @@
 // import ArrowLeft from '@material-ui/icons/KeyboardArrowLeft';
 // import ArrowRight from '@material-ui/icons/KeyboardArrowRight';
-import { computed } from 'mobx';
 import { observer } from 'mobx-react';
 import { Moment as IMoment } from 'moment';
 import * as React from 'react';
@@ -8,8 +7,8 @@ import * as React from 'react';
 import './MonthRow.scss';
 
 export interface IProps {
-  monthDate: IMoment;
-  dayJumpCallback: (index: number) => void;
+  monthDates: IMoment[];
+  dayJumpCallback: any;
 }
 
 export interface IState {
@@ -26,34 +25,17 @@ export default class MonthRow extends React.Component<IProps, IState> {
     };
   }
 
-  @computed
-  public get monthLength() {
-    return this.props.monthDate.daysInMonth() || 0;
-  }
-
-  public goPreviousMonth = () => {
-    this.props.dayJumpCallback(1);
-  };
-
-  public goNextMonth = () => {
-    this.props.dayJumpCallback(this.monthLength + 2);
-  };
-
-  public async componentDidMount() {
-    //
-  }
-
   public render() {
     return (
       <div
         className="monthRowWrapper"
-        key={this.props.monthDate.format('MMMM')}
+        key={this.props.monthDates.map(month => month.format('MM')).join()}
       >
         <span
           className="monthName"
           // style={{ width: this.state.maxMonthWidth + 'px' }}
         >
-          {this.props.monthDate.format('MMMM')}
+          {this.props.monthDates.map(month => month.format('MMMM')).join(' - ')}
         </span>
         {/* <div className="arrowWrapper">
           <ArrowLeft onClick={this.goPreviousMonth} />

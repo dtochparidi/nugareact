@@ -6,9 +6,18 @@ import CalendarDay from 'structures/CalendarDay';
 import * as interact from 'levabala_interactjs';
 
 import './DateRow.scss';
+import * as DateRowVariables from './DateRow.scss';
 import moize from 'moize';
+import rootStore from 'stores/RootStore';
+import MonthRow from '../MonthRow';
+import * as Moment from 'moment';
+import { extendMoment } from 'moment-range';
 
-console.log('asdasds');
+const moment = extendMoment(Moment);
+
+const dayWidth = parseFloat(DateRowVariables.dayWidth);
+const daySpaceBetweenMin = parseFloat(DateRowVariables.daySpaceBetweenMin);
+
 // import moize, { collectStats } from 'moize';
 
 // collectStats();
@@ -19,9 +28,8 @@ console.log('asdasds');
 // }, 1500);
 
 export interface IProps {
-  choosenDay: IMoment;
   visitsPerDay: { [dayIndex: number]: number };
-  dayJumpCallback: (index: number) => void;
+  dayJumpCallback: (targetDay: IMoment) => void;
 }
 
 export interface IState {
@@ -30,10 +38,9 @@ export interface IState {
 }
 
 interface IDayGeneratorArgs {
-  i: number;
   visitsPerDay: number;
   isChoosen: boolean;
-  monthStartDate: IMoment;
+  day: IMoment;
 }
 
 // let compares = 0;
@@ -42,27 +49,29 @@ interface IDayGeneratorArgs {
 export default class DateRow extends React.Component<IProps, IState> {
   private dateRowWrapperRef = React.createRef<HTMLDivElement>();
   private reactions: Array<() => void> = [];
-  private offset = { x: 0, y: 0 };
-  // private buffer = 50;
+  private offset = 0;
+  private fixedOffset = 0;
+  private spaceBetween = daySpaceBetweenMin;
+  private dayWidthAround = dayWidth + this.spaceBetween;
+  private buffer = this.dayWidthAround * 2;
+  private nextCheckTimeout = this.dayWidthAround;
+  private previosDaysCount = 0;
+  private previosContainerWidth = 0;
 
   private dayGenerator = moize(
-    ({ i, visitsPerDay, isChoosen, monthStartDate }: IDayGeneratorArgs) => {
+    ({ day, visitsPerDay, isChoosen }: IDayGeneratorArgs) => {
+      const handler = () => this.clickHandler(day);
       return (
         <div
-          key={i}
+          key={day.valueOf()}
           className={`day ${isChoosen ? 'chosen' : ''}`}
-          onClick={this.indexClickHandler}
+          onClick={handler}
         >
           <span className="main">
             <span className="name">
-              <span className="weekdayName">
-                {monthStartDate
-                  .clone()
-                  .date(i + 1)
-                  .format('dd')}
-              </span>
+              <span className="weekdayName">{day.format('dd')}</span>
             </span>
-            <span className="index">{i + 1}</span>
+            <span className="index">{day.date()}</span>
             <span className="weekdayVisits">
               {visitsPerDay ? visitsPerDay : '0'}
             </span>
@@ -74,11 +83,9 @@ export default class DateRow extends React.Component<IProps, IState> {
       equals: (prevArgs: IDayGeneratorArgs, nowArgs: IDayGeneratorArgs) => {
         // compares++;
         const equal =
-          prevArgs.i === nowArgs.i &&
+          prevArgs.day.valueOf() === nowArgs.day.valueOf() &&
           prevArgs.visitsPerDay === nowArgs.visitsPerDay &&
-          prevArgs.isChoosen === nowArgs.isChoosen &&
-          prevArgs.monthStartDate.valueOf() ===
-            nowArgs.monthStartDate.valueOf();
+          prevArgs.isChoosen === nowArgs.isChoosen;
 
         return equal;
       },
@@ -91,23 +98,79 @@ export default class DateRow extends React.Component<IProps, IState> {
 
     this.reactions.push(
       reaction(
-        () => this.props.choosenDay.format('DD:MM:YYYY'),
-        () => this.forceUpdate(),
+        () => rootStore.uiStore.currentDay.valueOf(),
+        () => this.updateBorders(true),
+      ),
+      reaction(
+        () => rootStore.uiStore.screenWidth,
+        () => this.updateBorders(true),
       ),
     );
 
     this.state = {
-      leftBorder: props.choosenDay.clone().subtract(5, 'days'),
-      rightBorder: props.choosenDay.clone().add(5, 'days'),
+      leftBorder: rootStore.uiStore.currentDay.clone().subtract(5, 'days'),
+      rightBorder: rootStore.uiStore.currentDay.clone().add(5, 'days'),
     };
   }
 
   public componentDidUpdate(prevProps: IProps) {
-    if (prevProps.choosenDay.valueOf() !== this.props.choosenDay.valueOf())
-      this.setState({
-        leftBorder: this.props.choosenDay.clone().subtract(5, 'days'),
-        rightBorder: this.props.choosenDay.clone().add(5, 'days'),
-      });
+    // console.log(prevProps.choosenDay.format('DD:MM'));
+    // if (prevProps.choosenDay.valueOf() !== rootStore.uiStore.currentDay.valueOf())
+    //   this.updateBorders(true);
+  }
+
+  public updateBorders(reset = false) {
+    // const rowWidth = (this.dateRowWrapperRef.current as HTMLDivElement)
+    //   .offsetWidth;
+    const rowWidth = (this.dateRowWrapperRef
+      .current as HTMLDivElement).getBoundingClientRect().width;
+
+    const dayWidthAroundMin = dayWidth + daySpaceBetweenMin;
+    const daysCount = Math.floor(
+      (rowWidth + daySpaceBetweenMin) / dayWidthAroundMin,
+    );
+
+    this.spaceBetween =
+      daySpaceBetweenMin +
+      ((rowWidth + daySpaceBetweenMin) % dayWidthAroundMin) / daysCount;
+    this.dayWidthAround = dayWidth + this.spaceBetween;
+
+    reset =
+      reset ||
+      daysCount !== this.previosDaysCount ||
+      rowWidth !== this.previosContainerWidth;
+    this.previosDaysCount = daysCount;
+    this.previosContainerWidth = rowWidth;
+
+    // console.log('update borders', daysCount);
+
+    if (reset) {
+      this.offset = 0;
+      this.fixedOffset = 0;
+    }
+
+    const daysOffset = Math.ceil(this.offset / this.dayWidthAround);
+    const daysBuffer = Math.ceil(this.buffer / this.dayWidthAround);
+
+    const newLeftBorder = rootStore.uiStore.currentDay
+      .clone()
+      .subtract(daysCount / 2 + daysOffset, 'days');
+    const newRightBorder = rootStore.uiStore.currentDay
+      .clone()
+      .add(daysCount / 2 - daysOffset + daysBuffer, 'days');
+
+    if (!reset) {
+      const delta = newLeftBorder.diff(this.state.leftBorder, 'days');
+
+      this.fixedOffset += delta * this.dayWidthAround;
+    }
+
+    this.setState({
+      leftBorder: newLeftBorder,
+      rightBorder: newRightBorder,
+    });
+
+    rootStore.uiStore.setBorderDays(newLeftBorder, newRightBorder);
   }
 
   public componentWillUnmount() {
@@ -115,20 +178,14 @@ export default class DateRow extends React.Component<IProps, IState> {
   }
 
   public componentDidMount() {
-    interact(this.dateRowWrapperRef.current).draggable({
+    interact('.dateRowWrapper').draggable({
       onmove: this.onDrag,
       onstart: this.onStart,
     });
   }
 
-  public indexClickHandler = (e: React.MouseEvent) => {
-    this.props.dayJumpCallback(
-      parseInt(
-        (e.currentTarget.querySelector('.index') as HTMLElement).textContent ||
-          '0',
-        10,
-      ),
-    );
+  public clickHandler = (day: IMoment) => {
+    this.props.dayJumpCallback(day);
   };
 
   public animationEnded = () => {
@@ -136,8 +193,6 @@ export default class DateRow extends React.Component<IProps, IState> {
   };
 
   public render() {
-    const { choosenDay } = this.props;
-
     const visitsPerDay = Object.entries(this.props.visitsPerDay)
       .map(([dayId, visitsCount]) => [
         CalendarDay.fromId(dayId).date,
@@ -154,31 +209,50 @@ export default class DateRow extends React.Component<IProps, IState> {
       }, {});
 
     const { leftBorder, rightBorder } = this.state;
-    console.log(
-      leftBorder.format('DD:MM:YYYY'),
-      rightBorder.format('DD:MM:YYYY'),
-      'asd',
-    );
-    const daysCount = rightBorder.diff(leftBorder, 'days');
-    console.log('daysCount:', daysCount);
+    // console.log(
+    //   leftBorder.format('DD:MM:YYYY'),
+    //   rightBorder.format('DD:MM:YYYY'),
+    // );
+    const daysCount =
+      rightBorder.diff(leftBorder, 'days') *
+      (rootStore.uiStore.firstLoadDone ? 1 : 0);
+    // console.log('daysCount:', daysCount);
 
     return (
-      <div className="dateRowWrapper" ref={this.dateRowWrapperRef}>
+      <div key={rootStore.uiStore.currentDay.format('DD:MM:YYYY')}>
+        <MonthRow
+          monthDates={Array.from(
+            moment
+              .range(this.state.leftBorder, this.state.rightBorder)
+              .by('month'),
+          )}
+          dayJumpCallback={this.props.dayJumpCallback}
+        />
         <div
-          className="dateRow"
-          key={`${this.props.choosenDay.format(
-            'DD:MM:YYYY',
-          )}${leftBorder}${rightBorder}`}
+          className="dateRowWrapper"
+          ref={this.dateRowWrapperRef}
+          style={
+            {
+              '--day-space-between': `${this.spaceBetween}px`,
+            } as React.CSSProperties
+          }
         >
-          {new Array(daysCount).fill(null).map((v, i) => {
-            const day = leftBorder.clone().add(i, 'days');
-            return this.dayGenerator({
-              i,
-              isChoosen: day.valueOf() === choosenDay.valueOf(),
-              monthStartDate: day.startOf('month'),
-              visitsPerDay: visitsPerDay[day.valueOf()],
-            });
-          })}
+          <div
+            className="dateRow"
+            key={`${rootStore.uiStore.currentDay.format(
+              'DD:MM:YYYY',
+            )}${leftBorder}${rightBorder}`}
+          >
+            {new Array(daysCount).fill(null).map((v, i) => {
+              const day = leftBorder.clone().add(i, 'days');
+              return this.dayGenerator({
+                day,
+                isChoosen:
+                  day.valueOf() === rootStore.uiStore.currentDay.valueOf(),
+                visitsPerDay: visitsPerDay[day.valueOf()],
+              });
+            })}
+          </div>
         </div>
       </div>
     );
@@ -189,16 +263,24 @@ export default class DateRow extends React.Component<IProps, IState> {
   };
 
   private onDrag = (e: interact.InteractEvent) => {
-    this.offset.x += e.dx;
+    this.offset += e.dx;
     // this.offset.y += e.dy;
+
+    this.nextCheckTimeout += e.dx;
+    if (
+      this.nextCheckTimeout <= 0 ||
+      this.nextCheckTimeout >= this.dayWidthAround * 2
+    ) {
+      this.updateBorders();
+      this.nextCheckTimeout = this.dayWidthAround;
+    }
 
     this.updateTransform();
   };
 
   private updateTransform() {
-    const { x, y } = this.offset;
-
     const dateRowWrapper = this.dateRowWrapperRef.current as HTMLDivElement;
-    dateRowWrapper.style.transform = `translate(${x}px, ${y}px)`;
+    dateRowWrapper.style.transform = `translate(${this.offset +
+      this.fixedOffset}px, 0px)`;
   }
 }

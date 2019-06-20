@@ -2,7 +2,6 @@ import * as Moment from 'moment';
 import { Duration as IDuration, Moment as IMoment } from 'moment';
 import { DateRange, extendMoment } from 'moment-range';
 import * as React from 'react';
-import * as ReactCSSTransitionReplace from 'react-css-transition-replace';
 
 import ICalendarDay from '../../interfaces/ICalendarDay';
 import Card from '../Card';
@@ -26,7 +25,6 @@ import IUpdateAppFunction from 'interfaces/IUpdateAppFunction';
 import { action, observable } from 'mobx';
 import moize from 'moize';
 import rootStore from 'stores/RootStore';
-import MonthRow from './Day/MonthRow';
 import TopRow from './Day/TopRow';
 import { generateDropzoneConfig } from './modules/dropzoneConfig';
 import {
@@ -37,6 +35,7 @@ import {
 } from './modules/staticMethods';
 import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
 import { RightColumn } from '.';
+import { LazyTask } from '@levabala/lazytask/build/dist';
 
 const calendarCellMinWidth = parseFloat(CardVariables.calendarCellWidthMin);
 const timeColumnWidth = parseFloat(CardVariables.timeColumnWidth);
@@ -98,8 +97,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   @observable
   public movingId: string = '';
   @observable
-  public currentDay: IMoment = moment();
-  @observable
   public monthStartDate: IMoment = moment();
 
   public visibilityStore: VisibilityStore = new VisibilityStore();
@@ -118,7 +115,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   private isScrolling: boolean = false;
   private pageTurnEmitter: Emitter;
   private scrollingUpdateTimeout: NodeJS.Timeout;
-  private jumpToDayHandler: (index: number) => void;
   private dropzoneConfig = generateDropzoneConfig.bind(this)();
   private firstLoadDays: IMoment[] = [];
   private fullfilledDays: string[] = [];
@@ -133,8 +129,6 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     this.calendarContainerRef = React.createRef();
     this.pageTurnEmitter = new Emitter();
-
-    this.jumpToDayHandler = this.jumpToDay.bind(this);
 
     const mainColumnStep = Moment.duration(45, 'minutes');
     const actualRange = this.props.dayTimeRangeActual.clone();
@@ -568,6 +562,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
       rootStore.uiStore.firstLoadCompeleted();
       rootStore.domainStore.calendarDayStore.loadVisitsPerDay();
+
+      this.updateCurrentDayData();
     });
   }
 
@@ -675,38 +671,35 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       ]);
 
     this.updateScroll();
+
+    this.updateCurrentDayData();
   }
 
   @action
-  public updateCurrentDayData(dayIndex: number) {
-    const newMonthStartDate = daysStore.days[dayIndex].date
-      .clone()
-      .startOf('month');
-
-    this.currentDay = daysStore.days[dayIndex].date.clone();
-    this.currentDayIndex = dayIndex;
-
-    if (
-      !this.monthStartDate ||
-      newMonthStartDate.format('MM:YYYY') !==
-        this.monthStartDate.format('MM:YYYY')
-    ) {
-      this.monthStartDate = newMonthStartDate;
-      setTimeout(() =>
-        lazyTaskManager.addFunc(() =>
-          rootStore.domainStore.calendarDayStore.loadVisitsPerDay(),
-        ),
-      );
-    }
-  }
-
-  public updateScroll(force = false) {
-    const container = this.calendarContainerRef.current as HTMLDivElement;
+  public updateCurrentDayData() {
     const dayIndex = Math.floor(
       this.currentLeftColumnIndex / this.state.columnsPerDay,
     );
 
-    this.updateCurrentDayData(dayIndex);
+    if (
+      rootStore.uiStore.currentDay.valueOf() ===
+      daysStore.days[dayIndex].date.valueOf()
+    )
+      return;
+
+    setTimeout(() =>
+      lazyTaskManager.addTask(
+        new LazyTask(
+          () => rootStore.domainStore.calendarDayStore.loadVisitsPerDay(),
+          10,
+        ),
+      ),
+    );
+    rootStore.uiStore.setCurrentDay(daysStore.days[dayIndex].date);
+  }
+
+  public updateScroll(force = false) {
+    const container = this.calendarContainerRef.current as HTMLDivElement;
 
     const gridsContainer = container.querySelector(
       '.gridsContainer',
@@ -828,8 +821,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     this.updateDropzones(minDay, maxDay);
   }
 
-  public jumpToDay(dayIndex: number) {
-    const targetDate = this.monthStartDate.clone().date(dayIndex);
+  public jumpToDay = (targetDate: IMoment) => {
     this.currentLeftColumnIndex = 0;
     this.props.removeDays(0, daysStore.days.length);
 
@@ -851,6 +843,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
             this.updateScroll(true);
             this.updateVisibility();
             setTimeout(() => (this.instantRender.value = false));
+
+            this.updateCurrentDayData();
           });
         });
       },
@@ -867,7 +861,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     gridsContainer.scrollLeft = 0;
     timeRowsContainer.scrollLeft = 0;
-  }
+  };
 
   public updateDaysWidth() {
     const dayWidth = this.calcDaysWidth();
@@ -928,24 +922,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
               visibility: !this.state.firstLoad ? 'visible' : 'hidden',
             }}
           >
-            <ReactCSSTransitionReplace
-              transitionName="cross-fade"
-              transitionEnterTimeout={1000}
-              transitionLeaveTimeout={1000}
-              style={{ width: '100%' }}
-            >
-              <div key={this.monthStartDate.format('MM')}>
-                <MonthRow
-                  monthDate={this.monthStartDate}
-                  dayJumpCallback={this.jumpToDayHandler}
-                />
-                <DateRow
-                  choosenDay={this.currentDay}
-                  dayJumpCallback={this.jumpToDayHandler}
-                  visitsPerDay={daysStore.visitsPerDay}
-                />
-              </div>
-            </ReactCSSTransitionReplace>
+            <DateRow
+              dayJumpCallback={this.jumpToDay}
+              visitsPerDay={daysStore.visitsPerDay}
+            />
             <div className="stickyWrapper">
               <div className="viewPortContainer">
                 <div className="scrollingContainer">
@@ -1017,6 +997,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
+        this.updateScreenSize();
+
         this.updateColumnsCount();
         this.updateDaysWidth();
         this.updateScroll(true);
@@ -1032,6 +1014,10 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         this.renderAllDays();
       }, boundTime);
     });
+  }
+
+  private updateScreenSize() {
+    rootStore.uiStore.setScreenWidth(window.innerWidth);
   }
 
   private startScrollHandling(

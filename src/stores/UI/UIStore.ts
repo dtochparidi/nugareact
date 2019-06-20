@@ -1,6 +1,7 @@
 import { action, computed, observable } from 'mobx';
 import * as Moment from 'moment';
 import { DateRange, extendMoment } from 'moment-range';
+import { Moment as IMoment } from 'moment';
 
 const moment = extendMoment(Moment);
 
@@ -14,6 +15,14 @@ export default class UIStore {
   public positionCount: number = 25;
   @observable
   public fastMode: boolean = false;
+  @observable
+  public screenWidth: number = 0;
+  @observable
+  public currentDay: IMoment = moment();
+  @observable
+  public leftBorderDay: IMoment = moment();
+  @observable
+  public rightBorderDay: IMoment = moment();
   @observable
   public isScrolling: boolean = false;
   public isScrollingUnbinded: boolean = false;
@@ -47,6 +56,22 @@ export default class UIStore {
   @action
   public setFastMode(enabled: boolean) {
     this.fastMode = enabled;
+  }
+
+  @action
+  public setCurrentDay(day: IMoment) {
+    this.currentDay = day;
+  }
+
+  @action
+  public setBorderDays(leftDay: IMoment, rightDay: IMoment) {
+    this.leftBorderDay = leftDay;
+    this.rightBorderDay = rightDay;
+  }
+
+  @action
+  public setScreenWidth(width: number) {
+    this.screenWidth = width;
   }
 
   @action
