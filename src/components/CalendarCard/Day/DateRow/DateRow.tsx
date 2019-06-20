@@ -6,14 +6,17 @@ import CalendarDay from 'structures/CalendarDay';
 import * as interact from 'levabala_interactjs';
 
 import './DateRow.scss';
-import moize, { collectStats } from 'moize';
+import moize from 'moize';
 
-collectStats();
+console.log('asd');
+// import moize, { collectStats } from 'moize';
 
-setInterval(() => {
-  console.log(moize.getStats('dayGenerator'));
-  console.log(compares);
-}, 1500);
+// collectStats();
+
+// setInterval(() => {
+//   console.log(moize.getStats('dayGenerator'));
+//   console.log(compares);
+// }, 1500);
 
 export interface IProps {
   choosenDay: IMoment;
@@ -33,7 +36,7 @@ interface IDayGeneratorArgs {
   monthStartDate: IMoment;
 }
 
-let compares = 0;
+// let compares = 0;
 
 @observer
 export default class DateRow extends React.Component<IProps, IState> {
@@ -69,7 +72,7 @@ export default class DateRow extends React.Component<IProps, IState> {
     },
     {
       equals: (prevArgs: IDayGeneratorArgs, nowArgs: IDayGeneratorArgs) => {
-        compares++;
+        // compares++;
         const equal =
           prevArgs.i === nowArgs.i &&
           prevArgs.visitsPerDay === nowArgs.visitsPerDay &&
@@ -151,6 +154,11 @@ export default class DateRow extends React.Component<IProps, IState> {
       }, {});
 
     const { leftBorder, rightBorder } = this.state;
+    console.log(
+      leftBorder.format('DD:MM:YYYY'),
+      rightBorder.format('DD:MM:YYYY'),
+      'asd',
+    );
     const daysCount = rightBorder.diff(leftBorder, 'days');
     console.log('daysCount:', daysCount);
 
