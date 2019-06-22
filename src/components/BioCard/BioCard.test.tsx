@@ -36,4 +36,4 @@
 //   expect(component);
 // });
 
-it('test-filler', () => expect(true));
+it('test-filler', () => undefined);
