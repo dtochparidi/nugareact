@@ -12,7 +12,7 @@ export default function allInScenario() {
   function a() {
     addAppsScenario(random(5, 0));
     setTimeout(
-      () => lazyTaskManager.addTask(new LazyTask(a)),
+      () => lazyTaskManager.addTask(new LazyTask({func: a})),
       random(300, 900),
     );
   }
@@ -20,7 +20,7 @@ export default function allInScenario() {
   function b() {
     removeAppsScenario(random(0.2, 0.05));
     setTimeout(
-      () => lazyTaskManager.addTask(new LazyTask(b)),
+      () => lazyTaskManager.addTask(new LazyTask({func: b})),
       random(1000, 2500),
     );
   }
@@ -28,7 +28,7 @@ export default function allInScenario() {
   function c() {
     changePersonsScenario(random(0.1, 0.01));
     setTimeout(
-      () => lazyTaskManager.addTask(new LazyTask(c)),
+      () => lazyTaskManager.addTask(new LazyTask({func: c})),
       random(500, 1500),
     );
   }

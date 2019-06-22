@@ -39,13 +39,19 @@ export default class CalendarDayStore {
       await Promise.all(
         this.days.map(async day => {
           await lazyTaskManager.addTask(
-            new LazyTask(async () => {
-              const apps = await this.loadDayApps(day);
-              await lazyTaskManager.addTask(
-                new LazyTask(async () => {
-                  day.mergeAppointments(apps, true);
-                }),
-              );
+            new LazyTask({
+              func: async () => {
+                const apps = await this.loadDayApps(day);
+                await lazyTaskManager.addTask(
+                  new LazyTask({
+                    func: async () => {
+                      day.mergeAppointments(apps, true);
+                    },
+                    taskName: 'mergeAppointments',
+                  }),
+                );
+              },
+              taskName: 'loadDayApps',
             }),
           );
         }),
@@ -233,40 +239,44 @@ export default class CalendarDayStore {
   };
 
   private async loadDayApps(day: CalendarDay) {
+    // console.log('loadDay', day.date.format('DD:MM'));
     const data = await fetchDay(day.date);
     const { personStore } = this.rootStore.domainStore;
 
     const promises = Object.values(data.appointments).map(
       async app =>
         await lazyTaskManager.addTask(
-          new LazyTask(() => {
-            if (!app) throw Error('app is undefined');
+          new LazyTask({
+            func: () => {
+              if (!app) throw Error('app is undefined');
 
-            // check if the same app already exists
-            if (
-              day.id in this.daysMap &&
-              app.uniqueId in this.daysMap[day.id].appointments &&
-              app.stateHash ===
-                this.daysMap[day.id].appointments[app.uniqueId].stateHash
-            )
-              return this.daysMap[day.id].appointments[app.uniqueId];
+              // check if the same app already exists
+              if (
+                day.id in this.daysMap &&
+                app.uniqueId in this.daysMap[day.id].appointments &&
+                app.stateHash ===
+                  this.daysMap[day.id].appointments[app.uniqueId].stateHash
+              )
+                return this.daysMap[day.id].appointments[app.uniqueId];
 
-            const person =
-              app.personId in personStore.persons
-                ? personStore.persons[app.personId]
-                : personStore.loadPerson(app.personId);
+              const person =
+                app.personId in personStore.persons
+                  ? personStore.persons[app.personId]
+                  : personStore.loadPerson(app.personId);
 
-            return new Appointment({
-              date: app.date,
-              duration: app.duration,
-              personId: app.personId,
-              personInstance: person,
-              points: app.points,
-              position: app.position,
-              stateHash: app.stateHash,
-              uniqueId: app.uniqueId,
-              visits: app.visits,
-            });
+              return new Appointment({
+                date: app.date,
+                duration: app.duration,
+                personId: app.personId,
+                personInstance: person,
+                points: app.points,
+                position: app.position,
+                stateHash: app.stateHash,
+                uniqueId: app.uniqueId,
+                visits: app.visits,
+              });
+            },
+            taskName: 'loadAppIn',
           }),
         ),
     );

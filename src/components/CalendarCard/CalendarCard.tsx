@@ -689,10 +689,11 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     setTimeout(() =>
       lazyTaskManager.addTask(
-        new LazyTask(
-          () => rootStore.domainStore.calendarDayStore.loadVisitsPerDay(),
-          10,
-        ),
+        new LazyTask({
+          func: () => rootStore.domainStore.calendarDayStore.loadVisitsPerDay(),
+          priority: 10,
+          taskName: 'loadVisitsPerDay',
+        }),
       ),
     );
     rootStore.uiStore.setCurrentDay(daysStore.days[dayIndex].date);

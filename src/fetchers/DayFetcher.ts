@@ -99,21 +99,28 @@ export async function generateAppointments(
   };
 
   const generatedApps: IAppointment[] = await Promise.all(
-    new Array(count)
-      .fill(null)
-      .map(
-        async () => await lazyTaskManager.addTask(new LazyTask(generateApp)),
-      ),
+    new Array(count).fill(null).map(
+      async () =>
+        await lazyTaskManager.addTask(
+          new LazyTask({
+            func: generateApp,
+            priority: 5,
+            taskName: 'generateIAppointment',
+          }),
+        ),
+    ),
   );
 
-  const finalTask = new LazyTask(() =>
-    generatedApps
-      .filter(app => app !== null)
-      .reduce((acc, app: IAppointment) => {
-        acc[app.uniqueId] = app;
-        return acc;
-      }, {}),
-  );
+  const finalTask = new LazyTask({
+    func: () =>
+      generatedApps
+        .filter(app => app !== null)
+        .reduce((acc, app: IAppointment) => {
+          acc[app.uniqueId] = app;
+          return acc;
+        }, {}),
+    taskName: 'reduceApps',
+  });
 
   const data: {
     [uniqueId: string]: IAppointment;
@@ -142,13 +149,13 @@ async function generateDataAboutMonth(date: IMoment): Promise<void> {
       .fill(null)
       .map(
         (val, i) =>
-          new LazyTask(
-            () => fetchDayFromServer(date.clone().date(i)),
-            0,
-            () => rootStore.uiStore.firstLoadDone,
-            undefined,
-            true,
-          ),
+          new LazyTask({
+            condition: () => rootStore.uiStore.firstLoadDone,
+            func: () => fetchDayFromServer(date.clone().date(i)),
+            onePerTick: true,
+            priority: 0,
+            taskName: 'fetchDayFromServer',
+          }),
       )
       .map(task => lazyTaskManager.addTask(task)),
   );

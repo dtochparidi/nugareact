@@ -17,6 +17,7 @@ import Appointment from 'structures/Appointment';
 import CalendarDay from 'structures/CalendarDay';
 
 import AppointmentCell from './AppointmentCell';
+import { IAppointmentCellProps } from './AppointmentCell';
 
 import './AppointmentCell/AppointmentCell.scss';
 import { AppsBlock } from '.';
@@ -51,7 +52,7 @@ export interface IState {
   stateIndex: number;
 }
 
-const MAX_CHUNK_APPS_COUNT = 5;
+const MAX_CHUNK_APPS_COUNT = 50;
 
 @observer
 export default class Day extends React.Component<IProps, IState> {
@@ -61,7 +62,13 @@ export default class Day extends React.Component<IProps, IState> {
   @observable
   public appsChunkStates: { [key: number]: number } = {};
   @observable
-  public appsChunks: { [key: number]: [JSX.Element[], string] } = {};
+  public chunks: {
+    [key: number]: {
+      apps: { [uniqueI: string]: { element: JSX.Element; stateHash: string } };
+      chunkInfo: { chunkHash: string; chunkId: number };
+    };
+  } = {};
+  public appsToChunksIds: { [uniqueId: string]: number } = {};
 
   public dayElemRef = React.createRef<HTMLDivElement>();
   public visibility = false;
@@ -147,6 +154,8 @@ export default class Day extends React.Component<IProps, IState> {
     this.state = {
       stateIndex: 0,
     };
+
+    // console.log(this.chunks);
   }
 
   public generateAppElement({
@@ -229,20 +238,20 @@ export default class Day extends React.Component<IProps, IState> {
     else
       Object.values(dayData.appointments).forEach(app => {
         lazyTaskManager.addTask(
-          new LazyTask(
-            () => {
-              runInAction(() => {
-                this.displayMap[app.uniqueId].value = true;
-              });
-            },
-            undefined,
-            () =>
+          new LazyTask({
+            condition: () =>
               !!this.dayElemRef.current &&
               !(this.dayElemRef.current as HTMLDivElement).classList.contains(
                 'hidden',
               ),
-            () => !this.dayElemRef.current,
-          ),
+            destructer: () => !this.dayElemRef.current,
+            func: () => {
+              runInAction(() => {
+                this.displayMap[app.uniqueId].value = true;
+              });
+            },
+            taskName: 'makeAppsVisible',
+          }),
           false,
         );
       });
@@ -335,43 +344,79 @@ export default class Day extends React.Component<IProps, IState> {
 
       lazyTaskManager.addFunc(() => {
         const elements = newApps.map(([_, element]) => element);
-        const chunks = elements
-          .sort((a, b) => (a.key as string).localeCompare(b.key as string))
-          .reduce(
-            (acc: JSX.Element[][], val: JSX.Element) => {
-              if (acc[acc.length - 1].length > MAX_CHUNK_APPS_COUNT)
-                acc.push([]);
 
-              const actualChunk = acc[acc.length - 1];
-              actualChunk.push(val);
+        const previousChunksCount = Object.keys(this.chunks).length;
 
-              return acc;
-            },
-            [[]],
-          );
+        const elementsGroups = elements.reduce(
+          (acc: JSX.Element[][], val) => {
+            if (acc[acc.length - 1].length > MAX_CHUNK_APPS_COUNT) acc.push([]);
 
-        const previousChunksCount = Object.keys(this.appsChunks).length;
+            acc[acc.length - 1].push(val);
+            return acc;
+          },
+          [[]],
+        );
 
-        // TODO:
-        // make chunks associated with appointment groups
-
-        chunks.reverse().forEach((chunk, i) => {
+        elementsGroups.forEach(group => {
           lazyTaskManager.addFunc(() =>
-            runInAction(() => {
+            runInAction(() =>
               transaction(() => {
-                this.appsChunks[i] = [
-                  chunk,
-                  chunk
-                    .map(el => el.key)
-                    .sort((a, b) => (a as string).localeCompare(b as string))
-                    .join(),
-                ];
-              });
-            }),
+                group.forEach(el => {
+                  const key = el.key as string;
+                  const chunk =
+                    (this.appsToChunksIds[key] &&
+                      this.chunks[this.appsToChunksIds[key]]) ||
+                    Object.values(this.chunks).find(
+                      c => Object.keys(c.apps).length < MAX_CHUNK_APPS_COUNT,
+                    ) ||
+                    (this.chunks[Object.keys(this.chunks).length] = {
+                      apps: {},
+                      chunkInfo: {
+                        chunkHash: '',
+                        chunkId: Object.keys(this.chunks).length,
+                      },
+                    });
+
+                  const {
+                    apps: chunkApps,
+                    chunkInfo: { chunkId },
+                  } = chunk;
+                  if (!(key in chunkApps)) {
+                    this.appsToChunksIds[key] = chunkId;
+                    chunkApps[key] = {
+                      element: el,
+                      stateHash: (el.props as IAppointmentCellProps).appointment
+                        .stateHash,
+                    };
+                    chunk.chunkInfo.chunkHash += key;
+
+                    console.log('append new app');
+                  } else {
+                    const currentStateHash = (el.props as IAppointmentCellProps)
+                      .appointment.stateHash;
+                    const recordedStateHash = chunkApps[key].stateHash;
+
+                    if (currentStateHash !== recordedStateHash) {
+                      console.log('stateHash diff => replacing');
+                      chunkApps[key] = {
+                        element: el,
+                        stateHash: (el.props as IAppointmentCellProps)
+                          .appointment.stateHash,
+                      };
+                      chunk.chunkInfo.chunkHash = Object.values(chunk.apps)
+                        .map(({ element }) => element.key)
+                        .join('');
+                    }
+                  }
+                });
+              }),
+            ),
           );
         });
 
-        if (previousChunksCount !== Object.keys(this.appsChunks).length)
+        // TODO: delete removed Apps from AppsBlocks
+
+        if (previousChunksCount !== Object.keys(this.chunks).length)
           this.setState({ stateIndex: this.state.stateIndex + 1 });
 
         if (this.props.visibilityStore.isVisible(this.props.dayData.id))
@@ -390,7 +435,12 @@ export default class Day extends React.Component<IProps, IState> {
     if (instant) func();
     else
       lazyTaskManager.addTask(
-        new LazyTask(func, undefined, this.mountCondition, this.mountCondition),
+        new LazyTask({
+          condition: this.mountCondition,
+          destructer: this.mountCondition,
+          func,
+          taskName: 'generateAppointments',
+        }),
         true,
       );
 
@@ -414,9 +464,15 @@ export default class Day extends React.Component<IProps, IState> {
         ref={this.dayElemRef}
       >
         <div className="day">
-          {Object.values(this.appsChunks).map(([apps, hash], i) => (
-            <AppsBlock key={i} apps={apps} hash={hash} />
-          ))}{' '}
+          {Object.values(this.chunks).map(
+            ({ apps, chunkInfo: { chunkHash } }, i) => (
+              <AppsBlock
+                key={i}
+                apps={Object.values(apps).map(({ element }) => element)}
+                hash={chunkHash}
+              />
+            ),
+          )}{' '}
         </div>
       </div>
     );

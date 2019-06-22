@@ -5,7 +5,7 @@ import LazyWidget from 'lazytask-widget/lib';
 import { observer } from 'mobx-react';
 import { configureDevtool } from 'mobx-react-devtools';
 import * as React from 'react';
-import modifyPersonsScenario from 'scenarios/modifyPersonsScenario';
+// import modifyPersonsScenario from 'scenarios/modifyPersonsScenario';
 
 import CalendarCard from './components/CalendarCard';
 import currentVersion from './CurrentVersion.json';
@@ -21,9 +21,9 @@ import 'scenarios/scenariosPackage';
 // import versions from './versions';
 
 // import ControlWindow from 'components/ControlWindow';
-function random(to: number, from: number = 0) {
-  return Math.floor(Math.random() * (to - from)) + from;
-}
+// function random(to: number, from: number = 0) {
+//   return Math.floor(Math.random() * (to - from)) + from;
+// }
 
 function noop() {
   //
@@ -51,6 +51,7 @@ const { uiStore } = rootStore;
 if (clientSide) {
   (window as any).lockVisibility = false;
   (window as any).rootStore = rootStore;
+  (window as any).lazyTaskManager = lazyTaskManager;
 
   // checking for updates
   // versionName = Cookies.get('version');
@@ -81,17 +82,17 @@ class App extends React.Component {
     personStore.setCurrentUser('000');
   }
 
-  public componentDidMount() {
-    function a() {
-      modifyPersonsScenario(0.1);
-    }
-    (function b() {
-      setTimeout(async () => {
-        await lazyTaskManager.addFunc(a);
-        b();
-      }, random(700, 1500));
-    })();
-  }
+  // public componentDidMount() {
+  //   function a() {
+  //     modifyPersonsScenario(0.1);
+  //   }
+  //   (function b() {
+  //     setTimeout(async () => {
+  //       await lazyTaskManager.addFunc(a);
+  //       b();
+  //     }, random(700, 1500));
+  //   })();
+  // }
 
   public render() {
     return (

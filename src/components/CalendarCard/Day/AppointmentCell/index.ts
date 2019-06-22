@@ -1,1 +1,1 @@
-export { default } from './AppointmentCell';
+export { default, IProps as IAppointmentCellProps } from './AppointmentCell';

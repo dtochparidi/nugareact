@@ -148,7 +148,10 @@ export default class GridP extends React.Component<IProps, IState> {
     };
 
     if (this.props.instantRender) func();
-    else lazyTaskManager.addTask(new LazyTask(func, 5));
+    else
+      lazyTaskManager.addTask(
+        new LazyTask({ func, priority: 5, taskName: 'initWebGLRenderer' }),
+      );
 
     ((window as any).pixiRenderers = (window as any).pixiRenderers || []).push(
       this.renderer,
