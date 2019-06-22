@@ -1,5 +1,5 @@
 import fetchDay from 'fetchers/DayFetcher';
-import IAppointment from 'interfaces/IAppointment';
+// import IAppointment from 'interfaces/IAppointment';
 import IUpdateAppFunction from 'interfaces/IUpdateAppFunction';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
 import { action, observable } from 'mobx';
@@ -237,34 +237,38 @@ export default class CalendarDayStore {
     const { personStore } = this.rootStore.domainStore;
 
     const promises = Object.values(data.appointments).map(
-      async (app: IAppointment): Promise<Appointment> => {
-        if (!app) throw Error('app is undefined');
+      async app =>
+        await lazyTaskManager.addTask(
+          new LazyTask(() => {
+            if (!app) throw Error('app is undefined');
 
-        // check if the same app already exists
-        if (
-          day.id in this.daysMap &&
-          app.uniqueId in this.daysMap[day.id].appointments &&
-          app.stateHash ===
-            this.daysMap[day.id].appointments[app.uniqueId].stateHash
-        )
-          return this.daysMap[day.id].appointments[app.uniqueId];
+            // check if the same app already exists
+            if (
+              day.id in this.daysMap &&
+              app.uniqueId in this.daysMap[day.id].appointments &&
+              app.stateHash ===
+                this.daysMap[day.id].appointments[app.uniqueId].stateHash
+            )
+              return this.daysMap[day.id].appointments[app.uniqueId];
 
-        const person =
-          app.personId in personStore.persons
-            ? personStore.persons[app.personId]
-            : personStore.loadPerson(app.personId);
-        return new Appointment({
-          date: app.date,
-          duration: app.duration,
-          personId: app.personId,
-          personInstance: person,
-          points: app.points,
-          position: app.position,
-          stateHash: app.stateHash,
-          uniqueId: app.uniqueId,
-          visits: app.visits,
-        });
-      },
+            const person =
+              app.personId in personStore.persons
+                ? personStore.persons[app.personId]
+                : personStore.loadPerson(app.personId);
+
+            return new Appointment({
+              date: app.date,
+              duration: app.duration,
+              personId: app.personId,
+              personInstance: person,
+              points: app.points,
+              position: app.position,
+              stateHash: app.stateHash,
+              uniqueId: app.uniqueId,
+              visits: app.visits,
+            });
+          }),
+        ),
     );
 
     return await Promise.all(promises);

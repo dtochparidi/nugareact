@@ -9,7 +9,7 @@ $calendar-cell-height: 70px * $scale;
 $calendar-cell-width-min: 400px * $scale;
 $time-row-height: $calendar-cell-height * 2 / 3;
 $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
-  $monthRow-margin-top + $monthRow-margin-bottom + $dateRow-padding * 2 +
+  $monthRow-margin-top + $monthRow-margin-bottom * 2 + $dateRow-padding * 2 +
   $thin-width;
 
 :export {
@@ -58,7 +58,8 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
 
   .rightColumn {
     position: absolute;
-    top: $top-row-height - $time-row-height - $dateRow-height;
+    top: $top-row-height - $time-row-height - $dateRow-height -
+      $monthRow-margin-bottom;
     right: 0;
     height: calc(100% - #{$top-row-height - $calendar-cell-height});
 
@@ -148,6 +149,7 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
               z-index: 101;
 
               height: $time-row-height;
+              margin-top: $monthRow-margin-bottom;
 
               overflow: hidden;
 
@@ -239,6 +241,12 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
             width: 100%;
 
             grid-template-rows: auto;
+
+            .appsBlock {
+              position: absolute;
+              left: 0;
+              top: 0;
+            }
 
             .grid {
               display: grid;

@@ -1,7 +1,13 @@
 import { LazyTask } from '@levabala/lazytask/build/dist';
 import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
 import IUpdateAppFunction from 'interfaces/IUpdateAppFunction';
-import { IReactionDisposer, observable, reaction, runInAction } from 'mobx';
+import {
+  IReactionDisposer,
+  observable,
+  reaction,
+  runInAction,
+  transaction,
+} from 'mobx';
 import { observer } from 'mobx-react';
 import moize from 'moize';
 import * as moment from 'moment';
@@ -13,6 +19,7 @@ import CalendarDay from 'structures/CalendarDay';
 import AppointmentCell from './AppointmentCell';
 
 import './AppointmentCell/AppointmentCell.scss';
+import { AppsBlock } from '.';
 
 const renderCounts = {};
 
@@ -41,14 +48,20 @@ export interface IProps {
 }
 
 export interface IState {
-  apps: JSX.Element[];
   stateIndex: number;
 }
+
+const MAX_CHUNK_APPS_COUNT = 5;
 
 @observer
 export default class Day extends React.Component<IProps, IState> {
   @observable
   public displayMap: { [key: string]: { value: boolean } } = {};
+
+  @observable
+  public appsChunkStates: { [key: number]: number } = {};
+  @observable
+  public appsChunks: { [key: number]: [JSX.Element[], string] } = {};
 
   public dayElemRef = React.createRef<HTMLDivElement>();
   public visibility = false;
@@ -132,7 +145,6 @@ export default class Day extends React.Component<IProps, IState> {
     this.reactions = [r1, r2];
 
     this.state = {
-      apps: [],
       stateIndex: 0,
     };
   }
@@ -320,14 +332,53 @@ export default class Day extends React.Component<IProps, IState> {
       this.appsCountIndex += +(this.lastAppsCount !== apps.length);
 
       if (this.appElementsStateIndex === stateIndexBefore) return;
-      
-      const elements = newApps.map(([_, element]) => element);
-      this.setState({ apps: elements, stateIndex: this.state.stateIndex + 1 });
 
-      if (this.props.visibilityStore.isVisible(this.props.dayData.id))
-        this.turnOnVisibility(instant);
+      lazyTaskManager.addFunc(() => {
+        const elements = newApps.map(([_, element]) => element);
+        const chunks = elements
+          .sort((a, b) => (a.key as string).localeCompare(b.key as string))
+          .reduce(
+            (acc: JSX.Element[][], val: JSX.Element) => {
+              if (acc[acc.length - 1].length > MAX_CHUNK_APPS_COUNT)
+                acc.push([]);
 
-      this.lastAppsCount = apps.length;
+              const actualChunk = acc[acc.length - 1];
+              actualChunk.push(val);
+
+              return acc;
+            },
+            [[]],
+          );
+
+        const previousChunksCount = Object.keys(this.appsChunks).length;
+
+        // TODO:
+        // make chunks associated with appointment groups
+
+        chunks.reverse().forEach((chunk, i) => {
+          lazyTaskManager.addFunc(() =>
+            runInAction(() => {
+              transaction(() => {
+                this.appsChunks[i] = [
+                  chunk,
+                  chunk
+                    .map(el => el.key)
+                    .sort((a, b) => (a as string).localeCompare(b as string))
+                    .join(),
+                ];
+              });
+            }),
+          );
+        });
+
+        if (previousChunksCount !== Object.keys(this.appsChunks).length)
+          this.setState({ stateIndex: this.state.stateIndex + 1 });
+
+        if (this.props.visibilityStore.isVisible(this.props.dayData.id))
+          this.turnOnVisibility(instant);
+
+        this.lastAppsCount = apps.length;
+      });
 
       performance.measure(
         markPrefix,
@@ -362,7 +413,11 @@ export default class Day extends React.Component<IProps, IState> {
         id={`${dayData.id}`}
         ref={this.dayElemRef}
       >
-        <div className="day">{this.state.apps}</div>
+        <div className="day">
+          {Object.values(this.appsChunks).map(([apps, hash], i) => (
+            <AppsBlock key={i} apps={apps} hash={hash} />
+          ))}{' '}
+        </div>
       </div>
     );
   }
