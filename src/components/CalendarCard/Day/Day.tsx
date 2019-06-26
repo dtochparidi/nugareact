@@ -53,7 +53,6 @@ export interface IState {
 }
 
 const MAX_CHUNK_APPS_COUNT = 50;
-let index = 0;
 
 @observer
 export default class Day extends React.Component<IProps, IState> {
@@ -77,8 +76,6 @@ export default class Day extends React.Component<IProps, IState> {
   private reactions: IReactionDisposer[] = [];
   private unmounted = false;
   private lastAppsCount = 0;
-
-  private index = index++;
 
   private generateAppElementMoized = moize(this.generateAppElement, {
     equals: (
@@ -159,8 +156,6 @@ export default class Day extends React.Component<IProps, IState> {
     this.state = {
       stateIndex: 0,
     };
-
-    // console.log(this.chunks);
   }
 
   public findChunkDublicates() {
@@ -168,8 +163,6 @@ export default class Day extends React.Component<IProps, IState> {
       .map(chunk => Object.values(chunk.apps).map(app => app.element.key))
       .flat();
     const set = new Set(keys);
-
-    console.log(keys);
 
     return keys.length - set.size;
   }
@@ -356,12 +349,6 @@ export default class Day extends React.Component<IProps, IState> {
       this.lastDayStateIndex = dayData.stateIndex;
       this.appsCountIndex += +(this.lastAppsCount !== apps.length);
 
-      console.log(
-        stateIndexBefore,
-        '->',
-        this.appElementsStateIndex,
-        this.index,
-      );
       if (this.appElementsStateIndex === stateIndexBefore) return;
 
       const processApps = () => {
@@ -431,7 +418,6 @@ export default class Day extends React.Component<IProps, IState> {
                     chunk.apps[app.key as string].stateHash;
 
                   if (currentStateHash !== recordedStateHash) {
-                    console.log('stateHash diff => replacing');
                     chunk.apps[app.key as string] = {
                       element: app,
                       stateHash: (app.props as IAppointmentCellProps)
@@ -456,8 +442,6 @@ export default class Day extends React.Component<IProps, IState> {
             uniqueId => !elements.find(el => el.key === uniqueId),
           );
 
-          console.log(removedElements, this.index);
-
           runInAction(() =>
             transaction(() =>
               removedElements.forEach(key => {
@@ -472,7 +456,6 @@ export default class Day extends React.Component<IProps, IState> {
           );
         };
 
-        console.log(promizes, this.index);
         const removeAppsFunc = () =>
           instant ? removeApps() : lazyTaskManager.addFunc(removeApps);
 

@@ -179,7 +179,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
   public onAppointmentDraggingStart(e: interact.InteractEvent) {
     const appCell = e.target as Element;
-    ((appCell.parentNode as Element).parentNode as Element).classList.add(
+    (((appCell.parentNode as Element).parentNode as Element).parentNode as Element).classList.add(
       'dragOrigin',
     );
 
@@ -187,10 +187,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
   }
 
   public onAppointmentDraggingEnd(e: interact.InteractEvent) {
-    const appCell = ((e.target as Element).parentNode as Element)
-      .parentNode as Element;
-    ((((appCell.parentNode as Element).parentNode as Element)
-      .parentNode as Element).parentNode as Element).classList.remove(
+    const appCell = e.target as Element;
+    (((appCell.parentNode as Element).parentNode as Element).parentNode as Element).classList.remove(
       'dragOrigin',
     );
   }

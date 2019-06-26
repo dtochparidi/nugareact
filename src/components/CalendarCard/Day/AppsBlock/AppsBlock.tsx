@@ -7,13 +7,13 @@ export interface IProps {
 }
 
 export default class AppsBlock extends React.Component<IProps> {
-  public componentDidMount() {
-    console.log('AppsBlock mounted', this.props.index);
-  }
+  // public componentDidMount() {
+  //   console.log('AppsBlock mounted', this.props.index);
+  // }
 
-  public componentDidUpdate() {
-    console.log('appsblock updated', this.props.index);
-  }
+  // public componentDidUpdate() {
+  //   console.log('appsblock updated', this.props.index);
+  // }
 
   public shouldComponentUpdate(prevProps: IProps) {
     const notEqual = prevProps.hash !== this.props.hash;

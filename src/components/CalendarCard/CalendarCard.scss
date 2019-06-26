@@ -216,6 +216,8 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
         right: 0;
         top: 0;
 
+        will-change: scroll-position;
+
         .dayWrapper {
           --columns-count: 6;
 
@@ -310,6 +312,8 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
       .gridsContainer {
         width: 100%;
         overflow: hidden;
+
+        will-change: scroll-position;
       }
     }
   }
