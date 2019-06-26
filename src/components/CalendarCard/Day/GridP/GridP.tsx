@@ -5,7 +5,6 @@ import * as PIXI from 'pixi.js';
 import * as React from 'react';
 import rootStore from 'stores/RootStore';
 import * as CardVariables from '../../CalendarCard.scss';
-import { setPriority } from 'os';
 
 const positionsColumnGapHeight = parseFloat(
   CardVariables.positionsColumnGapHeight,
@@ -83,34 +82,48 @@ const generateGraphicsTextured = moize(
     const lineSegmentWidth = Math.min(width, width / segmentsHorizontalCount);
     const lineSegmentHeight = Math.min(height, height / segmentsVerticalCount);
 
-    const lineVerticalTexture = generateLineTexture(0, lineSegmentHeight);
+    // const lineVerticalTexture = generateLineTexture(0, lineSegmentHeight);
     const lineHorizontalTexture = generateLineTexture(lineSegmentWidth, 0);
 
     const segmentsVerticalTextures = rootStore.uiStore.positionGaps
+      .concat([rows])
       .map((v, i, arr) => {
-        const last = i === 0 ? 0 : v - arr[i];
+        const last = i === 0 ? -1 : arr[i - 1];
         const step = v - last;
 
-        const stepCounts = Math.ceil(step / maxLineSegmentLength);
-        return new Array(stepCounts).fill(null);
-
-        const texture = generateLineTexture(0, step * cellHeight);
-        texture.defaultAnchor.set(0, last * cellHeight);
-
-        return texture;
+        const stepHeight = step * cellHeight;
+        const stepCounts = Math.ceil(stepHeight / lineSegmentHeight);
+        return new Array(stepCounts).fill(null).map((_, stepIndex, steps) => {
+          const textureHeight =
+            stepIndex === steps.length - 1
+              ? stepHeight % lineSegmentHeight
+              : maxLineSegmentLength;
+          const texture = generateLineTexture(0, textureHeight);
+          const y = (arr[i - 1] + i + 1 || 0) * cellHeight;
+          return [texture, y];
+        });
       })
       .flat();
 
     // main grid
     const sprites: PIXI.Sprite[] = [];
     for (let x = 0; x < cols; x++)
-      for (let s = 0; s < segmentsVerticalCount; s++) {
-        const sprite = new PIXI.Sprite(lineVerticalTexture);
-        sprite.x = cellWidth * x;
-        sprite.y = s * lineSegmentHeight;
+      segmentsVerticalTextures.forEach(
+        ([texture, y]: [PIXI.Texture, number]) => {
+          const sprite = new PIXI.Sprite(texture);
+          sprite.x = cellWidth * x;
+          sprite.y = y;
 
-        sprites.push(sprite);
-      }
+          sprites.push(sprite);
+        },
+      );
+    // for (let s = 0; s < segmentsVerticalCount; s++) {
+    //   const sprite = new PIXI.Sprite(lineVerticalTexture);
+    //   sprite.x = cellWidth * x;
+    //   sprite.y = s * lineSegmentHeight;
+
+    //   sprites.push(sprite);
+    // }
 
     let lastGapIndex = 0;
     for (let y = 0; y < rows; y++) {

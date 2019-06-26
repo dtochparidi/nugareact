@@ -8,6 +8,8 @@ import CalendarDay from 'structures/CalendarDay';
 
 import CalendarCard from '..';
 import { freePlaceToDrop } from './freePlaceToDrop';
+import rootStore from 'stores/RootStore';
+// import rootStore from 'stores/RootStore';
 
 const moment = extendMoment(Moment);
 
@@ -25,10 +27,24 @@ function getPositionByRelativePosition(
   y: number,
   height: number,
   min: number,
-  max: number,
+  positionsCount: number,
 ) {
   const coeff = y / height;
-  return Math.floor(min + (max - min) * coeff);
+  const maxPositions = positionsCount + rootStore.uiStore.positionGaps.length;
+  const position = Math.floor(min + (maxPositions - min) * coeff);
+
+  const gapsPast = Math.max(
+    rootStore.uiStore.positionGaps
+      .concat([positionsCount])
+      .findIndex((g, i) => g + i + 1 > position),
+    0,
+  );
+
+  const realPosition = position - gapsPast;
+
+  // console.log(y, '->', realPosition, gapsPast);
+
+  return realPosition;
 }
 
 function getInfo(

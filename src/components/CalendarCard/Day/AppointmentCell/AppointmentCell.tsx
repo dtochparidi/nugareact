@@ -6,8 +6,13 @@ import * as moment from 'moment';
 import * as React from 'react';
 import rootStore from 'stores/RootStore';
 
+import * as CardVariables from '../../CalendarCard.scss';
 import * as StyleVariables from '../../../../common/variables.scss';
 import Appointment from '../../../../structures/Appointment';
+
+const positionsColumnGapHeight = parseFloat(
+  CardVariables.positionsColumnGapHeight,
+);
 
 import './AppointmentCell.scss';
 
@@ -107,6 +112,7 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
       overlapping,
       visits,
       points,
+      position,
     } = this.props.appointment;
 
     const { isDisplaying } = this.props;
@@ -126,9 +132,17 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     const coeffX = cellWidth * dx;
     const coeffY = cellHeight * dy;
 
+    const gapsPast = Math.max(
+      rootStore.uiStore.positionGaps.findIndex(g => g + 1 > position + dy),
+      0,
+    );
+
     translateX = (translateX || 0) + coeffX;
     translateY =
-      (translateY || 0) + coeffY + parseFloat(StyleVariables.thinWidth);
+      (translateY || 0) +
+      coeffY +
+      gapsPast * positionsColumnGapHeight +
+      parseFloat(StyleVariables.thinWidth);
 
     const translated = true;
 
