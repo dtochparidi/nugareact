@@ -71,7 +71,9 @@ const generateGraphicsTextured = moize(
     const container = new PIXI.Container();
 
     const cellWidth = width / cols;
-    const height = cellHeight * rows;
+    const height =
+      cellHeight * rows +
+      rootStore.uiStore.positionGaps.length * positionsColumnGapHeight;
     const yStep = cellHeight;
 
     const maxLineSegmentLength = 2000;
@@ -94,23 +96,40 @@ const generateGraphicsTextured = moize(
         sprites.push(sprite);
       }
 
-    let lastGapIndex = -1;
-    for (let y = 0; y < rows; y++)
+    const positionBlocks = rootStore.uiStore.positionGaps.map((v, i, arr) =>
+      i === 0 ? v + 1 : v - arr[i - 1],
+    );
+
+    const last =
+      rootStore.uiStore.positionGaps[rootStore.uiStore.positionGaps.length - 1];
+    if (last !== rows) positionBlocks.push(rows - last - 1);
+
+    console.log(positionBlocks);
+
+    let lastGapIndex = 0;
+    for (let y = 0; y < rows; y++) {
+      const gapExists = rootStore.uiStore.positionGaps.includes(y - 1);
+      lastGapIndex += gapExists ? 1 : 0;
+
       for (let s = 0; s < segmentsHorizontal; s++) {
         const sprite = new PIXI.Sprite(lineHorizontalTexture);
 
-        const gapIndex = rootStore.uiStore.positionGaps.indexOf(y);
-        if (gapIndex > lastGapIndex) lastGapIndex = gapIndex + 1;
-
-        console.log(lastGapIndex);
-
         sprite.x = s * lineSegmentWidth;
-        sprite.y =
-          yStep * y +
-          (lastGapIndex === -1 ? 0 : lastGapIndex) * positionsColumnGapHeight;
+        sprite.y = yStep * y + lastGapIndex * positionsColumnGapHeight;
 
         sprites.push(sprite);
+
+        if (gapExists) {
+          const gapSprite = new PIXI.Sprite(lineHorizontalTexture);
+
+          gapSprite.x = s * lineSegmentWidth;
+          gapSprite.y =
+            yStep * y + (lastGapIndex - 1) * positionsColumnGapHeight;
+
+          sprites.push(gapSprite);
+        }
       }
+    }
 
     // mark
     // const mark = new PIXI.Graphics();
@@ -189,7 +208,9 @@ export default class GridP extends React.Component<IProps, IState> {
 
   public updateSize() {
     const { width } = this.props;
-    const height = this.props.cellHeight * this.props.rows;
+    const height =
+      this.props.cellHeight * this.props.rows +
+      rootStore.uiStore.positionGaps.length * positionsColumnGapHeight;
 
     const maxSideSize = 4096;
     const scale = Math.max(Math.max(width, height) / maxSideSize, 1);

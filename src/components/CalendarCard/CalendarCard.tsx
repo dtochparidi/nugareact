@@ -179,18 +179,16 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
   public onAppointmentDraggingStart(e: interact.InteractEvent) {
     const appCell = e.target as Element;
-    (((appCell.parentNode as Element).parentNode as Element).parentNode as Element).classList.add(
-      'dragOrigin',
-    );
+    (((appCell.parentNode as Element).parentNode as Element)
+      .parentNode as Element).classList.add('dragOrigin');
 
     this.updateMovingId(appCell.id);
   }
 
   public onAppointmentDraggingEnd(e: interact.InteractEvent) {
     const appCell = e.target as Element;
-    (((appCell.parentNode as Element).parentNode as Element).parentNode as Element).classList.remove(
-      'dragOrigin',
-    );
+    (((appCell.parentNode as Element).parentNode as Element)
+      .parentNode as Element).classList.remove('dragOrigin');
   }
 
   public checkForOverlaps(dayStamp: IMoment) {
