@@ -128,11 +128,13 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
       width: 100%;
       overflow: hidden;
 
+      .topRow {
+        margin-bottom: $monthRow-margin-bottom;
+      }
+
       .viewPortContainer {
         width: 100%;
         overflow: hidden;
-
-        // border-bottom: solid lightgray 1px;
 
         .scrollingContainer {
           width: 100%;
@@ -149,7 +151,6 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
               z-index: 101;
 
               height: $time-row-height;
-              margin-top: $monthRow-margin-bottom;
 
               overflow: hidden;
 

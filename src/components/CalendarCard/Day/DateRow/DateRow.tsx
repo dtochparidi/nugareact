@@ -219,7 +219,10 @@ export default class DateRow extends React.Component<IProps, IState> {
     // console.log('daysCount:', daysCount);
 
     return (
-      <div key={rootStore.uiStore.currentDay.format('DD:MM:YYYY')}>
+      <div
+        key={rootStore.uiStore.currentDay.format('DD:MM:YYYY')}
+        className="topRow"
+      >
         <MonthRow
           monthDates={Array.from(
             moment
