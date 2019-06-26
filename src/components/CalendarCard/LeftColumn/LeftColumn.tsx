@@ -1,5 +1,7 @@
 // import { Moment } from 'moment';
 import * as React from 'react';
+import rootStore from 'stores/RootStore';
+import { observer } from 'mobx-react';
 
 export interface IProps {
   // stamps: Moment[];
@@ -7,6 +9,7 @@ export interface IProps {
   positionCount: number;
 }
 
+@observer
 export default class LeftColumn extends React.Component<IProps> {
   public render() {
     return (
@@ -19,7 +22,12 @@ export default class LeftColumn extends React.Component<IProps> {
         {this.props.positionCount
           ? new Array(this.props.positionCount)
               .fill(null)
-              .map((v, i) => <div className="item" key={i}>{`${i}`}</div>)
+              .map((v, i) => [
+                <div className="item" key={i}>{`${i}`}</div>,
+                rootStore.uiStore.positionGaps.includes(i) ? (
+                  <div className="gap" key={i + 'gap'} />
+                ) : null,
+              ])
           : null}
         {/* {this.props.stamps.map(stamp => {
           const s = stamp.format("HH:mm");

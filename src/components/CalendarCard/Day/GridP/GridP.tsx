@@ -3,6 +3,12 @@ import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
 import moize from 'moize';
 import * as PIXI from 'pixi.js';
 import * as React from 'react';
+import rootStore from 'stores/RootStore';
+import * as CardVariables from '../../CalendarCard.scss';
+
+const positionsColumnGapHeight = parseFloat(
+  CardVariables.positionsColumnGapHeight,
+);
 
 export interface IProps {
   children?: React.ReactNode;
@@ -88,11 +94,20 @@ const generateGraphicsTextured = moize(
         sprites.push(sprite);
       }
 
+    let lastGapIndex = -1;
     for (let y = 0; y < rows; y++)
       for (let s = 0; s < segmentsHorizontal; s++) {
         const sprite = new PIXI.Sprite(lineHorizontalTexture);
+
+        const gapIndex = rootStore.uiStore.positionGaps.indexOf(y);
+        if (gapIndex > lastGapIndex) lastGapIndex = gapIndex + 1;
+
+        console.log(lastGapIndex);
+
         sprite.x = s * lineSegmentWidth;
-        sprite.y = yStep * y;
+        sprite.y =
+          yStep * y +
+          (lastGapIndex === -1 ? 0 : lastGapIndex) * positionsColumnGapHeight;
 
         sprites.push(sprite);
       }

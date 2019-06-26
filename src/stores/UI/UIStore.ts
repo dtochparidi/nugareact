@@ -14,6 +14,8 @@ export default class UIStore {
   @observable
   public positionCount: number = 25;
   @observable
+  public positionGaps: number[] = [4, 11];
+  @observable
   public fastMode: boolean = false;
   @observable
   public screenWidth: number = 0;

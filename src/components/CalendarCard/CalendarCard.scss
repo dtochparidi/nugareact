@@ -8,6 +8,7 @@ $avatar-size: 40px;
 $calendar-cell-height: 70px * $scale;
 $calendar-cell-width-min: 400px * $scale;
 $time-row-height: $calendar-cell-height * 2 / 3;
+$positions-column-gap-height: 20px;
 $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
   $monthRow-margin-top + $monthRow-margin-bottom * 2 + $dateRow-padding * 2 +
   $thin-width;
@@ -16,6 +17,7 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
   #{'calendarCellWidthMin'}: $calendar-cell-width-min;
   #{'calendarCellHeight'}: $calendar-cell-height;
   #{'timeColumnWidth'}: $time-column-width;
+  #{'positionsColumnGapHeight'}: $positions-column-gap-height;
 }
 
 .calendarCard {
@@ -75,24 +77,26 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
 
     z-index: 1001;
 
-    display: grid;
+    display: block;
     grid-area: leftColumn;
 
     width: $time-column-width;
     pointer-events: none;
 
-    grid-template-rows: ($top-row-height - $calendar-cell-height) repeat(
-        calc(var(--rows-count) + 1),
-        $calendar-cell-height
-      );
-
-    // :first-child {
-    //   visibility: hidden;
-    // }
-
     .item {
+      &:first-of-type {
+        height: ($top-row-height - $calendar-cell-height);
+      }
+
       border-top: none;
       border-bottom: none;
+
+      height: $calendar-cell-height;
+    }
+
+    .gap {
+      height: $positions-column-gap-height;
+      background: darkgreen;
     }
   }
 

@@ -58,7 +58,7 @@ export async function generateAppointments(
   toHour: number,
   positions: number,
   toJSON: boolean = false,
-  count: number = random(255, 250),
+  count: number = 1, // random(255, 250),
 ) {
   const ranges: Array<[number, DateRange]> = [];
   const maxStepsCount = Math.floor(
