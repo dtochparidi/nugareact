@@ -5,6 +5,7 @@ import * as PIXI from 'pixi.js';
 import * as React from 'react';
 import rootStore from 'stores/RootStore';
 import * as CardVariables from '../../CalendarCard.scss';
+import { setPriority } from 'os';
 
 const positionsColumnGapHeight = parseFloat(
   CardVariables.positionsColumnGapHeight,
@@ -77,18 +78,33 @@ const generateGraphicsTextured = moize(
     const yStep = cellHeight;
 
     const maxLineSegmentLength = 2000;
-    const segmentsHorizontal = Math.ceil(width / maxLineSegmentLength);
-    const segmentsVertical = Math.ceil(height / maxLineSegmentLength);
-    const lineSegmentWidth = Math.min(width, width / segmentsHorizontal);
-    const lineSegmentHeight = Math.min(height, height / segmentsVertical);
+    const segmentsHorizontalCount = Math.ceil(width / maxLineSegmentLength);
+    const segmentsVerticalCount = Math.ceil(height / maxLineSegmentLength);
+    const lineSegmentWidth = Math.min(width, width / segmentsHorizontalCount);
+    const lineSegmentHeight = Math.min(height, height / segmentsVerticalCount);
 
     const lineVerticalTexture = generateLineTexture(0, lineSegmentHeight);
     const lineHorizontalTexture = generateLineTexture(lineSegmentWidth, 0);
 
+    const segmentsVerticalTextures = rootStore.uiStore.positionGaps
+      .map((v, i, arr) => {
+        const last = i === 0 ? 0 : v - arr[i];
+        const step = v - last;
+
+        const stepCounts = Math.ceil(step / maxLineSegmentLength);
+        return new Array(stepCounts).fill(null);
+
+        const texture = generateLineTexture(0, step * cellHeight);
+        texture.defaultAnchor.set(0, last * cellHeight);
+
+        return texture;
+      })
+      .flat();
+
     // main grid
     const sprites: PIXI.Sprite[] = [];
     for (let x = 0; x < cols; x++)
-      for (let s = 0; s < segmentsVertical; s++) {
+      for (let s = 0; s < segmentsVerticalCount; s++) {
         const sprite = new PIXI.Sprite(lineVerticalTexture);
         sprite.x = cellWidth * x;
         sprite.y = s * lineSegmentHeight;
@@ -96,22 +112,12 @@ const generateGraphicsTextured = moize(
         sprites.push(sprite);
       }
 
-    const positionBlocks = rootStore.uiStore.positionGaps.map((v, i, arr) =>
-      i === 0 ? v + 1 : v - arr[i - 1],
-    );
-
-    const last =
-      rootStore.uiStore.positionGaps[rootStore.uiStore.positionGaps.length - 1];
-    if (last !== rows) positionBlocks.push(rows - last - 1);
-
-    console.log(positionBlocks);
-
     let lastGapIndex = 0;
     for (let y = 0; y < rows; y++) {
       const gapExists = rootStore.uiStore.positionGaps.includes(y - 1);
       lastGapIndex += gapExists ? 1 : 0;
 
-      for (let s = 0; s < segmentsHorizontal; s++) {
+      for (let s = 0; s < segmentsHorizontalCount; s++) {
         const sprite = new PIXI.Sprite(lineHorizontalTexture);
 
         sprite.x = s * lineSegmentWidth;
