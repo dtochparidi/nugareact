@@ -16,6 +16,10 @@ export default class UIStore {
   @observable
   public positionGaps: number[] = [4, 6, 8, 11, 14, 17, 22];
   @observable
+  public positionGapsTitles: string[] = this.positionGaps.map(
+    (_, i) => `Title ${i + 1}`,
+  );
+  @observable
   public fastMode: boolean = false;
   @observable
   public screenWidth: number = 0;

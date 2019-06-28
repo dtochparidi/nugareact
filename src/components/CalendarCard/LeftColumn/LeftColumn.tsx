@@ -20,23 +20,20 @@ export default class LeftColumn extends React.Component<IProps> {
         <div className="item" key="minusOne" />
         <div className="item" key="zero" />
         {this.props.positionCount
-          ? new Array(this.props.positionCount)
-              .fill(null)
-              .map((v, i) => [
+          ? new Array(this.props.positionCount).fill(null).map((v, i) => {
+              const gapIndex = rootStore.uiStore.positionGaps.indexOf(i);
+              return [
                 <div className="item" key={i}>{`${i}`}</div>,
-                rootStore.uiStore.positionGaps.includes(i) ? (
-                  <div className="gap" key={i + 'gap'} />
+                gapIndex !== -1 ? (
+                  <div className="gap" key={i + 'gap'}>
+                    <span className="title">
+                      {rootStore.uiStore.positionGapsTitles[gapIndex]}
+                    </span>
+                  </div>
                 ) : null,
-              ])
+              ];
+            })
           : null}
-        {/* {this.props.stamps.map(stamp => {
-          const s = stamp.format("HH:mm");
-          return (
-            <div className="item" key={s}>
-              {s}
-            </div>
-          );
-        })} */}
       </div>
     );
   }

@@ -95,10 +95,19 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
     }
 
     .gap {
+      position: relative;
+
       height: $positions-column-gap-height;
-      background: darkgreen;
 
       width: 100%;
+
+      .title {
+        position: absolute;
+        left: $time-column-width + $time-column-offset;
+        bottom: 0;
+
+        white-space: nowrap;
+      }
     }
   }
 
