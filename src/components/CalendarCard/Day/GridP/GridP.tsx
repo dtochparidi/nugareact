@@ -135,6 +135,7 @@ const generateGraphicsTextured = moize(
 
         sprite.x = s * lineSegmentWidth;
         sprite.y = yStep * y + lastGapIndex * positionsColumnGapHeight;
+        console.log('m:', sprite.y);
 
         sprites.push(sprite);
 
@@ -144,6 +145,8 @@ const generateGraphicsTextured = moize(
           gapSprite.x = s * lineSegmentWidth;
           gapSprite.y =
             yStep * y + (lastGapIndex - 1) * positionsColumnGapHeight;
+
+          console.log('g:', gapSprite.y);
 
           sprites.push(gapSprite);
         }

@@ -133,7 +133,9 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
     const coeffY = cellHeight * dy;
 
     const gapsPast = Math.max(
-      rootStore.uiStore.positionGaps.findIndex(g => g + 1 > position + dy),
+      rootStore.uiStore.positionGaps
+        .concat([rootStore.uiStore.positionCount])
+        .findIndex(g => g + 1 > position + dy),
       0,
     );
 

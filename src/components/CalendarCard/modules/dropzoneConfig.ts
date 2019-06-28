@@ -156,7 +156,6 @@ export function generateDropzoneConfig(this: CalendarCard) {
         } = getInfo(appCell, dayElement, dayTimeRangeActual, positionCount);
 
         const position = Math.max(Math.min(absPosition, positionCount - 1), 0);
-
         const dayStart = dayDate
           .hour(dayTimeRangeActual.start.hour())
           .minute(dayTimeRangeActual.start.minute());
@@ -204,43 +203,9 @@ export function generateDropzoneConfig(this: CalendarCard) {
           this,
         );
 
-        // const x = roundedOffset / largeStep;
-        // const endX = roundedEndOffset / largeStep;
-        // const chunks: HTMLElement[] = [];
-
-        // let currentX = x;
-        // let index = 0;
-        // while (currentX < endX) {
-        //   const gridX = Math.floor(
-        //     currentX + (1 / this.props.subGridColumns) * 0.9,
-        //   );
-        //   const gridY = position;
-        //   const selector = `[data-x="${gridX}"][data-y="${gridY}"]`;
-        //   const gridCell = dayElement.querySelector(selector) as HTMLElement;
-
-        //   if (!gridCell) return;
-
-        //   const littleChunkIndex = Math.round(
-        //     (currentX - gridX) / (1 / this.props.subGridColumns),
-        //   );
-        //   const littleGridChunk = (gridCell.querySelector(
-        //     '.subGrid',
-        //   ) as HTMLElement).children[littleChunkIndex] as HTMLElement;
-
-        //   if (littleGridChunk) chunks.push(littleGridChunk);
-
-        //   index++;
-        //   currentX = x + (1 / this.props.subGridColumns) * index;
-        // }
-
-        // if (lastLittleGridChunk)
-        //   lastLittleGridChunk.forEach(chunk => chunk.classList.remove('enter'));
-        // chunks.forEach(chunk => chunk.classList.add('enter'));
-
         placeIsFree = isFree;
         lastPosition = position;
         lastStamp = roundedStamp;
-        // lastLittleGridChunk = chunks;
       },
       overlap: 'leftCenter',
     };
