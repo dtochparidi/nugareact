@@ -14,7 +14,7 @@ export default class UIStore {
   @observable
   public positionCount: number = 25;
   @observable
-  public positionGaps: number[] = [4, 8, 11, 22];
+  public positionGaps: number[] = [4, 6, 8, 11, 14, 17, 22];
   @observable
   public fastMode: boolean = false;
   @observable

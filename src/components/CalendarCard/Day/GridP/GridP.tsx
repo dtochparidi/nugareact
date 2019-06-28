@@ -25,14 +25,15 @@ export interface IState {
   a: any;
 }
 
+const dotStep = 3;
+const dotRadius = 0.5;
+
 function dottedLine(
   graphics: PIXI.Graphics,
   x1: number,
   y1: number,
   x2: number,
   y2: number,
-  dotStep: number,
-  dotRadius: number,
 ) {
   const dx = x2 - x1;
   const dy = y2 - y1;
@@ -50,12 +51,9 @@ function dottedLine(
 }
 
 const generateLineTexture = moize((width: number, height: number) => {
-  const dotStep = 3;
-  const dotRadius = 0.5;
-
   const graphics = new PIXI.Graphics();
   graphics.lineStyle(1, 0xd3d3d3, 1);
-  dottedLine(graphics, 0, 0, width, height, dotStep, dotRadius);
+  dottedLine(graphics, 0, 0, width, height);
 
   return graphics.generateCanvasTexture();
 });
@@ -126,7 +124,7 @@ const generateGraphicsTextured = moize(
     // }
 
     let lastGapIndex = 0;
-    for (let y = 0; y < rows; y++) {
+    for (let y = 0; y <= rows; y++) {
       const gapExists = rootStore.uiStore.positionGaps.includes(y - 1);
       lastGapIndex += gapExists ? 1 : 0;
 
@@ -232,7 +230,8 @@ export default class GridP extends React.Component<IProps, IState> {
     const { width } = this.props;
     const height =
       this.props.cellHeight * this.props.rows +
-      rootStore.uiStore.positionGaps.length * positionsColumnGapHeight;
+      rootStore.uiStore.positionGaps.length * positionsColumnGapHeight +
+      dotRadius * 4;
 
     const maxSideSize = 4096;
     const scale = Math.max(Math.max(width, height) / maxSideSize, 1);

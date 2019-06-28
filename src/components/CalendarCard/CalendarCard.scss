@@ -211,6 +211,7 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
 
       border: dotted lightgray 1px;
       border-top: none;
+      border-bottom: none;
 
       box-sizing: border-box;
 
@@ -321,6 +322,7 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
         overflow: hidden;
 
         will-change: scroll-position;
+        margin-bottom: -5px; // magic number
       }
     }
   }
