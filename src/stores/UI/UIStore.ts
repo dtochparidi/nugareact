@@ -10,6 +10,8 @@ export default class UIStore {
   public firstLoadDone = false;
 
   @observable
+  public appsByBlockLocking: boolean = true;
+  @observable
   public subGridColumns: number = 0;
   @observable
   public positionCount: number = 25;
@@ -62,6 +64,11 @@ export default class UIStore {
   );
   @observable
   public mainColumnStep: Moment.Duration = Moment.duration(45, 'minutes');
+
+  @action
+  public setAppsBlockLocking(value: boolean) {
+    this.appsByBlockLocking = value;
+  }
 
   @action
   public addGap(position: number, title: string) {
@@ -133,5 +140,28 @@ export default class UIStore {
       this.dayTimeRange.start,
       this.dayTimeRange.start.clone().add(actualDuration, 'minute'),
     );
+  }
+
+  public getBlockInfo(
+    blockPosition: number,
+  ): {
+    blockStart: number;
+    blockEnd: number;
+    blockIndex: number;
+    blockTitle: string;
+  } {
+    const block = this.positionGaps.find(g => g.position >= blockPosition);
+
+    if (!block) throw new Error('Invalid Gap Position');
+
+    const blockIndex = this.positionGaps.findIndex(
+      g => g.position === block.position,
+    );
+    const index = blockIndex - 1;
+    const blockStart = index === -1 ? 0 : this.positionGaps[index].position;
+    const blockEnd = block.position;
+    const blockTitle = block.title;
+
+    return { blockStart, blockEnd, blockTitle, blockIndex };
   }
 }

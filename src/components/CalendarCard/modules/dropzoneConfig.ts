@@ -104,7 +104,18 @@ export function generateDropzoneConfig(this: CalendarCard) {
         this.clearShifts();
       },
       ondrop: (e: IDragEvent) => {
-        if (placeIsFree && appInfo) {
+        const appBlockPrevious = rootStore.uiStore.positionGaps.findIndex(
+          g => g.position < ((appInfo && appInfo.position) as number),
+        );
+        if (
+          placeIsFree &&
+          appInfo &&
+          (!rootStore.uiStore.appsByBlockLocking ||
+            appBlockPrevious ===
+              rootStore.uiStore.positionGaps.findIndex(
+                g => g.position < lastPosition,
+              ))
+        ) {
           this.lockShifts();
 
           this.props.updateAppointment(

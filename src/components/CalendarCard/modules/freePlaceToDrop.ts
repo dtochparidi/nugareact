@@ -3,6 +3,7 @@ import Appointment from 'structures/Appointment';
 import CalendarDay from 'structures/CalendarDay';
 
 import CalendarCard, { Direction } from '../CalendarCard';
+import rootStore from 'stores/RootStore';
 
 export function freePlaceToDrop(
   movingApp: {
@@ -31,6 +32,17 @@ export function freePlaceToDrop(
   };
 
   const day = context.getDayByStamp(movingApp.dateRange.start);
+
+  const appBlock = rootStore.uiStore.appsByBlockLocking
+    ? rootStore.uiStore.getBlockInfo(
+        day.appointments[movingApp.uniqueId].position,
+      )
+    : {
+        blockEnd: rootStore.uiStore.positionCount,
+        blockIndex: 0,
+        blockStart: 0,
+        blockTitle: '',
+      };
 
   const shiftsCache = context.shiftsCache;
 
@@ -70,7 +82,9 @@ export function freePlaceToDrop(
     priorityDirection: Direction = Direction.Top,
     fixedIds: string[] = [],
   ): IOffsetMap | false => {
-    const filledColumn = new Array(context.props.positionCount).fill(null).map(
+    const positionCount = appBlock.blockEnd - appBlock.blockStart + 1; // appBlock.blockIndex + ;
+
+    const filledColumn = new Array(positionCount).fill(null).map(
       () =>
         [] as Array<{
           uniqueId: string;
@@ -80,6 +94,8 @@ export function freePlaceToDrop(
     );
     const nearCollisingApps = Object.values(day.appointments).filter(
       app =>
+        app.position >= appBlock.blockStart &&
+        app.position <= appBlock.blockEnd &&
         app.uniqueId !== fixedApp.uniqueId &&
         app.uniqueId !== movingApp.uniqueId &&
         app.dateRange.overlaps(fixedApp.dateRange),
@@ -98,7 +114,9 @@ export function freePlaceToDrop(
 
     nearCollisingApps.forEach(app =>
       filledColumn[
-        app.position + (positionsOffset[app.uniqueId] || { dy: 0 }).dy
+        app.position -
+          appBlock.blockStart +
+          (positionsOffset[app.uniqueId] || { dy: 0 }).dy
       ].push(app),
     );
 
@@ -107,9 +125,10 @@ export function freePlaceToDrop(
 
     // add moving app
     if (movingApp.uniqueId !== fixedApp.uniqueId)
-      filledColumn[movingApp.position].push(movingApp);
+      filledColumn[movingApp.position - appBlock.blockStart].push(movingApp);
 
-    if (!filledColumn[fixedAppPosition].length) return positionsOffset;
+    if (!filledColumn[fixedAppPosition - appBlock.blockStart].length)
+      return positionsOffset;
 
     const getOvelaps = (
       position: number,
@@ -132,13 +151,25 @@ export function freePlaceToDrop(
           number
         ]
       | false => {
+      // const equalBlocks = () => {
+      //   if (!rootStore.uiStore.appsByBlockLocking) return true;
+
+      //   const blockInfo = rootStore.uiStore.getBlockInfo(app.position);
+      //   return (
+      //     blockInfo.blockStart >= appBlock.blockStart &&
+      //     blockInfo.blockEnd <= appBlock.blockEnd
+      //   );
+      // };
+
       const nextPosition = position + d;
-      const inBound = nextPosition >= 0 && nextPosition < filledColumn.length;
+      const inBound =
+        nextPosition >= 0 &&
+        nextPosition - appBlock.blockStart < filledColumn.length; // &&equalBlocks();
 
       if (!inBound) return false;
 
-      const apps = filledColumn[position].filter(nextApp =>
-        nextApp.dateRange.overlaps(app.dateRange),
+      const apps = filledColumn[position - appBlock.blockStart].filter(
+        nextApp => nextApp.dateRange.overlaps(app.dateRange),
       );
 
       if (
