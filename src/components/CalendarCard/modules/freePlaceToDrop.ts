@@ -32,6 +32,7 @@ export function freePlaceToDrop(
   };
 
   const day = context.getDayByStamp(movingApp.dateRange.start);
+  if (!day) return false;
 
   const appBlock = rootStore.uiStore.appsByBlockLocking
     ? rootStore.uiStore.getBlockInfo(
@@ -82,6 +83,18 @@ export function freePlaceToDrop(
     priorityDirection: Direction = Direction.Top,
     fixedIds: string[] = [],
   ): IOffsetMap | false => {
+    const equalBlocks = () => {
+      if (!rootStore.uiStore.appsByBlockLocking) return true;
+
+      const blockInfo = rootStore.uiStore.getBlockInfo(fixedApp.position);
+      return (
+        blockInfo.blockStart >= appBlock.blockStart &&
+        blockInfo.blockEnd <= appBlock.blockEnd
+      );
+    };
+
+    if (!equalBlocks()) return false;
+
     const positionCount = appBlock.blockEnd - appBlock.blockStart + 1; // appBlock.blockIndex + ;
 
     const filledColumn = new Array(positionCount).fill(null).map(
@@ -151,19 +164,9 @@ export function freePlaceToDrop(
           number
         ]
       | false => {
-      // const equalBlocks = () => {
-      //   if (!rootStore.uiStore.appsByBlockLocking) return true;
-
-      //   const blockInfo = rootStore.uiStore.getBlockInfo(app.position);
-      //   return (
-      //     blockInfo.blockStart >= appBlock.blockStart &&
-      //     blockInfo.blockEnd <= appBlock.blockEnd
-      //   );
-      // };
-
       const nextPosition = position + d;
       const inBound =
-        nextPosition >= 0 &&
+        nextPosition >= appBlock.blockStart &&
         nextPosition - appBlock.blockStart < filledColumn.length; // &&equalBlocks();
 
       if (!inBound) return false;

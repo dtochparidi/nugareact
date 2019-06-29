@@ -150,13 +150,15 @@ export default class UIStore {
     blockIndex: number;
     blockTitle: string;
   } {
-    const block = this.positionGaps.find(g => g.position >= blockPosition);
+    const block = this.positionGaps
+      .concat([{ position: this.positionCount, title: 'final' }])
+      .find(g => g.position >= blockPosition);
 
     if (!block) throw new Error('Invalid Gap Position');
 
-    const blockIndex = this.positionGaps.findIndex(
-      g => g.position === block.position,
-    );
+    const blockIndex = this.positionGaps
+      .concat([{ position: this.positionCount, title: 'final' }])
+      .findIndex(g => g.position === block.position);
     const index = blockIndex - 1;
     const blockStart = index === -1 ? 0 : this.positionGaps[index].position;
     const blockEnd = block.position;
