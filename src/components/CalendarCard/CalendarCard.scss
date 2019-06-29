@@ -81,11 +81,17 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
     grid-area: leftColumn;
 
     width: $time-column-width;
-    pointer-events: none;
+    // pointer-events: none;
 
     .item {
       &:first-of-type {
         height: ($top-row-height - $calendar-cell-height);
+      }
+
+      transition: background 0.3s ease-in-out;
+
+      &:hover {
+        background: lightgray;
       }
 
       border-top: none;
@@ -103,7 +109,7 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
 
       .title {
         position: absolute;
-        left: $time-column-width + $time-column-offset;
+        left: $time-column-width;
         bottom: 0;
 
         white-space: nowrap;
@@ -220,6 +226,7 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
 
       border: dotted lightgray 1px;
       border-top: none;
+      border-left: none;
       border-bottom: none;
 
       box-sizing: border-box;

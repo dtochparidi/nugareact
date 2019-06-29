@@ -134,8 +134,8 @@ export default class AppointmentCell extends React.Component<IProps, IState> {
 
     const gapsPast = Math.max(
       rootStore.uiStore.positionGaps
-        .concat([rootStore.uiStore.positionCount])
-        .findIndex(g => g + 1 > position + dy),
+        .concat([{ position: rootStore.uiStore.positionCount, title: '' }])
+        .findIndex(g => g.position + 1 > position + dy),
       0,
     );
 

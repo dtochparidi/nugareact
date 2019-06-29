@@ -22,7 +22,7 @@ import ToggleArea from './ToggleArea';
 
 import * as Emitter from 'events';
 import IUpdateAppFunction from 'interfaces/IUpdateAppFunction';
-import { action, observable } from 'mobx';
+import { action, observable, reaction } from 'mobx';
 import moize from 'moize';
 import rootStore from 'stores/RootStore';
 import TopRow from './Day/TopRow';
@@ -36,6 +36,7 @@ import {
 import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
 import { RightColumn } from '.';
 import { LazyTask } from '@levabala/lazytask/build/dist';
+import * as uuid from 'uuid';
 
 const calendarCellMinWidth = parseFloat(CardVariables.calendarCellWidthMin);
 const timeColumnWidth = parseFloat(CardVariables.timeColumnWidth);
@@ -163,6 +164,14 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       requiredDays: [moment().startOf('day')],
       stamps,
     };
+
+    reaction(
+      () =>
+        rootStore.uiStore.positionGaps
+          .map(({ position }) => position.toString())
+          .join(),
+      () => this.updateParalaxGrids(true),
+    );
   }
   public turnPageRight = () => {
     this.turnPage(1);
@@ -300,7 +309,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
         {new Array(gridsCount).fill(null).map((v, i) => (
           <GridP
             style={{ display: 'inline-block' }}
-            key={i}
+            key={uuid.v4()}
             width={parseFloat(this.state.dayWidth)}
             cellHeight={calendarCellHeight}
             rows={this.props.positionCount}
@@ -309,6 +318,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
             instantRender={true}
           />
         ))}
+        }
       </div>
     );
 

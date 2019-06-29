@@ -11,6 +11,16 @@ export interface IProps {
 
 @observer
 export default class LeftColumn extends React.Component<IProps> {
+  public itemPress = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    const position = parseInt(
+      (event.target as HTMLDivElement).textContent as string,
+      10,
+    );
+
+    if (!rootStore.uiStore.positionGaps.find(g => g.position === position))
+      rootStore.uiStore.addGap(position, 'Title Unknown');
+  };
+
   public render() {
     return (
       <div
@@ -21,13 +31,19 @@ export default class LeftColumn extends React.Component<IProps> {
         <div className="item" key="zero" />
         {this.props.positionCount
           ? new Array(this.props.positionCount).fill(null).map((v, i) => {
-              const gapIndex = rootStore.uiStore.positionGaps.indexOf(i);
+              const gapIndex = rootStore.uiStore.positionGaps.findIndex(
+                g => g.position === i,
+              );
               return [
-                <div className="item" key={i}>{`${i}`}</div>,
+                <div
+                  className="item"
+                  key={i}
+                  onClick={this.itemPress}
+                >{`${i}`}</div>,
                 gapIndex !== -1 ? (
                   <div className="gap" key={i + 'gap'}>
                     <span className="title">
-                      {rootStore.uiStore.positionGapsTitles[gapIndex]}
+                      {rootStore.uiStore.positionGaps[gapIndex].title}
                     </span>
                   </div>
                 ) : null,

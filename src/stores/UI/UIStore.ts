@@ -14,11 +14,24 @@ export default class UIStore {
   @observable
   public positionCount: number = 25;
   @observable
-  public positionGaps: number[] = [4, 6, 8, 11, 14, 17, 22];
-  @observable
-  public positionGapsTitles: string[] = this.positionGaps.map(
-    (_, i) => `Title ${i + 1}`,
-  );
+  public positionGaps: Array<{ position: number; title: string }> = [
+    {
+      position: 4,
+      title: 'Title 1',
+    },
+    {
+      position: 6,
+      title: 'Title 2',
+    },
+    {
+      position: 12,
+      title: 'Title 3',
+    },
+    {
+      position: 21,
+      title: 'Title 4',
+    },
+  ];
   @observable
   public fastMode: boolean = false;
   @observable
@@ -49,6 +62,14 @@ export default class UIStore {
   );
   @observable
   public mainColumnStep: Moment.Duration = Moment.duration(45, 'minutes');
+
+  @action
+  public addGap(position: number, title: string) {
+    this.positionGaps.push({ position, title });
+    this.positionGaps = this.positionGaps
+      .slice()
+      .sort((a, b) => (a.position > b.position ? 1 : -1));
+  }
 
   @action
   public setScrolling(scrolling: boolean) {

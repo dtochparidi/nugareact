@@ -6,6 +6,13 @@ import * as React from 'react';
 import rootStore from 'stores/RootStore';
 import * as CardVariables from '../../CalendarCard.scss';
 
+// collectStats();
+
+// setInterval(
+//   () => console.log((moize as any).getStats('graphicsGenerator')),
+//   1500,
+// );
+
 const positionsColumnGapHeight = parseFloat(
   CardVariables.positionsColumnGapHeight,
 );
@@ -58,20 +65,28 @@ const generateLineTexture = moize((width: number, height: number) => {
   return graphics.generateCanvasTexture();
 });
 
+interface IGenerateGraphicsTexturedArgs {
+  width: number;
+  cellHeight: number;
+  cols: number;
+  rows: number;
+  subGridColumns: number;
+  positionGaps: Array<{ position: number; title: string }>;
+}
+
 const generateGraphicsTextured = moize(
-  (
-    width: number,
-    cellHeight: number,
-    cols: number,
-    rows: number,
-    subGridColumns: number,
-  ) => {
+  ({
+    width,
+    cellHeight,
+    cols,
+    rows,
+    positionGaps,
+  }: IGenerateGraphicsTexturedArgs) => {
     const container = new PIXI.Container();
 
     const cellWidth = width / cols;
     const height =
-      cellHeight * rows +
-      rootStore.uiStore.positionGaps.length * positionsColumnGapHeight;
+      cellHeight * rows + positionGaps.length * positionsColumnGapHeight;
     const yStep = cellHeight;
 
     const maxLineSegmentLength = 2000;
@@ -83,11 +98,11 @@ const generateGraphicsTextured = moize(
     // const lineVerticalTexture = generateLineTexture(0, lineSegmentHeight);
     const lineHorizontalTexture = generateLineTexture(lineSegmentWidth, 0);
 
-    const segmentsVerticalTextures = rootStore.uiStore.positionGaps
-      .concat([rows])
+    const segmentsVerticalTextures = positionGaps
+      .concat([{ position: rows, title: '' }])
       .map((v, i, arr) => {
-        const last = i === 0 ? -1 : arr[i - 1];
-        const step = v - last;
+        const last = i === 0 ? -1 : arr[i - 1].position;
+        const step = v.position - last;
 
         const stepHeight = step * cellHeight;
         const stepCounts = Math.ceil(stepHeight / lineSegmentHeight);
@@ -97,7 +112,7 @@ const generateGraphicsTextured = moize(
               ? stepHeight % lineSegmentHeight
               : maxLineSegmentLength;
           const texture = generateLineTexture(0, textureHeight);
-          const y = (arr[i - 1] + i + 1 || 0) * cellHeight;
+          const y = (i - 1 >= 0 ? arr[i - 1].position + i + 1 : 0) * cellHeight;
           return [texture, y];
         });
       })
@@ -125,7 +140,7 @@ const generateGraphicsTextured = moize(
 
     let lastGapIndex = 0;
     for (let y = 0; y <= rows; y++) {
-      const gapExists = rootStore.uiStore.positionGaps.includes(y - 1);
+      const gapExists = positionGaps.find(g => g.position === y - 1);
       lastGapIndex += gapExists ? 1 : 0;
 
       for (let s = 0; s < segmentsHorizontalCount; s++) {
@@ -133,7 +148,6 @@ const generateGraphicsTextured = moize(
 
         sprite.x = s * lineSegmentWidth;
         sprite.y = yStep * y + lastGapIndex * positionsColumnGapHeight;
-        console.log('m:', sprite.y);
 
         sprites.push(sprite);
 
@@ -143,8 +157,6 @@ const generateGraphicsTextured = moize(
           gapSprite.x = s * lineSegmentWidth;
           gapSprite.y =
             yStep * y + (lastGapIndex - 1) * positionsColumnGapHeight;
-
-          console.log('g:', gapSprite.y);
 
           sprites.push(gapSprite);
         }
@@ -165,6 +177,26 @@ const generateGraphicsTextured = moize(
     container.addChild(...sprites);
 
     return container;
+  },
+  {
+    equals: (
+      prevArgs: IGenerateGraphicsTexturedArgs,
+      nowArgs: IGenerateGraphicsTexturedArgs,
+    ) => {
+      return (
+        prevArgs.width === nowArgs.width &&
+        prevArgs.cellHeight === nowArgs.cellHeight &&
+        prevArgs.cols === nowArgs.cols &&
+        prevArgs.rows === nowArgs.rows &&
+        prevArgs.subGridColumns === nowArgs.subGridColumns &&
+        prevArgs.positionGaps
+          .map(({ position }) => position.toString())
+          .join() ===
+          nowArgs.positionGaps.map(({ position }) => position.toString()).join()
+      );
+    },
+
+    profileName: 'graphicsGenerator',
   },
 );
 
@@ -259,13 +291,14 @@ export default class GridP extends React.Component<IProps, IState> {
 
   public renderPIXI() {
     const { width, cellHeight, cols, rows, subGridColumns } = this.props;
-    const container = generateGraphicsTextured(
-      width,
+    const container = generateGraphicsTextured({
       cellHeight,
       cols,
+      positionGaps: rootStore.uiStore.positionGaps,
       rows,
       subGridColumns,
-    );
+      width,
+    });
 
     ((window as any).pixiContainers =
       (window as any).pixiContainers || []).push(container);

@@ -35,8 +35,8 @@ function getPositionByRelativePosition(
 
   const gapsPast = Math.max(
     rootStore.uiStore.positionGaps
-      .concat([positionsCount])
-      .findIndex((g, i) => g + i + 1 > position),
+      .concat([{ position: rootStore.uiStore.positionCount, title: '' }])
+      .findIndex((g, i) => g.position + i + 1 > position),
     0,
   );
 
