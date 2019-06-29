@@ -1001,9 +1001,21 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     { boundTime }: { boundTime: number } = { boundTime: 250 },
   ) {
     let resizeTimeout: NodeJS.Timeout;
+    let lastWidth = window.innerWidth;
+    // let lastHeight = window.innerHeight;
     window.addEventListener('resize', () => {
+      const currentWidth = window.innerWidth;
+      // const currentHeight = window.innerHeight;
+
+      if (currentWidth === lastWidth) return;
+
+      lastWidth = currentWidth;
+      // lastHeight = currentHeight;
+
+      console.log('resize');
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
+        console.log('resize end');
         this.updateScreenSize();
 
         this.updateColumnsCount();
