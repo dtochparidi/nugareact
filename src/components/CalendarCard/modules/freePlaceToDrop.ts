@@ -10,6 +10,7 @@ export function freePlaceToDrop(
     uniqueId: string;
     position: number;
     dateRange: DateRange;
+    originPosition: number;
   },
   context: CalendarCard,
 ): boolean {
@@ -18,6 +19,7 @@ export function freePlaceToDrop(
   }
 
   context.clearShifts();
+  console.log(movingApp.originPosition);
 
   const applyShifts = (currentDay: CalendarDay, offsets: IOffsetMap) => {
     const shifts = Object.entries(offsets).map(([id, deltas]) => {
@@ -34,10 +36,10 @@ export function freePlaceToDrop(
   const day = context.getDayByStamp(movingApp.dateRange.start);
   if (!day) return false;
 
+  const { originPosition } = movingApp;
+
   const appBlock = rootStore.uiStore.appsByBlockLocking
-    ? rootStore.uiStore.getBlockInfo(
-        day.appointments[movingApp.uniqueId].position,
-      )
+    ? rootStore.uiStore.getBlockInfo(originPosition)
     : {
         blockEnd: rootStore.uiStore.positionCount,
         blockIndex: 0,

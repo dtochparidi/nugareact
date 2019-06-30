@@ -208,6 +208,7 @@ export function generateDropzoneConfig(this: CalendarCard) {
               roundedStamp,
               roundedStamp.clone().add(appInfo.duration),
             ),
+            originPosition: appInfo.position,
             position,
             uniqueId: appInfo.uniqueId,
           },
