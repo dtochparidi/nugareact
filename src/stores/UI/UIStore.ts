@@ -2,12 +2,15 @@ import { action, computed, observable } from 'mobx';
 import * as Moment from 'moment';
 import { DateRange, extendMoment } from 'moment-range';
 import { Moment as IMoment } from 'moment';
+import is from 'is_js';
 
 const moment = extendMoment(Moment);
 
 export default class UIStore {
   public firstLoadHandlers: Array<() => void> = [];
   public firstLoadDone = false;
+
+  public isFirefox = is.firefox();
 
   @observable
   public appsByBlockLocking: boolean = true;

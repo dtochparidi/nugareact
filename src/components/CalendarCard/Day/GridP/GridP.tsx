@@ -271,8 +271,13 @@ export default class GridP extends React.Component<IProps, IState> {
     const scaledWidth = width * scale;
     const scaledHeight = height * scale;
 
-    this.scaleX = width <= maxSideSize ? scale : 1;
-    this.scaleY = height <= maxSideSize ? scale : 1;
+    if (rootStore.uiStore.isFirefox) {
+      this.scaleX = width >= maxSideSize ? scale : 1;
+      this.scaleY = width >= maxSideSize ? scale : 1;
+    } else {
+      this.scaleX = width <= maxSideSize ? scale : 1;
+      this.scaleY = height <= maxSideSize ? scale : 1;
+    }
 
     const resolution = 1 / scale;
     this.setResolution(resolution);
