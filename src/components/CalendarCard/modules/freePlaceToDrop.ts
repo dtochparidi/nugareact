@@ -19,7 +19,6 @@ export function freePlaceToDrop(
   }
 
   context.clearShifts();
-  console.log(movingApp.originPosition);
 
   const applyShifts = (currentDay: CalendarDay, offsets: IOffsetMap) => {
     const shifts = Object.entries(offsets).map(([id, deltas]) => {

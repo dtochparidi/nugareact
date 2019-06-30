@@ -26,6 +26,8 @@ $day-space-between-min: 10px;
 
   background: $color-calendar-background;
 
+  touch-action: none;
+
   .arrowWrapper {
     display: flex;
     justify-content: center;
