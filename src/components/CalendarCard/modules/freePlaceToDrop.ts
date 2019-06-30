@@ -137,7 +137,7 @@ export function freePlaceToDrop(
     const fixedAppPosition =
       fixedApp.position + (positionsOffset[fixedApp.uniqueId] || { dy: 0 }).dy;
 
-    // add moving app
+    // add moving appfreePlaceToDrop
     if (movingApp.uniqueId !== fixedApp.uniqueId)
       filledColumn[movingApp.position - appBlock.blockStart].push(movingApp);
 
@@ -167,7 +167,7 @@ export function freePlaceToDrop(
       | false => {
       const nextPosition = position + d;
       const inBound =
-        nextPosition >= appBlock.blockStart &&
+        nextPosition > appBlock.blockStart &&
         nextPosition - appBlock.blockStart < filledColumn.length; // &&equalBlocks();
 
       if (!inBound) return false;
