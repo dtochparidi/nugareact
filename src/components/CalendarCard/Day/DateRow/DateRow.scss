@@ -57,6 +57,11 @@ $day-space-between-min: 10px;
     height: $dateRow-height;
     padding: $dateRow-padding;
 
+    .gap {
+      display: inline-block;
+      width: $day-width;
+    }
+
     .day {
       display: inline-flex;
       justify-content: center;

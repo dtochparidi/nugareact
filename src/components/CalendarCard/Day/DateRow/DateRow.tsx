@@ -160,9 +160,32 @@ export default class DateRow extends React.Component<IProps, IState> {
       .add(daysCount / 2 - daysOffset + daysBuffer, 'days');
 
     if (!reset) {
+      const gapsBefore = new Array(
+        this.state.rightBorder.diff(this.state.leftBorder, 'days'),
+      )
+        .fill(null)
+        .map((_, i) => this.state.leftBorder.clone().add(i, 'days'))
+        .filter((day, i) => {
+          return i !== daysCount - 1 && day.date() === day.daysInMonth();
+        });
+      const gapsNow = new Array(newRightBorder.diff(newLeftBorder, 'days'))
+        .fill(null)
+        .map((_, i) => newLeftBorder.clone().add(i, 'days'))
+        .filter((day, i) => {
+          return i !== daysCount - 1 && day.date() === day.daysInMonth();
+        });
+      const gapsDelta = gapsNow.length - gapsBefore.length;
+      console.log(
+        gapsBefore.map(g => g.format('MM:YYYY')),
+        gapsNow.map(g => g.format('MM:YYYY')),
+        gapsDelta,
+      );
+
       const delta = newLeftBorder.diff(this.state.leftBorder, 'days');
 
-      this.fixedOffset += delta * this.dayWidthAround;
+      this.fixedOffset +=
+        (delta - Math.abs(gapsDelta) * Math.sign(-delta)) * this.dayWidthAround;
+      console.log(this.fixedOffset, delta);
     }
 
     this.setState({
@@ -246,15 +269,25 @@ export default class DateRow extends React.Component<IProps, IState> {
               'DD:MM:YYYY',
             )}${leftBorder}${rightBorder}`}
           >
-            {new Array(daysCount).fill(null).map((v, i) => {
-              const day = leftBorder.clone().add(i, 'days');
-              return this.dayGenerator({
-                day,
-                isChoosen:
-                  day.valueOf() === rootStore.uiStore.currentDay.valueOf(),
-                visitsPerDay: visitsPerDay[day.valueOf()],
-              });
-            })}
+            {new Array(daysCount)
+              .fill(null)
+              .map((v, i) => {
+                const day = leftBorder.clone().add(i, 'days');
+                const gap =
+                  i !== daysCount - 1 && day.date() === day.daysInMonth() ? (
+                    <div className="gap" key={`gap${day.format('MM:YYYY')}`} />
+                  ) : null;
+                return [
+                  this.dayGenerator({
+                    day,
+                    isChoosen:
+                      day.valueOf() === rootStore.uiStore.currentDay.valueOf(),
+                    visitsPerDay: visitsPerDay[day.valueOf()],
+                  }),
+                  gap,
+                ];
+              })
+              .flat()}
           </div>
         </div>
       </div>
