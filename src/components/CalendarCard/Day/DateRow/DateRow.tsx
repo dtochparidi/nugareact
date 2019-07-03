@@ -53,7 +53,7 @@ export default class DateRow extends React.Component<IProps, IState> {
   private fixedOffset = 0;
   private spaceBetween = daySpaceBetweenMin;
   private dayWidthAround = dayWidth + this.spaceBetween;
-  private buffer = this.dayWidthAround * 2;
+  // private buffer = this.dayWidthAround * 2;
   private nextCheckTimeout = this.dayWidthAround;
   private previosDaysCount = 0;
   private previosContainerWidth = 0;
@@ -120,10 +120,9 @@ export default class DateRow extends React.Component<IProps, IState> {
   }
 
   public updateBorders(reset = false) {
-    // const rowWidth = (this.dateRowWrapperRef.current as HTMLDivElement)
-    //   .offsetWidth;
-    const rowWidth = (this.dateRowWrapperRef
-      .current as HTMLDivElement).getBoundingClientRect().width;
+    console.log('---');
+    const rowWidth = (this.dateRowWrapperRef.current as HTMLDivElement)
+      .offsetWidth;
 
     const dayWidthAroundMin = dayWidth + daySpaceBetweenMin;
     const daysCount = Math.floor(
@@ -145,48 +144,19 @@ export default class DateRow extends React.Component<IProps, IState> {
     // console.log('update borders', daysCount);
 
     if (reset) {
+      console.log('reset');
       this.offset = 0;
       this.fixedOffset = 0;
     }
+    const delta = Math.ceil(
+      (this.offset + this.fixedOffset) / dayWidthAroundMin,
+    );
+    this.fixedOffset = -this.offset;
 
-    const daysOffset = Math.ceil(this.offset / this.dayWidthAround);
-    const daysBuffer = Math.ceil(this.buffer / this.dayWidthAround);
+    const newLeftBorder = this.state.leftBorder.clone().add(delta, 'days');
+    const newRightBorder = newLeftBorder.clone().add(daysCount, 'days');
 
-    const newLeftBorder = rootStore.uiStore.currentDay
-      .clone()
-      .subtract(daysCount / 2 + daysOffset, 'days');
-    const newRightBorder = rootStore.uiStore.currentDay
-      .clone()
-      .add(daysCount / 2 - daysOffset + daysBuffer, 'days');
-
-    if (!reset) {
-      const gapsBefore = new Array(
-        this.state.rightBorder.diff(this.state.leftBorder, 'days'),
-      )
-        .fill(null)
-        .map((_, i) => this.state.leftBorder.clone().add(i, 'days'))
-        .filter((day, i) => {
-          return i !== daysCount - 1 && day.date() === day.daysInMonth();
-        });
-      const gapsNow = new Array(newRightBorder.diff(newLeftBorder, 'days'))
-        .fill(null)
-        .map((_, i) => newLeftBorder.clone().add(i, 'days'))
-        .filter((day, i) => {
-          return i !== daysCount - 1 && day.date() === day.daysInMonth();
-        });
-      const gapsDelta = gapsNow.length - gapsBefore.length;
-      console.log(
-        gapsBefore.map(g => g.format('MM:YYYY')),
-        gapsNow.map(g => g.format('MM:YYYY')),
-        gapsDelta,
-      );
-
-      const delta = newLeftBorder.diff(this.state.leftBorder, 'days');
-
-      this.fixedOffset +=
-        (delta - Math.abs(gapsDelta) * Math.sign(-delta)) * this.dayWidthAround;
-      console.log(this.fixedOffset, delta);
-    }
+    console.log(newLeftBorder.date(), newRightBorder.date());
 
     this.setState({
       leftBorder: newLeftBorder,
@@ -241,6 +211,33 @@ export default class DateRow extends React.Component<IProps, IState> {
       (rootStore.uiStore.firstLoadDone ? 1 : 0);
     // console.log('daysCount:', daysCount);
 
+    const monthes = new Array(daysCount)
+      .fill(null)
+      .map((v, i) => leftBorder.clone().add(i, 'days'))
+      .reduce(
+        (acc: IMoment[][], val) => {
+          const last = acc[acc.length - 1];
+          const currentMonth =
+            !last.length || last[0].month() === val.month()
+              ? last
+              : acc.append([]);
+          currentMonth.push(val);
+
+          return acc;
+        },
+        [[]],
+      )
+      .map(month =>
+        month.map(day =>
+          this.dayGenerator({
+            day,
+            isChoosen: day.valueOf() === rootStore.uiStore.currentDay.valueOf(),
+            visitsPerDay: visitsPerDay[day.valueOf()],
+          }),
+        ),
+      )
+      .joinObj(gapIndex => <div className="gap" key={`gap${gapIndex}`} />);
+
     return (
       <div
         key={rootStore.uiStore.currentDay.format('DD:MM:YYYY')}
@@ -269,25 +266,7 @@ export default class DateRow extends React.Component<IProps, IState> {
               'DD:MM:YYYY',
             )}${leftBorder}${rightBorder}`}
           >
-            {new Array(daysCount)
-              .fill(null)
-              .map((v, i) => {
-                const day = leftBorder.clone().add(i, 'days');
-                const gap =
-                  i !== daysCount - 1 && day.date() === day.daysInMonth() ? (
-                    <div className="gap" key={`gap${day.format('MM:YYYY')}`} />
-                  ) : null;
-                return [
-                  this.dayGenerator({
-                    day,
-                    isChoosen:
-                      day.valueOf() === rootStore.uiStore.currentDay.valueOf(),
-                    visitsPerDay: visitsPerDay[day.valueOf()],
-                  }),
-                  gap,
-                ];
-              })
-              .flat()}
+            {monthes}
           </div>
         </div>
       </div>
