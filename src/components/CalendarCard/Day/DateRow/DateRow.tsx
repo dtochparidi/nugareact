@@ -4,6 +4,7 @@ import { Moment as IMoment } from 'moment';
 import * as React from 'react';
 import CalendarDay from 'structures/CalendarDay';
 import * as interact from 'levabala_interactjs';
+// import interact from 'interactjs';
 
 import './DateRow.scss';
 import * as DateRowVariables from './DateRow.scss';
@@ -59,6 +60,7 @@ export default class DateRow extends React.Component<IProps, IState> {
   private nextCheckTimeout = this.dayWidthAround;
   private previosDaysCount = 0;
   private previosContainerWidth = 0;
+  private currentChosenDay = rootStore.uiStore.currentDay.clone();
 
   private dayGenerator = moize(
     ({ day, visitsPerDay, isChoosen }: IDayGeneratorArgs) => {
@@ -110,15 +112,18 @@ export default class DateRow extends React.Component<IProps, IState> {
     );
 
     this.state = {
-      leftBorder: rootStore.uiStore.currentDay.clone().subtract(5, 'days'),
-      rightBorder: rootStore.uiStore.currentDay.clone().add(5, 'days'),
+      leftBorder: rootStore.uiStore.currentDay.clone(),
+      rightBorder: rootStore.uiStore.currentDay.clone(),
     };
   }
 
   public componentDidUpdate(prevProps: IProps) {
-    // console.log(prevProps.choosenDay.format('DD:MM'));
-    // if (prevProps.choosenDay.valueOf() !== rootStore.uiStore.currentDay.valueOf())
-    //   this.updateBorders(true);
+    if (
+      this.currentChosenDay.valueOf() !== rootStore.uiStore.currentDay.valueOf()
+    ) {
+      this.currentChosenDay = rootStore.uiStore.currentDay.clone();
+      this.updateBorders(true);
+    }
   }
 
   public updateBorders(reset = false) {
@@ -144,49 +149,59 @@ export default class DateRow extends React.Component<IProps, IState> {
     this.previosContainerWidth = rowWidth;
 
     // console.log('update borders', daysCount);
+    let newLeftBorder;
+    let newRightBorder;
 
     if (reset) {
       console.log('reset');
       this.offset = 0;
       this.fixedOffset = 0;
+      this.doneOffset = 0;
+      this.gapDaysOffset = 0;
+
+      newLeftBorder = this.currentChosenDay
+        .clone()
+        .subtract(Math.floor(daysCount / 2), 'days');
+      newRightBorder = this.currentChosenDay
+        .clone()
+        .add(Math.floor(daysCount / 2), 'days');
+    } else {
+      const deltaFloat = (this.offset - this.doneOffset) / dayWidthAroundMin;
+      const delta =
+        Math.floor(Math.abs(deltaFloat)) * Math.sign(deltaFloat) -
+        this.gapDaysOffset;
+      this.fixedOffset -=
+        this.offset - this.doneOffset - this.gapDaysOffset * dayWidthAroundMin;
+      this.doneOffset = this.offset;
+
+      newLeftBorder = this.state.leftBorder.clone().subtract(delta, 'days');
+      newRightBorder = newLeftBorder.clone().add(daysCount, 'days');
+
+      const leftChangeGap = Math.sign(
+        Math.max(newLeftBorder.month() - this.state.leftBorder.month(), 0),
+      );
+      this.gapDaysOffset =
+        leftChangeGap - Math.abs(this.gapDaysOffset) * Math.sign(leftChangeGap);
+
+      newLeftBorder.subtract(this.gapDaysOffset, 'days');
+      newRightBorder.subtract(this.gapDaysOffset, 'days');
+      this.fixedOffset -= this.gapDaysOffset * dayWidthAroundMin;
+
+      console.log(
+        [
+          ['delta', delta],
+          ['leftChangeGap', leftChangeGap],
+          ['gapOffset', this.gapDaysOffset],
+          ['leftBorder', this.state.leftBorder.format('DD:MM')],
+          ['newLeftBorder', newLeftBorder.format('DD:MM')],
+        ]
+          .map(([n, v]) => `${n}: ${v}`)
+          .join('\n'),
+      );
     }
-
-    const deltaFloat = (this.offset - this.doneOffset) / dayWidthAroundMin;
-    const delta =
-      Math.floor(Math.abs(deltaFloat)) * Math.sign(deltaFloat) -
-      this.gapDaysOffset;
-    this.fixedOffset -=
-      this.offset - this.doneOffset - this.gapDaysOffset * dayWidthAroundMin;
-    this.doneOffset = this.offset;
-
-    const newLeftBorder = this.state.leftBorder.clone().subtract(delta, 'days');
-    const newRightBorder = newLeftBorder.clone().add(daysCount, 'days');
-
-    const leftChangeGap = Math.sign(
-      Math.max(newLeftBorder.month() - this.state.leftBorder.month(), 0),
-    );
-    this.gapDaysOffset =
-      leftChangeGap - Math.abs(this.gapDaysOffset) * Math.sign(leftChangeGap);
-
-    newLeftBorder.subtract(this.gapDaysOffset, 'days');
-    newRightBorder.subtract(this.gapDaysOffset, 'days');
-    this.fixedOffset -= this.gapDaysOffset * dayWidthAroundMin;
-
-    console.log(
-      [
-        ['delta', delta],
-        ['leftChangeGap', leftChangeGap],
-        ['gapOffset', this.gapDaysOffset],
-        ['leftBorder', this.state.leftBorder.format('DD:MM')],
-        ['newLeftBorder', newLeftBorder.format('DD:MM')],
-      ]
-        .map(([n, v]) => `${n}: ${v}`)
-        .join('\n'),
-    );
-
     this.setState({
-      leftBorder: newLeftBorder,
-      rightBorder: newRightBorder,
+      leftBorder: newLeftBorder.startOf('day'),
+      rightBorder: newRightBorder.startOf('day'),
     });
 
     rootStore.uiStore.setBorderDays(newLeftBorder, newRightBorder);
@@ -198,8 +213,18 @@ export default class DateRow extends React.Component<IProps, IState> {
 
   public componentDidMount() {
     interact('.dateRowWrapper').draggable({
+      // inertia: true,
       onmove: this.onDrag,
       onstart: this.onStart,
+      snap: {
+        endOnly: true,
+        targets: [
+          (interact as any).createSnapGrid({
+            x: dayWidth + daySpaceBetweenMin,
+            y: 10,
+          } as any),
+        ],
+      } as any,
     });
   }
 
