@@ -51,9 +51,11 @@ export default class DateRow extends React.Component<IProps, IState> {
   private reactions: Array<() => void> = [];
   private offset = 0;
   private fixedOffset = 0;
+  private doneOffset = 0;
+  private gapDaysOffset = 0;
   private spaceBetween = daySpaceBetweenMin;
   private dayWidthAround = dayWidth + this.spaceBetween;
-  // private buffer = this.dayWidthAround * 2;
+  // private buffer = 2;
   private nextCheckTimeout = this.dayWidthAround;
   private previosDaysCount = 0;
   private previosContainerWidth = 0;
@@ -148,15 +150,39 @@ export default class DateRow extends React.Component<IProps, IState> {
       this.offset = 0;
       this.fixedOffset = 0;
     }
-    const delta = Math.ceil(
-      (this.offset + this.fixedOffset) / dayWidthAroundMin,
-    );
-    this.fixedOffset = -this.offset;
 
-    const newLeftBorder = this.state.leftBorder.clone().add(delta, 'days');
+    const deltaFloat = (this.offset - this.doneOffset) / dayWidthAroundMin;
+    const delta =
+      Math.floor(Math.abs(deltaFloat)) * Math.sign(deltaFloat) -
+      this.gapDaysOffset;
+    this.fixedOffset -=
+      this.offset - this.doneOffset - this.gapDaysOffset * dayWidthAroundMin;
+    this.doneOffset = this.offset;
+
+    const newLeftBorder = this.state.leftBorder.clone().subtract(delta, 'days');
     const newRightBorder = newLeftBorder.clone().add(daysCount, 'days');
 
-    console.log(newLeftBorder.date(), newRightBorder.date());
+    const leftChangeGap = Math.sign(
+      Math.max(newLeftBorder.month() - this.state.leftBorder.month(), 0),
+    );
+    this.gapDaysOffset =
+      leftChangeGap - Math.abs(this.gapDaysOffset) * Math.sign(leftChangeGap);
+
+    newLeftBorder.subtract(this.gapDaysOffset, 'days');
+    newRightBorder.subtract(this.gapDaysOffset, 'days');
+    this.fixedOffset -= this.gapDaysOffset * dayWidthAroundMin;
+
+    console.log(
+      [
+        ['delta', delta],
+        ['leftChangeGap', leftChangeGap],
+        ['gapOffset', this.gapDaysOffset],
+        ['leftBorder', this.state.leftBorder.format('DD:MM')],
+        ['newLeftBorder', newLeftBorder.format('DD:MM')],
+      ]
+        .map(([n, v]) => `${n}: ${v}`)
+        .join('\n'),
+    );
 
     this.setState({
       leftBorder: newLeftBorder,
@@ -202,6 +228,9 @@ export default class DateRow extends React.Component<IProps, IState> {
       }, {});
 
     const { leftBorder, rightBorder } = this.state;
+
+    // leftBorder = leftBorder.clone().subtract(this.buffer, 'days');
+    // rightBorder = rightBorder.clone().add(this.buffer, 'days');
     // console.log(
     //   leftBorder.format('DD:MM:YYYY'),
     //   rightBorder.format('DD:MM:YYYY'),
