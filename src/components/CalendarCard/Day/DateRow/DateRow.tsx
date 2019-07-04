@@ -213,7 +213,7 @@ export default class DateRow extends React.Component<IProps, IState> {
 
   public componentDidMount() {
     interact('.dateRowWrapper').draggable({
-      // inertia: true,
+      inertia: true,
       onmove: this.onDrag,
       onstart: this.onStart,
       snap: {

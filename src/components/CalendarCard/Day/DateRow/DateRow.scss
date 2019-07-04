@@ -59,10 +59,10 @@ $day-space-between-min: 10px;
 
     .gap {
       display: inline-block;
-      width: 0;
-      margin-right: 0;
-      // width: $day-width;
-      // margin-right: var(--day-space-between);
+      // width: 0;
+      // margin-right: 0;
+      width: $day-width;
+      margin-right: var(--day-space-between);
     }
 
     .day {
