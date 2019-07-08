@@ -59,17 +59,17 @@ $day-space-between-min: 10px;
 
     .gap {
       display: inline-block;
-      // width: 0;
-      // margin-right: 0;
-      width: $day-width;
-      margin-right: var(--day-space-between);
+      width: 0;
+      padding-right: 0;
+      // width: $day-width;
+      // padding-right: var(--day-space-between);
     }
 
     .day {
       display: inline-flex;
       justify-content: center;
       width: $day-width;
-      margin-right: var(--day-space-between);
+      padding-right: var(--day-space-between);
 
       &.chosen > .main > .index {
         color: white;
