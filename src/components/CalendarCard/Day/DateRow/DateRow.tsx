@@ -129,7 +129,15 @@ export default class DateRow extends React.Component<IProps, IState> {
     };
   }
 
+  public setStateAsync = (newState: IState) =>
+    new Promise(resolve => this.setState(newState, () => resolve()));
+
   public componentDidUpdate(prevProps: IProps) {
+    const wrapper = this.dateRowWrapperRef.current;
+    if (wrapper) {
+      const day = (wrapper as HTMLDivElement).querySelector('.day');
+      if (day) this.dayWidthAroundActual = day.getBoundingClientRect().width;
+    }
     // if (
     //   this.currentChosenDay.valueOf() !== rootStore.uiStore.currentDay.valueOf()
     // ) {
@@ -150,6 +158,7 @@ export default class DateRow extends React.Component<IProps, IState> {
       scrolledDays;
 
     const daysDiffOffset = daysDiff * this.dayWidthAroundActual;
+    console.log(this.dayWidthAroundActual);
 
     console.log(
       `${scrolledDays} + ${rootStore.uiStore.currentDay.diff(
@@ -161,7 +170,7 @@ export default class DateRow extends React.Component<IProps, IState> {
     this.currentChosenDay = rootStore.uiStore.currentDay.clone();
   }
 
-  public updateBorders(reset = false) {
+  public async updateBorders(reset = false) {
     // console.log('updateBorders');
     // console.trace('updateBorders');
 
@@ -199,7 +208,7 @@ export default class DateRow extends React.Component<IProps, IState> {
       const day = (this.dateRowWrapperRef
         .current as HTMLDivElement).querySelector('.day');
       if (day) this.dayWidthAroundActual = day.getBoundingClientRect().width;
-      // console.log('dayWidthAroundActual:', this.dayWidthAroundActual);
+      console.log('dayWidthAroundActual:', this.dayWidthAroundActual);
 
       newLeftBorder = this.currentChosenDay
         .clone()
@@ -247,13 +256,15 @@ export default class DateRow extends React.Component<IProps, IState> {
     }
 
     // console.log('fixedOffset:', this.fixedOffset);
-    this.setState({
+    const promise = this.setStateAsync({
       leftBorder: newLeftBorder.startOf('day'),
       rightBorder: newRightBorder.startOf('day'),
     });
     this.updateTransform();
 
     rootStore.uiStore.setBorderDays(newLeftBorder, newRightBorder);
+
+    return promise;
   }
 
   public componentWillUnmount() {
@@ -272,7 +283,7 @@ export default class DateRow extends React.Component<IProps, IState> {
       onstart: this.onStart,
     });
 
-    this.updateBorders();
+    this.updateBorders(true);
     (window as any).dateRow = this;
   }
 
