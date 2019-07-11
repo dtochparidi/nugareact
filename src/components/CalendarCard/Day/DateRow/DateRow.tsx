@@ -112,15 +112,10 @@ export default class DateRow extends React.Component<IProps, IState> {
     super(props);
 
     this.reactions.push(
-      // reaction(
-      //   () => rootStore.uiStore.currentDay.valueOf(),
-      //   () =>
-      //     lazyTaskManager.addTask(
-      //       new LazyTask({
-      //         func: () => this.scrollToCurrentDay(),
-      //       }),
-      //     ),
-      // ),
+      reaction(
+        () => rootStore.uiStore.currentDay.valueOf(),
+        () => (this.currentChosenDay = rootStore.uiStore.currentDay),
+      ),
       reaction(
         () => rootStore.uiStore.screenWidth,
         () => this.updateBorders(true),
@@ -296,8 +291,6 @@ export default class DateRow extends React.Component<IProps, IState> {
 
         // console.log(corrector, 'from', c1, c2, c3);
 
-        this.currentChosenDay = day;
-
         this.onDrag({ dx } as any, true);
         this.updateBorders(true);
 
@@ -322,6 +315,8 @@ export default class DateRow extends React.Component<IProps, IState> {
   }
 
   public componentDidMount() {
+    this.currentChosenDay = rootStore.uiStore.currentDay;
+
     interact('.dateRowWrapper').draggable({
       // inertia: {
       //   allowResume: true,
@@ -338,6 +333,8 @@ export default class DateRow extends React.Component<IProps, IState> {
   }
 
   public clickHandler = (day: IMoment) => {
+    this.currentChosenDay = day;
+    this.forceUpdate();
     this.scrollToDay(day).then(() => this.props.dayJumpCallback(day));
     // this.props.dayJumpCallback(day);
     // this.currentChosenDay = day.clone();
@@ -402,7 +399,7 @@ export default class DateRow extends React.Component<IProps, IState> {
         month.map(day =>
           this.dayGenerator({
             day,
-            isChoosen: day.valueOf() === rootStore.uiStore.currentDay.valueOf(),
+            isChoosen: day.valueOf() === this.currentChosenDay.valueOf(),
             visitsPerDay: visitsPerDay[day.valueOf()],
           }),
         ),
