@@ -196,13 +196,16 @@ export default class DateRow extends React.Component<IProps, IState> {
         .clone()
         .add(Math.ceil(this.daysCount / 2), 'days');
     } else {
-      const deltaFloat = (this.offset - this.doneOffset) / this.dayWidthAround;
-      const delta = Math.floor(Math.abs(deltaFloat)) * Math.sign(deltaFloat);
+      const offsetDelta = this.offset - this.doneOffset;
+      const deltaFloat = offsetDelta / this.dayWidthAround;
+      const delta = Math.round(Math.abs(deltaFloat)) * Math.sign(deltaFloat);
       // console.log('deltaFloat:', deltaFloat);
+      const offsetRemainder = offsetDelta - delta * this.dayWidthAround;
       // console.log('delta:', delta);
+      // console.log('offset removed:', offsetRemainder);
 
-      this.fixedOffset -= this.offset - this.doneOffset;
-      this.doneOffset = this.offset;
+      this.fixedOffset -= this.offset - offsetRemainder - this.doneOffset;
+      this.doneOffset = this.offset + offsetRemainder;
 
       newLeftBorder = this.state.leftBorder.clone().subtract(delta, 'days');
       newRightBorder = newLeftBorder.clone().add(this.daysCount, 'days');
@@ -211,10 +214,6 @@ export default class DateRow extends React.Component<IProps, IState> {
     const promise = this.setStateAsync({
       leftBorder: newLeftBorder.startOf('day'),
       rightBorder: newRightBorder.startOf('day'),
-    }).then(() => {
-      // console.log('offset after-update change:', this.fixedOffset - offsetWas);
-      // this.c += (this.fixedOffset - offsetWas) % this.dayWidthAround;
-      // console.log(this.c);
     });
     this.updateTransform();
 
@@ -236,26 +235,26 @@ export default class DateRow extends React.Component<IProps, IState> {
     // console.log('currentCenterDay:', currentCenterDay.date());
 
     const daysDelta = -1 * day.diff(currentCenterDay, 'days');
-    // const offsetDelta = daysDelta * this.dayWidthAround;
+    const offsetDelta = daysDelta * this.dayWidthAround;
 
-    const wrapper = this.dateRowWrapperRef.current as HTMLDivElement;
-    const leftDayElement = wrapper.querySelector(
-      `#day${this.state.leftBorder.format('DD_MM_YYYY')}`,
-    ) as HTMLDivElement;
-    const rightDayElement = wrapper.querySelector(
-      `#day${this.state.rightBorder
-        .clone()
-        .subtract(1, 'day')
-        .format('DD_MM_YYYY')}`,
-    ) as HTMLDivElement;
+    // const wrapper = this.dateRowWrapperRef.current as HTMLDivElement;
+    // const leftDayElement = wrapper.querySelector(
+    //   `#day${this.state.leftBorder.format('DD_MM_YYYY')}`,
+    // ) as HTMLDivElement;
+    // const rightDayElement = wrapper.querySelector(
+    //   `#day${this.state.rightBorder
+    //     .clone()
+    //     .subtract(1, 'day')
+    //     .format('DD_MM_YYYY')}`,
+    // ) as HTMLDivElement;
 
-    const offsetDelta =
-      ((rightDayElement.getBoundingClientRect().left -
-        leftDayElement.getBoundingClientRect().left) /
-        this.state.rightBorder.diff(this.state.leftBorder, 'days')) *
-      daysDelta;
+    // const offsetDelta =
+    //   ((rightDayElement.getBoundingClientRect().left -
+    //     leftDayElement.getBoundingClientRect().left) /
+    //     this.state.rightBorder.diff(this.state.leftBorder, 'days')) *
+    //   daysDelta;
 
-    console.log(offsetDelta, daysDelta);
+    // console.log(offsetDelta, daysDelta * this.dayWidthAround, daysDelta);
     const startOffset = this.offset;
     const endOffset = startOffset + offsetDelta;
     const startTime = Date.now();
