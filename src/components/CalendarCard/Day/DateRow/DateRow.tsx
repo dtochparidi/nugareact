@@ -382,8 +382,10 @@ export default class DateRow extends React.Component<IProps, IState> {
       (rootStore.uiStore.firstLoadDone ? 1 : 0);
     // console.log('daysCount:', daysCount);
 
-    const palette = [1, 0.7, 0.5];
+    const pastOpacity = 1;
+    const futureOpacity = 0.7;
 
+    const now = moment().startOf('day');
     const monthes = new Array(daysCount)
       .fill(null)
       .map((v, i) => leftBorder.clone().add(i, 'days'))
@@ -405,7 +407,8 @@ export default class DateRow extends React.Component<IProps, IState> {
           this.dayGenerator({
             day,
             isChoosen: day.valueOf() === this.currentChosenDay.valueOf(),
-            opacity: palette[i] || palette.last(),
+            opacity:
+              day.valueOf() > now.valueOf() ? futureOpacity : pastOpacity,
             visitsPerDay: visitsPerDay[day.valueOf()],
           }),
         ),
