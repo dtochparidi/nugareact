@@ -47,6 +47,7 @@ interface IDayGeneratorArgs {
   visitsPerDay: number;
   isChoosen: boolean;
   day: IMoment;
+  opacity: number;
 }
 
 // let compares = 0;
@@ -73,7 +74,7 @@ export default class DateRow extends React.Component<IProps, IState> {
   // private c = 0;
 
   private dayGenerator = moize(
-    ({ day, visitsPerDay, isChoosen }: IDayGeneratorArgs) => {
+    ({ day, visitsPerDay, isChoosen, opacity }: IDayGeneratorArgs) => {
       const handler = () => this.clickHandler(day);
       return (
         <div
@@ -81,6 +82,7 @@ export default class DateRow extends React.Component<IProps, IState> {
           id={`day${day.format('DD_MM_YYYY')}`}
           className={`day ${isChoosen ? 'chosen' : ''}`}
           onClick={handler}
+          style={{ opacity }}
         >
           <span className="main">
             <span className="name">
@@ -380,6 +382,8 @@ export default class DateRow extends React.Component<IProps, IState> {
       (rootStore.uiStore.firstLoadDone ? 1 : 0);
     // console.log('daysCount:', daysCount);
 
+    const palette = [1, 0.7, 0.5];
+
     const monthes = new Array(daysCount)
       .fill(null)
       .map((v, i) => leftBorder.clone().add(i, 'days'))
@@ -396,11 +400,12 @@ export default class DateRow extends React.Component<IProps, IState> {
         },
         [[]],
       )
-      .map(month =>
+      .map((month, i) =>
         month.map(day =>
           this.dayGenerator({
             day,
             isChoosen: day.valueOf() === this.currentChosenDay.valueOf(),
+            opacity: palette[i] || palette.last(),
             visitsPerDay: visitsPerDay[day.valueOf()],
           }),
         ),

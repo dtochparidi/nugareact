@@ -3,7 +3,12 @@
 interface Array<T> {
   append(el: T): T;
   joinObj(separator: (gapIndex: number) => any): T;
+  last(): T;
 }
+
+Array.prototype.last = function() {
+  return this[this.length - 1];
+};
 
 Array.prototype.append = function(el) {
   this.push(el);
