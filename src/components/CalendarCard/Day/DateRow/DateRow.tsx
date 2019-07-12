@@ -316,16 +316,18 @@ export default class DateRow extends React.Component<IProps, IState> {
   public componentDidMount() {
     this.currentChosenDay = rootStore.uiStore.currentDay;
 
-    interact('.dateRowWrapper').draggable({
-      // inertia: {
-      //   allowResume: true,
-      //   smoothEndDuration: 1000,
-      // },
-      inertia: false,
-      onend: this.onDragEnded,
-      onmove: this.onDrag,
-      onstart: this.onStart,
-    });
+    interact('.dateRowWrapper')
+      .draggable({
+        // inertia: {
+        //   allowResume: true,
+        //   smoothEndDuration: 1000,
+        // },
+        inertia: false,
+        onend: this.onDragEnded,
+        onmove: this.onDrag,
+        onstart: this.onStart,
+      })
+      .styleCursor(false);
 
     this.updateBorders(true);
     (window as any).dateRow = this;
