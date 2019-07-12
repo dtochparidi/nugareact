@@ -71,6 +71,7 @@ export default class DateRow extends React.Component<IProps, IState> {
   // private currentAnimationID = 0;
   private daysCount = 0;
   private lastBorderOffset = 0;
+  private offsetRemainderAccumulator = 0;
   // private c = 0;
 
   private dayGenerator = moize(
@@ -147,7 +148,7 @@ export default class DateRow extends React.Component<IProps, IState> {
     // }
   }
 
-  public async updateBorders(reset = false) {
+  public async updateBorders(reset = false, rounding = true) {
     // console.log('updateBorders');
     // const offsetWas = this.fixedOffset;
 
@@ -198,13 +199,31 @@ export default class DateRow extends React.Component<IProps, IState> {
         .clone()
         .add(Math.ceil(this.daysCount / 2), 'days');
     } else {
+      // const roundingCoeff = rounding ? 1 : 0;
+      // const offsetDelta = this.offset - this.doneOffset;
+      // const deltaFloat =
+      //   (offsetDelta + this.offsetRemainderAccumulator * roundingCoeff) /
+      //   this.dayWidthAround;
+      // const delta = Math.round(Math.abs(deltaFloat)) * Math.sign(deltaFloat);
+      // // console.log('deltaFloat:', deltaFloat);
+      // const offsetRemainder = offsetDelta - delta * this.dayWidthAround;
+      // this.offsetRemainderAccumulator += offsetRemainder;
+      // console.log('delta:', delta);
+      // console.log('offset removed:', offsetRemainder);
+
+      // this.offset -= offsetRemainder;
+      // this.fixedOffset -= this.offset - this.doneOffset - offsetRemainder;
+      // this.doneOffset = this.offset;
+
       const offsetDelta = this.offset - this.doneOffset;
       const deltaFloat = offsetDelta / this.dayWidthAround;
       const delta = Math.round(Math.abs(deltaFloat)) * Math.sign(deltaFloat);
       // console.log('deltaFloat:', deltaFloat);
       const offsetRemainder = offsetDelta - delta * this.dayWidthAround;
+      this.offsetRemainderAccumulator += offsetRemainder;
       // console.log('delta:', delta);
       // console.log('offset removed:', offsetRemainder);
+      console.log(this.offsetRemainderAccumulator);
 
       this.fixedOffset -= this.offset - offsetRemainder - this.doneOffset;
       this.doneOffset = this.offset + offsetRemainder;
@@ -293,13 +312,13 @@ export default class DateRow extends React.Component<IProps, IState> {
         // console.log(corrector, 'from', c1, c2, c3);
 
         this.onDrag({ dx } as any, true);
-        this.updateBorders(true);
+        this.updateBorders(true, false);
 
         resolver();
       } else {
         const offset = getCurrentOffset(time);
         const dx = offset - this.offset;
-        this.onDrag({ dx } as any);
+        this.onDrag({ dx } as any, undefined, false);
 
         requestAnimationFrame(scroller);
       }
@@ -455,7 +474,11 @@ export default class DateRow extends React.Component<IProps, IState> {
     //
   };
 
-  private onDrag = (e: interact.InteractEvent, silently = false): boolean => {
+  private onDrag = (
+    e: interact.InteractEvent,
+    silently = false,
+    rounding = true,
+  ): boolean => {
     // function minByAbs(a: number, b: number) {
     //   const A = Math.abs(a);
     //   const B = Math.abs(b);
@@ -488,7 +511,7 @@ export default class DateRow extends React.Component<IProps, IState> {
       // );
       // this.offset -= corrector;
 
-      this.updateBorders();
+      this.updateBorders(undefined, rounding);
       this.lastBorderOffset = newOffset;
     }
 

@@ -142,13 +142,15 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     );
 
     if (clientSide)
-      interact('.appointmentCell').draggable(
-        createDragConfig(
-          this.onAppointmentDraggingStart.bind(this),
-          () => null,
-          this.onAppointmentDraggingEnd.bind(this),
-        ),
-      );
+      interact('.appointmentCell')
+        .draggable(
+          createDragConfig(
+            this.onAppointmentDraggingStart.bind(this),
+            () => null,
+            this.onAppointmentDraggingEnd.bind(this),
+          ),
+        )
+        .styleCursor(false);
 
     this.state = {
       cellWidth: 0,
