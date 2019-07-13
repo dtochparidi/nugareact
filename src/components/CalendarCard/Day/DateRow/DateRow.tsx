@@ -241,22 +241,7 @@ export default class DateRow extends React.Component<IProps, IState> {
     return promise;
   }
 
-  public scrollToDay(
-    day: IMoment,
-    scrollDuration: number = 600,
-  ): Promise<void> {
-    // console.log(`--- scrollToDay ${day.date()}`);
-
-    this.isAnimating = true;
-    cancelAnimationFrame(this.currentAnimationID);
-
-    const currentCenterDay = this.state.leftBorder
-      .clone()
-      .add(Math.floor(this.daysCount / 2), 'days');
-
-    const daysDelta = -1 * day.diff(currentCenterDay, 'days');
-    const offsetDelta = daysDelta * this.dayWidthAround;
-
+  public scrollDelta(offsetDelta: number, scrollDuration: number = 600) {
     const startOffset = this.offset;
     const endOffset = startOffset + offsetDelta;
     const startTime = Date.now();
@@ -285,7 +270,7 @@ export default class DateRow extends React.Component<IProps, IState> {
         const dx = offset - this.offset;
 
         this.onDrag({ dx } as any, true);
-        this.updateBorders(true, false);
+        // this.updateBorders(false, false);
         this.isAnimating = false;
 
         resolver();
@@ -302,6 +287,25 @@ export default class DateRow extends React.Component<IProps, IState> {
     scroller();
 
     return promise;
+  }
+
+  public scrollToDay(
+    day: IMoment,
+    scrollDuration: number = 600,
+  ): Promise<void> {
+    console.log(`--- scrollToDay ${day.date()}`);
+
+    this.isAnimating = true;
+    cancelAnimationFrame(this.currentAnimationID);
+
+    const currentCenterDay = this.state.leftBorder
+      .clone()
+      .add(Math.floor(this.daysCount / 2), 'days');
+
+    const daysDelta = -1 * day.diff(currentCenterDay, 'days');
+    const offsetDelta = daysDelta * this.dayWidthAround;
+
+    return this.scrollDelta(offsetDelta, scrollDuration);
   }
 
   public componentWillUnmount() {
@@ -333,7 +337,9 @@ export default class DateRow extends React.Component<IProps, IState> {
 
     this.currentChosenDay = day;
     this.forceUpdate();
-    this.scrollToDay(day).then(() => this.props.dayJumpCallback(day));
+    this.scrollToDay(day)
+      .then(() => this.updateBorders(true, false))
+      .then(() => this.props.dayJumpCallback(day));
     // this.props.dayJumpCallback(day);
     // this.currentChosenDay = day.clone();
     // this.updateBorders(true);
@@ -345,6 +351,8 @@ export default class DateRow extends React.Component<IProps, IState> {
     const maxSpeed = 500;
     const speedScale = 0.1;
     const offsetDeltaRaw = Math.min(speed * speedScale, maxSpeed) * sign;
+
+    // this.updateBorders(false, true);
 
     const newOffsetRaw = this.offset + offsetDeltaRaw;
     const newOffsetTotalRaw = newOffsetRaw + this.fixedOffset;
@@ -362,10 +370,22 @@ export default class DateRow extends React.Component<IProps, IState> {
 
     const corrector = minByAbs(c1, minByAbs(c2, c3));
     const newOffset = newOffsetRaw - corrector;
+    const offsetDelta = newOffset - this.offset;
 
-    this.offset = newOffset;
+    // const daysDelta = Math.ceil(offsetDelta / this.dayWidthAround);
+    // const targetDay = this.state.leftBorder
+    //   .clone()
+    //   .add(daysDelta + Math.floor(this.daysCount / 2), 'days');
+
+    console.log('offsetDelta:', offsetDelta);
+    // console.log('daysDelta:', daysDelta);
+
+    // this.scrollToDay(targetDay).then(() => this.updateBorders(false, false));
+    this.scrollDelta(offsetDelta).then(() => this.updateBorders(false, false));
+
+    // this.offset = newOffset;
     // this.updateTransform();
-    this.updateBorders();
+    // this.updateBorders();
   };
 
   public render() {
