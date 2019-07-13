@@ -72,6 +72,10 @@ $day-space-between-min: 10px;
       width: $day-width;
       padding-right: var(--day-space-between);
 
+      &:last-of-type {
+        padding-right: 0px;
+      }
+
       &.chosen > .main > .index {
         color: white;
         background: rgb(71, 58, 255);

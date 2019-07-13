@@ -145,16 +145,16 @@ export default class DateRow extends React.Component<IProps, IState> {
 
     const rowWidth = (this.dateRowWrapperRef.current as HTMLDivElement)
       .offsetWidth;
+    // .current as HTMLDivElement).getBoundingClientRect().width;
 
-    const daysCountRaw =
-      Math.floor((rowWidth + daySpaceBetweenMin) / this.dayWidthAround) +
-      this.buffer;
+    const daysCountRaw = Math.floor(rowWidth / (dayWidth + daySpaceBetweenMin));
 
-    this.daysCount = daysCountRaw % 2 === 0 ? daysCountRaw + 1 : daysCountRaw;
+    this.daysCount = daysCountRaw; //  % 2 === 0 ? daysCountRaw + 1 : daysCountRaw;
 
     this.spaceBetween =
       daySpaceBetweenMin +
-      (rowWidth % dayWidth) / (this.daysCount - this.buffer);
+      ((rowWidth + daySpaceBetweenMin) % (dayWidth + daySpaceBetweenMin)) /
+        this.daysCount;
 
     this.dayWidthAround = dayWidth + this.spaceBetween;
     // console.log('rowWidth:', rowWidth);
@@ -175,7 +175,7 @@ export default class DateRow extends React.Component<IProps, IState> {
     if (reset) {
       // console.log('reset');
       this.offset = 0;
-      this.fixedOffset = (-this.buffer / 2) * this.dayWidthAround;
+      this.fixedOffset = -this.buffer * this.dayWidthAround;
       this.doneOffset = 0;
 
       // const day = (this.dateRowWrapperRef
@@ -185,10 +185,10 @@ export default class DateRow extends React.Component<IProps, IState> {
 
       newLeftBorder = this.currentChosenDay
         .clone()
-        .subtract(Math.floor(this.daysCount / 2), 'days');
+        .subtract(Math.floor(this.daysCount / 2) + this.buffer, 'days');
       newRightBorder = this.currentChosenDay
         .clone()
-        .add(Math.ceil(this.daysCount / 2), 'days');
+        .add(Math.ceil(this.daysCount / 2) + this.buffer, 'days');
     } else {
       const roundingCoeff = rounding ? 1 : 0;
       // const deltaFloat = offsetDelta / this.dayWidthAround;
@@ -227,7 +227,9 @@ export default class DateRow extends React.Component<IProps, IState> {
       }
 
       newLeftBorder = this.state.leftBorder.clone().subtract(delta, 'days');
-      newRightBorder = newLeftBorder.clone().add(this.daysCount, 'days');
+      newRightBorder = newLeftBorder
+        .clone()
+        .add(this.daysCount + this.buffer * 2, 'days');
     }
 
     const promise = this.setStateAsync({
@@ -284,6 +286,8 @@ export default class DateRow extends React.Component<IProps, IState> {
     };
 
     const promise: Promise<void> = new Promise(r => (resolver = r));
+
+    this.onStart({} as any);
     scroller();
 
     return promise;
@@ -298,12 +302,19 @@ export default class DateRow extends React.Component<IProps, IState> {
     this.isAnimating = true;
     cancelAnimationFrame(this.currentAnimationID);
 
+    // const rowWidth = (this.dateRowWrapperRef.current as HTMLDivElement)
+    //   .offsetWidth;
+
+    // const translate = this.offset + this.fixedOffset;
+    // const centerDayOffset = translate - (Math.floor(this.daysCount / 2) + this.buffer) * this.dayWidthAround;
+
     const currentCenterDay = this.state.leftBorder
       .clone()
-      .add(Math.floor(this.daysCount / 2), 'days');
+      .add(Math.floor(this.daysCount / 2) + this.buffer, 'days');
 
     const daysDelta = -1 * day.diff(currentCenterDay, 'days');
     const offsetDelta = daysDelta * this.dayWidthAround;
+    console.log({ daysDelta });
 
     return this.scrollDelta(offsetDelta, scrollDuration);
   }
@@ -370,22 +381,22 @@ export default class DateRow extends React.Component<IProps, IState> {
 
     const corrector = minByAbs(c1, minByAbs(c2, c3));
     const newOffset = newOffsetRaw - corrector;
-    const offsetDelta = newOffset - this.offset;
+    // const offsetDelta = newOffset - this.offset;
 
     // const daysDelta = Math.ceil(offsetDelta / this.dayWidthAround);
     // const targetDay = this.state.leftBorder
     //   .clone()
     //   .add(daysDelta + Math.floor(this.daysCount / 2), 'days');
 
-    console.log('offsetDelta:', offsetDelta);
+    // console.log('offsetDelta:', offsetDelta);
     // console.log('daysDelta:', daysDelta);
 
     // this.scrollToDay(targetDay).then(() => this.updateBorders(false, false));
-    this.scrollDelta(offsetDelta).then(() => this.updateBorders(false, false));
+    // this.scrollDelta(offsetDelta).then(() => this.updateBorders(false, false));
 
-    // this.offset = newOffset;
-    // this.updateTransform();
-    // this.updateBorders();
+    this.offset = newOffset;
+    this.updateTransform();
+    this.updateBorders();
   };
 
   public render() {
@@ -488,6 +499,7 @@ export default class DateRow extends React.Component<IProps, IState> {
 
   private onStart = (e: interact.InteractEvent) => {
     //
+    this.lastBorderOffset = this.offset;
   };
 
   private onDrag = (
@@ -511,6 +523,8 @@ export default class DateRow extends React.Component<IProps, IState> {
 
     this.offset += dx;
     const borderPassed = !silently && Math.abs(delta) >= this.dayWidthAround;
+
+    console.log(borderPassed, Math.abs(delta) - this.dayWidthAround);
 
     if (borderPassed) {
       // const c1 = newOffset % this.dayWidthAround;
