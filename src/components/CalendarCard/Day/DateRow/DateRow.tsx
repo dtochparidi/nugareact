@@ -136,17 +136,7 @@ export default class DateRow extends React.Component<IProps, IState> {
     new Promise(resolve => this.setState(newState, () => resolve()));
 
   public componentDidUpdate(prevProps: IProps) {
-    // const wrapper = this.dateRowWrapperRef.current;
-    // if (wrapper) {
-    //   const day = (wrapper as HTMLDivElement).querySelector('.day');
-    //   if (day) this.dayWidthAround = day.getBoundingClientRect().width;
-    // }
-    // if (
-    //   this.currentChosenDay.valueOf() !== rootStore.uiStore.currentDay.valueOf()
-    // ) {
-    //   this.currentChosenDay = rootStore.uiStore.currentDay.clone();
-    //   this.updateBorders(true);
-    // }
+    //
   }
 
   public async updateBorders(reset = false, rounding = true) {
@@ -350,12 +340,32 @@ export default class DateRow extends React.Component<IProps, IState> {
   };
 
   public onDragEnded = (e: interact.InteractEvent) => {
-    // const { speed } = e;
-    // const sign = Math.sign(e.velocityX);
-    // const maxSpeed = 500;
-    // const speedScale = 0.1;
-    // const offsetDeltaRaw = Math.min(speed * speedScale, maxSpeed) * sign;
-    // this.smoothInertiaSnap(offsetDeltaRaw);
+    const { speed } = e;
+    const sign = Math.sign(e.velocityX);
+    const maxSpeed = 500;
+    const speedScale = 0.1;
+    const offsetDeltaRaw = Math.min(speed * speedScale, maxSpeed) * sign;
+
+    const newOffsetRaw = this.offset + offsetDeltaRaw;
+    const newOffsetTotalRaw = newOffsetRaw + this.fixedOffset;
+
+    function minByAbs(a: number, b: number) {
+      const A = Math.abs(a);
+      const B = Math.abs(b);
+
+      return A < B ? a : b;
+    }
+
+    const c1 = newOffsetTotalRaw % this.dayWidthAround;
+    const c2 = (newOffsetTotalRaw + this.dayWidthAround) % this.dayWidthAround;
+    const c3 = (newOffsetTotalRaw - this.dayWidthAround) % this.dayWidthAround;
+
+    const corrector = minByAbs(c1, minByAbs(c2, c3));
+    const newOffset = newOffsetRaw - corrector;
+
+    this.offset = newOffset;
+    // this.updateTransform();
+    this.updateBorders();
   };
 
   public render() {
