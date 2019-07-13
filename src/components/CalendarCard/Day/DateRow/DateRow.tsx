@@ -63,7 +63,7 @@ export default class DateRow extends React.Component<IProps, IState> {
   private dayWidthAround = dayWidth + this.spaceBetween;
   // private dayWidthAroundMin = dayWidth + daySpaceBetweenMin;
   // private dayWidthAroundActual = this.dayWidthAround;
-  private buffer = 2;
+  private buffer = -2;
   // private nextCheckTimeout = this.dayWidthAround;
   private previosDaysCount = 0;
   private previosContainerWidth = 0;
@@ -177,6 +177,7 @@ export default class DateRow extends React.Component<IProps, IState> {
       this.offset = 0;
       this.fixedOffset = -this.buffer * this.dayWidthAround;
       this.doneOffset = 0;
+      this.offsetRemainderAccumulator = 0;
 
       // const day = (this.dateRowWrapperRef
       //   .current as HTMLDivElement).querySelector('.day');
@@ -210,8 +211,13 @@ export default class DateRow extends React.Component<IProps, IState> {
       // const offsetDelta = this.offset - this.doneOffset;
       // const deltaFloat = offsetDelta / this.dayWidthAround;
       const delta = Math.round(Math.abs(deltaFloat)) * Math.sign(deltaFloat);
-      // console.log('deltaFloat:', deltaFloat);
       const offsetRemainder = offsetDelta - delta * this.dayWidthAround;
+      // console.log({
+      //   delta,
+      //   offsetDelta,
+      //   offsetRemainder,
+      // });
+      // console.log('deltaFloat:', deltaFloat);
       this.offsetRemainderAccumulator += offsetRemainder;
       // console.log('delta:', delta);
       // console.log('offset removed:', offsetRemainder);
@@ -244,6 +250,9 @@ export default class DateRow extends React.Component<IProps, IState> {
   }
 
   public scrollDelta(offsetDelta: number, scrollDuration: number = 600) {
+    this.isAnimating = true;
+    cancelAnimationFrame(this.currentAnimationID);
+
     const startOffset = this.offset;
     const endOffset = startOffset + offsetDelta;
     const startTime = Date.now();
@@ -271,7 +280,7 @@ export default class DateRow extends React.Component<IProps, IState> {
         const offset = getCurrentOffset(endTime);
         const dx = offset - this.offset;
 
-        this.onDrag({ dx } as any, true);
+        this.handleDragging({ dx } as any, true);
         // this.updateBorders(false, false);
         this.isAnimating = false;
 
@@ -279,7 +288,7 @@ export default class DateRow extends React.Component<IProps, IState> {
       } else {
         const offset = getCurrentOffset(time);
         const dx = offset - this.offset;
-        this.onDrag({ dx } as any, undefined, false);
+        this.handleDragging({ dx } as any, undefined, false);
 
         this.currentAnimationID = requestAnimationFrame(scroller);
       }
@@ -298,9 +307,6 @@ export default class DateRow extends React.Component<IProps, IState> {
     scrollDuration: number = 600,
   ): Promise<void> {
     console.log(`--- scrollToDay ${day.date()}`);
-
-    this.isAnimating = true;
-    cancelAnimationFrame(this.currentAnimationID);
 
     // const rowWidth = (this.dateRowWrapperRef.current as HTMLDivElement)
     //   .offsetWidth;
@@ -334,7 +340,7 @@ export default class DateRow extends React.Component<IProps, IState> {
         // },
         inertia: false,
         onend: this.onDragEnded,
-        onmove: this.onDrag,
+        onmove: this.onUserDrag,
         onstart: this.onStart,
       })
       .styleCursor(false);
@@ -357,6 +363,8 @@ export default class DateRow extends React.Component<IProps, IState> {
   };
 
   public onDragEnded = (e: interact.InteractEvent) => {
+    if (this.isAnimating) return;
+
     const { speed } = e;
     const sign = Math.sign(e.velocityX);
     const maxSpeed = 500;
@@ -381,7 +389,7 @@ export default class DateRow extends React.Component<IProps, IState> {
 
     const corrector = minByAbs(c1, minByAbs(c2, c3));
     const newOffset = newOffsetRaw - corrector;
-    // const offsetDelta = newOffset - this.offset;
+    const offsetDelta = newOffset - this.offset;
 
     // const daysDelta = Math.ceil(offsetDelta / this.dayWidthAround);
     // const targetDay = this.state.leftBorder
@@ -392,11 +400,18 @@ export default class DateRow extends React.Component<IProps, IState> {
     // console.log('daysDelta:', daysDelta);
 
     // this.scrollToDay(targetDay).then(() => this.updateBorders(false, false));
-    // this.scrollDelta(offsetDelta).then(() => this.updateBorders(false, false));
+    // console.log('---');
+    // console.log(this.offset);
+    // this.updateBorders(false, true);
+    // console.log(this.offset);
+    // if (1 !== 1)
+    this.scrollDelta(offsetDelta, 700).then(() =>
+      this.updateBorders(false, false),
+    );
 
-    this.offset = newOffset;
-    this.updateTransform();
-    this.updateBorders();
+    // this.offset = newOffset;
+    // this.updateTransform();
+    // this.updateBorders();
   };
 
   public render() {
@@ -497,16 +512,16 @@ export default class DateRow extends React.Component<IProps, IState> {
     );
   }
 
-  private onStart = (e: interact.InteractEvent) => {
+  public onStart = (e: interact.InteractEvent) => {
     //
     this.lastBorderOffset = this.offset;
   };
 
-  private onDrag = (
+  public handleDragging(
     e: interact.InteractEvent,
     silently = false,
     rounding = true,
-  ): boolean => {
+  ): boolean {
     // function minByAbs(a: number, b: number) {
     //   const A = Math.abs(a);
     //   const B = Math.abs(b);
@@ -524,7 +539,7 @@ export default class DateRow extends React.Component<IProps, IState> {
     this.offset += dx;
     const borderPassed = !silently && Math.abs(delta) >= this.dayWidthAround;
 
-    console.log(borderPassed, Math.abs(delta) - this.dayWidthAround);
+    // console.log(borderPassed, Math.abs(delta) - this.dayWidthAround);
 
     if (borderPassed) {
       // const c1 = newOffset % this.dayWidthAround;
@@ -548,9 +563,19 @@ export default class DateRow extends React.Component<IProps, IState> {
     this.updateTransform();
 
     return borderPassed;
+  }
+
+  public onUserDrag = (
+    e: interact.InteractEvent,
+    silently = false,
+    rounding = true,
+  ): boolean => {
+    if (this.isAnimating) return false;
+
+    return this.handleDragging(e, silently, rounding);
   };
 
-  private updateTransform() {
+  public updateTransform() {
     const dateRowWrapper = this.dateRowWrapperRef.current as HTMLDivElement;
     dateRowWrapper.style.transform = `translate(${this.offset +
       this.fixedOffset}px, 0px)`;

@@ -1,4 +1,5 @@
 import './extenders/connetExtenders';
+import './extenders/scripts';
 
 import { LazyTaskManager } from '@levabala/lazytask/build/dist';
 import lazyTaskManager from '@levabala/lazytask/build/dist/LazyTaskManager';
