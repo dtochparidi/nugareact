@@ -68,10 +68,11 @@ export default class DateRow extends React.Component<IProps, IState> {
   private previosDaysCount = 0;
   private previosContainerWidth = 0;
   private currentChosenDay = rootStore.uiStore.currentDay.clone();
-  // private currentAnimationID = 0;
+  private currentAnimationID = 0;
+  private isAnimating = false;
   private daysCount = 0;
   private lastBorderOffset = 0;
-  private offsetRemainderAccumulator = 0;
+  // private offsetRemainderAccumulator = 0;
   // private c = 0;
 
   private dayGenerator = moize(
@@ -220,10 +221,10 @@ export default class DateRow extends React.Component<IProps, IState> {
       const delta = Math.round(Math.abs(deltaFloat)) * Math.sign(deltaFloat);
       // console.log('deltaFloat:', deltaFloat);
       const offsetRemainder = offsetDelta - delta * this.dayWidthAround;
-      this.offsetRemainderAccumulator += offsetRemainder;
+      // this.offsetRemainderAccumulator += offsetRemainder;
       // console.log('delta:', delta);
       // console.log('offset removed:', offsetRemainder);
-      console.log(this.offsetRemainderAccumulator);
+      // console.log(this.offsetRemainderAccumulator);
 
       this.fixedOffset -= this.offset - offsetRemainder - this.doneOffset;
       this.doneOffset = this.offset + offsetRemainder;
@@ -249,33 +250,16 @@ export default class DateRow extends React.Component<IProps, IState> {
   ): Promise<void> {
     // console.log(`--- scrollToDay ${day.date()}`);
 
+    this.isAnimating = true;
+    cancelAnimationFrame(this.currentAnimationID);
+
     const currentCenterDay = this.state.leftBorder
       .clone()
       .add(Math.floor(this.daysCount / 2), 'days');
-    // console.log('nowDay:', moment().date());
-    // console.log('currentCenterDay:', currentCenterDay.date());
 
     const daysDelta = -1 * day.diff(currentCenterDay, 'days');
     const offsetDelta = daysDelta * this.dayWidthAround;
 
-    // const wrapper = this.dateRowWrapperRef.current as HTMLDivElement;
-    // const leftDayElement = wrapper.querySelector(
-    //   `#day${this.state.leftBorder.format('DD_MM_YYYY')}`,
-    // ) as HTMLDivElement;
-    // const rightDayElement = wrapper.querySelector(
-    //   `#day${this.state.rightBorder
-    //     .clone()
-    //     .subtract(1, 'day')
-    //     .format('DD_MM_YYYY')}`,
-    // ) as HTMLDivElement;
-
-    // const offsetDelta =
-    //   ((rightDayElement.getBoundingClientRect().left -
-    //     leftDayElement.getBoundingClientRect().left) /
-    //     this.state.rightBorder.diff(this.state.leftBorder, 'days')) *
-    //   daysDelta;
-
-    // console.log(offsetDelta, daysDelta * this.dayWidthAround, daysDelta);
     const startOffset = this.offset;
     const endOffset = startOffset + offsetDelta;
     const startTime = Date.now();
@@ -292,12 +276,6 @@ export default class DateRow extends React.Component<IProps, IState> {
           ? Math.min(offsetRaw, endOffset)
           : Math.max(offsetRaw, endOffset);
 
-      // console.log(
-      //   `${(progress * 100).toFixed()}% - ${(endOffset - this.offset).toFixed(
-      //     2,
-      //   )}px left`,
-      // );
-
       return offset;
     };
 
@@ -309,10 +287,9 @@ export default class DateRow extends React.Component<IProps, IState> {
         const offset = getCurrentOffset(endTime);
         const dx = offset - this.offset;
 
-        // console.log(corrector, 'from', c1, c2, c3);
-
         this.onDrag({ dx } as any, true);
         this.updateBorders(true, false);
+        this.isAnimating = false;
 
         resolver();
       } else {
@@ -320,7 +297,7 @@ export default class DateRow extends React.Component<IProps, IState> {
         const dx = offset - this.offset;
         this.onDrag({ dx } as any, undefined, false);
 
-        requestAnimationFrame(scroller);
+        this.currentAnimationID = requestAnimationFrame(scroller);
       }
     };
 
@@ -355,6 +332,8 @@ export default class DateRow extends React.Component<IProps, IState> {
   }
 
   public clickHandler = (day: IMoment) => {
+    if (this.isAnimating) return;
+
     this.currentChosenDay = day;
     this.forceUpdate();
     this.scrollToDay(day).then(() => this.props.dayJumpCallback(day));
