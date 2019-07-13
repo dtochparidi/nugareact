@@ -72,7 +72,7 @@ export default class DateRow extends React.Component<IProps, IState> {
   private isAnimating = false;
   private daysCount = 0;
   private lastBorderOffset = 0;
-  // private offsetRemainderAccumulator = 0;
+  private offsetRemainderAccumulator = 0;
   // private c = 0;
 
   private dayGenerator = moize(
@@ -200,11 +200,12 @@ export default class DateRow extends React.Component<IProps, IState> {
         .clone()
         .add(Math.ceil(this.daysCount / 2), 'days');
     } else {
-      // const roundingCoeff = rounding ? 1 : 0;
-      // const offsetDelta = this.offset - this.doneOffset;
-      // const deltaFloat =
-      //   (offsetDelta + this.offsetRemainderAccumulator * roundingCoeff) /
-      //   this.dayWidthAround;
+      const roundingCoeff = rounding ? 1 : 0;
+      // const deltaFloat = offsetDelta / this.dayWidthAround;
+      const offsetDelta = this.offset - this.doneOffset;
+      const deltaFloat =
+        (offsetDelta + this.offsetRemainderAccumulator * roundingCoeff) /
+        this.dayWidthAround;
       // const delta = Math.round(Math.abs(deltaFloat)) * Math.sign(deltaFloat);
       // // console.log('deltaFloat:', deltaFloat);
       // const offsetRemainder = offsetDelta - delta * this.dayWidthAround;
@@ -216,18 +217,24 @@ export default class DateRow extends React.Component<IProps, IState> {
       // this.fixedOffset -= this.offset - this.doneOffset - offsetRemainder;
       // this.doneOffset = this.offset;
 
-      const offsetDelta = this.offset - this.doneOffset;
-      const deltaFloat = offsetDelta / this.dayWidthAround;
+      // const offsetDelta = this.offset - this.doneOffset;
+      // const deltaFloat = offsetDelta / this.dayWidthAround;
       const delta = Math.round(Math.abs(deltaFloat)) * Math.sign(deltaFloat);
       // console.log('deltaFloat:', deltaFloat);
       const offsetRemainder = offsetDelta - delta * this.dayWidthAround;
-      // this.offsetRemainderAccumulator += offsetRemainder;
+      this.offsetRemainderAccumulator += offsetRemainder;
       // console.log('delta:', delta);
       // console.log('offset removed:', offsetRemainder);
       // console.log(this.offsetRemainderAccumulator);
 
-      this.fixedOffset -= this.offset - offsetRemainder - this.doneOffset;
-      this.doneOffset = this.offset + offsetRemainder;
+      if (rounding) {
+        this.offset -= offsetRemainder;
+        this.fixedOffset -= this.offset - this.doneOffset - offsetRemainder;
+        this.doneOffset = this.offset;
+      } else {
+        this.fixedOffset -= this.offset - offsetRemainder - this.doneOffset;
+        this.doneOffset = this.offset + offsetRemainder;
+      }
 
       newLeftBorder = this.state.leftBorder.clone().subtract(delta, 'days');
       newRightBorder = newLeftBorder.clone().add(this.daysCount, 'days');
