@@ -63,7 +63,7 @@ export default class DateRow extends React.Component<IProps, IState> {
   private dayWidthAround = dayWidth + this.spaceBetween;
   // private dayWidthAroundMin = dayWidth + daySpaceBetweenMin;
   // private dayWidthAroundActual = this.dayWidthAround;
-  private buffer = -2;
+  private buffer = 2;
   // private nextCheckTimeout = this.dayWidthAround;
   private previosDaysCount = 0;
   private previosContainerWidth = 0;
@@ -191,12 +191,11 @@ export default class DateRow extends React.Component<IProps, IState> {
         .clone()
         .add(Math.ceil(this.daysCount / 2) + this.buffer, 'days');
     } else {
-      const roundingCoeff = rounding ? 1 : 0;
+      // const roundingCoeff = rounding ? 1 : 0;
       // const deltaFloat = offsetDelta / this.dayWidthAround;
       const offsetDelta = this.offset - this.doneOffset;
       const deltaFloat =
-        (offsetDelta + this.offsetRemainderAccumulator * roundingCoeff) /
-        this.dayWidthAround;
+        (offsetDelta + this.offsetRemainderAccumulator) / this.dayWidthAround;
       // const delta = Math.round(Math.abs(deltaFloat)) * Math.sign(deltaFloat);
       // // console.log('deltaFloat:', deltaFloat);
       // const offsetRemainder = offsetDelta - delta * this.dayWidthAround;
@@ -223,19 +222,30 @@ export default class DateRow extends React.Component<IProps, IState> {
       // console.log('offset removed:', offsetRemainder);
       // console.log(this.offsetRemainderAccumulator);
 
+      let daysCorrect = 0;
       if (rounding) {
         this.offset -= offsetRemainder;
         this.fixedOffset -= this.offset - this.doneOffset - offsetRemainder;
         this.doneOffset = this.offset;
+
+        const daysCorrecting =
+          Math.round((this.offset + this.fixedOffset) / this.dayWidthAround) +
+          2;
+        console.log({ daysCorrecting });
+        this.fixedOffset -= daysCorrecting * this.dayWidthAround;
+
+        daysCorrect = daysCorrecting;
       } else {
         this.fixedOffset -= this.offset - offsetRemainder - this.doneOffset;
         this.doneOffset = this.offset + offsetRemainder;
       }
 
-      newLeftBorder = this.state.leftBorder.clone().subtract(delta, 'days');
+      newLeftBorder = this.state.leftBorder
+        .clone()
+        .subtract(delta + daysCorrect, 'days');
       newRightBorder = newLeftBorder
         .clone()
-        .add(this.daysCount + this.buffer * 2, 'days');
+        .add(this.daysCount + daysCorrect + this.buffer * 2, 'days');
     }
 
     const promise = this.setStateAsync({
@@ -354,6 +364,9 @@ export default class DateRow extends React.Component<IProps, IState> {
 
     this.currentChosenDay = day;
     this.forceUpdate();
+
+    this.updateBorders(false, true);
+    this.updateBorders(false, false);
     this.scrollToDay(day)
       .then(() => this.updateBorders(true, false))
       .then(() => this.props.dayJumpCallback(day));
@@ -362,11 +375,7 @@ export default class DateRow extends React.Component<IProps, IState> {
     // this.updateBorders(true);
   };
 
-  public onDragEnded = (e: interact.InteractEvent) => {
-    if (this.isAnimating) return;
-
-    const { speed } = e;
-    const sign = Math.sign(e.velocityX);
+  public smoothSnap(speed = 0, sign = 1) {
     const maxSpeed = 500;
     const speedScale = 0.1;
     const offsetDeltaRaw = Math.min(speed * speedScale, maxSpeed) * sign;
@@ -412,6 +421,15 @@ export default class DateRow extends React.Component<IProps, IState> {
     // this.offset = newOffset;
     // this.updateTransform();
     // this.updateBorders();
+  }
+
+  public onDragEnded = (e: interact.InteractEvent) => {
+    if (this.isAnimating) return;
+
+    const { speed } = e;
+    const sign = Math.sign(e.velocityX);
+
+    this.smoothSnap(speed, sign);
   };
 
   public render() {
