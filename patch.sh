@@ -1,6 +1,6 @@
 node ./scripts/patch.js
 
-message=${1:-patch}
+message=${1:-patch update}
 target=${2:-master}
 # target=${2:-paralaxGrid}
 # target=${2:-fixedWidth}

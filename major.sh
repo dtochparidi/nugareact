@@ -1,6 +1,6 @@
 node ./scripts/major.js
 
-message=${1:-updates}
+message=${1:-major update}
 target=${2:-master}
 # target=${2:-paralaxGrid}
 # target=${2:-fixedWidth}

@@ -73,6 +73,8 @@ export default class DateRow extends React.Component<IProps, IState> {
   private daysCount = 0;
   private lastBorderOffset = 0;
   private offsetRemainderAccumulator = 0;
+  private loadVisitsId: NodeJS.Timeout;
+  private loadVisitsDelay = 2000;
   // private c = 0;
 
   private dayGenerator = moize(
@@ -414,7 +416,7 @@ export default class DateRow extends React.Component<IProps, IState> {
     // this.updateBorders(false, true);
     // console.log(this.offset);
     // if (1 !== 1)
-    this.scrollDelta(offsetDelta, 700).then(() =>
+    return this.scrollDelta(offsetDelta, 700).then(() =>
       this.updateBorders(false, false),
     );
 
@@ -429,8 +431,21 @@ export default class DateRow extends React.Component<IProps, IState> {
     const { speed } = e;
     const sign = Math.sign(e.velocityX);
 
-    this.smoothSnap(speed, sign);
+    this.smoothSnap(speed, sign).then(() => this.loadVisitsPerDayDebounced());
   };
+
+  public loadVisitsPerDayDebounced() {
+    const func = () => {
+      rootStore.uiStore.setBorderDays(
+        this.state.leftBorder,
+        this.state.rightBorder,
+      );
+      rootStore.domainStore.calendarDayStore.loadVisitsPerDay();
+    };
+
+    clearTimeout(this.loadVisitsId);
+    this.loadVisitsId = setTimeout(func, this.loadVisitsDelay);
+  }
 
   public render() {
     const visitsPerDay = Object.entries(this.props.visitsPerDay)

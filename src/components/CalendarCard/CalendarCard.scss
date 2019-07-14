@@ -65,7 +65,7 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
     right: 0;
     height: calc(100% - #{$top-row-height - $calendar-cell-height});
 
-    z-index: 1001;
+    z-index: 1003;
     width: $time-column-width;
 
     background: $color-calendar-cell-background;
@@ -167,19 +167,17 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
             display: grid;
             grid-auto-flow: column;
 
+            &.sticky > .timeRow > .item > .wrapper > .day {
+              display: inline;
+            }
+
             .timeRow {
               display: flex;
               z-index: 101;
 
               height: $time-row-height;
-
               overflow: hidden;
-
               will-change: left, width;
-
-              // display: flex;
-
-              // height: $calendar-cell-height;
 
               .item {
                 flex: 1 1;
@@ -189,28 +187,28 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
 
                 justify-content: left;
 
-                .time {
+                .wrapper {
+                  display: flex;
+                  flex-direction: column;
+
                   margin-left: $time-column-offset;
 
-                  .hours {
-                    @extend .font-time;
+                  .day {
+                    display: none;
                   }
 
-                  .minutes {
-                    @extend .font-time-secondary;
-                    vertical-align: top;
+                  .time {
+                    .hours {
+                      @extend .font-time;
+                    }
+
+                    .minutes {
+                      @extend .font-time-secondary;
+                      vertical-align: top;
+                    }
                   }
                 }
               }
-
-              // .item {
-              //   flex-grow: 1;
-              //   flex-basis: 0;
-
-              //   // &.first {
-              //   //   border-left: none;
-              //   // }
-              // }
             }
           }
         }
@@ -224,12 +222,12 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
       margin-left: $time-column-width;
       margin-right: $time-column-width;
 
-      border: dotted lightgray 1px;
-      border-top: none;
-      border-left: none;
-      border-bottom: none;
+      // border: dotted lightgray 1px;
+      // border-top: none;
+      // border-left: none;
+      // border-bottom: none;
 
-      box-sizing: border-box;
+      // box-sizing: border-box;
 
       .daysContainer {
         overflow: hidden;

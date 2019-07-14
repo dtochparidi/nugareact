@@ -735,8 +735,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       Math.floor((pageWidth + dayWidth) / dayWidth) * dayWidth;
 
     let gridFrom = gridsContainer.scrollLeft;
-    let gridTo =
-      left - Math.floor(left / pageCeiledWidth - 1) * pageCeiledWidth;
+    let gridTo = left - Math.floor(left / pageCeiledWidth) * pageCeiledWidth;
 
     if (force && gridFrom < pageCeiledWidth) {
       gridFrom += cellWidth;

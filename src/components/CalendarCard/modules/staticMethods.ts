@@ -18,6 +18,12 @@ export function updateStickyElements(force = false) {
   function init(elem: IStickyHTMLElement) {
     elem.dataset.isSticky = StringBoolean.false;
     elem.dataset.initialized = StringBoolean.true;
+
+    const stickyContainer = elem.querySelector('.stickyContainer');
+    if (!stickyContainer) throw new Error('Cannot find sticky container');
+
+    stickyContainer.classList.remove('sticky');
+    stickyContainer.classList.add('unsticky');
   }
 
   function makeSticky(
@@ -29,10 +35,16 @@ export function updateStickyElements(force = false) {
 
     elem.style.position = 'fixed';
     elem.style.top = '0px';
-    elem.style.zIndex = '1000';
+    elem.style.zIndex = '1002';
     elem.style.width = `${parentR.width}px`;
 
     elem.dataset.isSticky = StringBoolean.true;
+
+    const stickyContainer = elem.querySelector('.stickyContainer');
+    if (!stickyContainer) throw new Error('Cannot find sticky container');
+
+    stickyContainer.classList.add('sticky');
+    stickyContainer.classList.remove('unsticky');
   }
 
   function makeUnSticky(elem: IStickyHTMLElement, f: boolean) {
@@ -43,6 +55,12 @@ export function updateStickyElements(force = false) {
     elem.style.width = '';
 
     elem.dataset.isSticky = StringBoolean.false;
+
+    const stickyContainer = elem.querySelector('.stickyContainer');
+    if (!stickyContainer) throw new Error('Cannot find sticky container');
+
+    stickyContainer.classList.remove('sticky');
+    stickyContainer.classList.add('unsticky');
   }
 
   const stickyElement = document.querySelector(

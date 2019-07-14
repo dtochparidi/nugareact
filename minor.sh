@@ -1,6 +1,6 @@
 node ./scripts/minor.js
 
-message=${1:-updates}
+message=${1:-minor update}
 target=${2:-master}
 # target=${2:-paralaxGrid}
 # target=${2:-fixedWidth}

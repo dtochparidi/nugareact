@@ -52,7 +52,7 @@ export interface IState {
   stateIndex: number;
 }
 
-const MAX_CHUNK_APPS_COUNT = 50;
+const MAX_CHUNK_APPS_COUNT = 350;
 
 @observer
 export default class Day extends React.Component<IProps, IState> {

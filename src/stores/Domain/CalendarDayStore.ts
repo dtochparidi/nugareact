@@ -4,9 +4,9 @@ import IUpdateAppFunction from 'interfaces/IUpdateAppFunction';
 import IUpdateAppProps from 'interfaces/IUpdateAppProps';
 import { action, observable } from 'mobx';
 import * as Moment from 'moment';
-import { extendMoment } from 'moment-range';
+// import { extendMoment } from 'moment-range';
 
-const moment = extendMoment(Moment);
+// const moment = extendMoment(Moment);
 
 import { Moment as IMoment } from 'moment';
 import Appointment from 'structures/Appointment';
@@ -98,14 +98,14 @@ export default class CalendarDayStore {
   }
 
   public async loadVisitsPerDay() {
-    const monthes = Array.from(
-      moment
-        .range(
-          this.rootStore.uiStore.leftBorderDay,
-          this.rootStore.uiStore.rightBorderDay,
-        )
-        .by('month'),
-    ).reverse();
+    const { leftBorderDay, rightBorderDay } = this.rootStore.uiStore;
+    const monthes: IMoment[] = [];
+
+    const temp = leftBorderDay.clone().subtract(1, 'month');
+    while (temp.valueOf() <= rightBorderDay.valueOf())
+      monthes.push(temp.add(1, 'month').clone());
+
+    console.log(monthes);
 
     monthes.forEach(async date => {
       const data = await fetchVisitsCount(date);
