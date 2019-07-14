@@ -231,7 +231,7 @@ export default class DateRow extends React.Component<IProps, IState> {
         const daysCorrecting =
           Math.round((this.offset + this.fixedOffset) / this.dayWidthAround) +
           2;
-        console.log({ daysCorrecting });
+        // console.log({ daysCorrecting });
         this.fixedOffset -= daysCorrecting * this.dayWidthAround;
 
         daysCorrect = daysCorrecting;
@@ -316,7 +316,7 @@ export default class DateRow extends React.Component<IProps, IState> {
     day: IMoment,
     scrollDuration: number = 600,
   ): Promise<void> {
-    console.log(`--- scrollToDay ${day.date()}`);
+    // console.log(`--- scrollToDay ${day.date()}`);
 
     // const rowWidth = (this.dateRowWrapperRef.current as HTMLDivElement)
     //   .offsetWidth;
@@ -330,7 +330,7 @@ export default class DateRow extends React.Component<IProps, IState> {
 
     const daysDelta = -1 * day.diff(currentCenterDay, 'days');
     const offsetDelta = daysDelta * this.dayWidthAround;
-    console.log({ daysDelta });
+    // console.log({ daysDelta });
 
     return this.scrollDelta(offsetDelta, scrollDuration);
   }
