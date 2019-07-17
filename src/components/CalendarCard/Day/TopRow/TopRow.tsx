@@ -33,7 +33,6 @@ export default class TopRow extends React.Component<IProps> {
                   key={hours + minutes}
                 >
                   <div className="wrapper">
-                    <div className="day">Here should be a day</div>
                     <div className="time">
                       <span className="hours">{hours}</span>
                       <span className="minutes">{' ' + minutes}</span>

@@ -5,7 +5,7 @@ import * as React from 'react';
 
 import ICalendarDay from '../../interfaces/ICalendarDay';
 import Card from '../Card';
-import Day, { DateRow, GridP } from './Day';
+import Day, { DateRow, GridP, StickyDaysRow } from './Day';
 import LeftColumn from './LeftColumn';
 
 import * as StyleVariables from '../../common/variables.scss';
@@ -936,6 +936,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
             />
             <div className="stickyWrapper">
               <div className="viewPortContainer">
+                <StickyDaysRow />
                 <div className="scrollingContainer">
                   <div className="stickyContainer">
                     {daysStore.days.map(day => {
