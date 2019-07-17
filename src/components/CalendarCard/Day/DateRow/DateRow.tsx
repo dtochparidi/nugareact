@@ -35,6 +35,8 @@ interface IDayGeneratorArgs {
   isChoosen: boolean;
   day: IMoment;
   opacity: number;
+  hovered: boolean;
+  id: string;
 }
 
 @observer
@@ -59,17 +61,29 @@ export default class DateRow extends React.Component<IProps, IState> {
   private offsetRemainderAccumulator = 0;
   private loadVisitsId: NodeJS.Timeout;
   private loadVisitsDelay = 2000;
+  private hoveredDayId?: string;
 
   private dayGenerator = moize(
-    ({ day, visitsPerDay, isChoosen, opacity }: IDayGeneratorArgs) => {
+    ({
+      day,
+      visitsPerDay,
+      isChoosen,
+      opacity,
+      hovered,
+      id,
+    }: IDayGeneratorArgs) => {
       const handler = () => this.clickHandler(day);
       return (
         <div
           key={day.valueOf()}
-          id={`day${day.format('DD_MM_YYYY')}`}
-          className={`day ${isChoosen ? 'chosen' : ''}`}
+          id={id}
+          className={`day ${isChoosen ? 'chosen' : ''} ${
+            hovered ? 'hovered' : ''
+          }`}
           onClick={handler}
           style={{ opacity }}
+          onMouseOver={this.hoverHandler}
+          onMouseOut={this.unhoverHandler}
         >
           <span className="main">
             <span className="name">
@@ -88,7 +102,8 @@ export default class DateRow extends React.Component<IProps, IState> {
         const equal =
           prevArgs.day.valueOf() === nowArgs.day.valueOf() &&
           prevArgs.visitsPerDay === nowArgs.visitsPerDay &&
-          prevArgs.isChoosen === nowArgs.isChoosen;
+          prevArgs.isChoosen === nowArgs.isChoosen &&
+          prevArgs.hovered === nowArgs.hovered;
 
         return equal;
       },
@@ -102,7 +117,12 @@ export default class DateRow extends React.Component<IProps, IState> {
     this.reactions.push(
       reaction(
         () => rootStore.uiStore.currentDay.valueOf(),
-        () => (this.currentChosenDay = rootStore.uiStore.currentDay),
+        () => {
+          this.scrollToDay(rootStore.uiStore.currentDay).then(() =>
+            this.updateBorders(true, false),
+          );
+          this.currentChosenDay = rootStore.uiStore.currentDay;
+        },
       ),
       reaction(
         () => rootStore.uiStore.screenWidth,
@@ -115,6 +135,33 @@ export default class DateRow extends React.Component<IProps, IState> {
       rightBorder: rootStore.uiStore.currentDay.clone(),
     };
   }
+
+  public unhoverHandler = (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>,
+  ) => {
+    // console.log('unhoverHandler');
+    const dayElement = event.currentTarget;
+    if (!dayElement) throw new Error('Very strange error');
+
+    this.hoveredDayId = undefined;
+
+    dayElement.classList.remove('hovered');
+  };
+
+  public hoverHandler = (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>,
+  ) => {
+    // if (this.isAnimating) return;
+
+    // console.log('hoverHandler');
+    const dayElement = event.currentTarget;
+    if (!dayElement) throw new Error('Very strange error');
+
+    const { id } = dayElement;
+    this.hoveredDayId = id;
+
+    dayElement.classList.add('hovered');
+  };
 
   public setStateAsync = (newState: IState) =>
     new Promise(resolve => this.setState(newState, () => resolve()));
@@ -353,6 +400,8 @@ export default class DateRow extends React.Component<IProps, IState> {
   }
 
   public render() {
+    // console.log('daterow render');
+
     const visitsPerDay = Object.entries(this.props.visitsPerDay)
       .map(([dayId, visitsCount]) => [
         CalendarDay.fromId(dayId).date,
@@ -390,15 +439,18 @@ export default class DateRow extends React.Component<IProps, IState> {
         [[]],
       )
       .map((month, i) =>
-        month.map(day =>
-          this.dayGenerator({
+        month.map(day => {
+          const id = `day${day.format('DD_MM_YYYY')}`;
+          return this.dayGenerator({
             day,
+            hovered: id === this.hoveredDayId,
+            id,
             isChoosen: day.valueOf() === this.currentChosenDay.valueOf(),
             opacity:
               day.valueOf() > now.valueOf() ? futureOpacity : pastOpacity,
             visitsPerDay: visitsPerDay[day.valueOf()],
-          }),
-        ),
+          });
+        }),
       )
       .joinObj(gapIndex => <div className="gap" key={`gap${gapIndex}`} />);
 

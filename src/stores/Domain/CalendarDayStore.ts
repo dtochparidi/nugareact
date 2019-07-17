@@ -105,7 +105,7 @@ export default class CalendarDayStore {
     while (temp.valueOf() <= rightBorderDay.valueOf())
       monthes.push(temp.add(1, 'month').clone());
 
-    console.log(monthes);
+    // console.log(monthes);
 
     monthes.forEach(async date => {
       const data = await fetchVisitsCount(date);

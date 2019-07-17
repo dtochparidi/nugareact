@@ -7,7 +7,7 @@ import { LazyTask } from '@levabala/lazytask/build/dist';
 export default async function fetchVisitsCount(
   date: IMoment,
 ): Promise<{ [id: string]: number }> {
-  console.log('fetching visits count for', date.format('MMMM'));
+  // console.log('fetching visits count for', date.format('MMMM'));
   const data = await lazyTaskManager.addTask(
     new LazyTask({
       func: async () =>

@@ -81,7 +81,7 @@ $day-space-between-min: 10px;
         background: rgb(71, 58, 255);
       }
 
-      &:not(.chosen):hover > .main > .index {
+      &.hovered:not(.chosen) > .main > .index {
         color: white;
         background: rgb(132, 123, 255);
 
