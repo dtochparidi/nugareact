@@ -829,13 +829,15 @@ export default class CalendarCard extends React.Component<IProps, IState> {
     this.updateDropzones(minDay, maxDay);
   }
 
-  public jumpToDay = (targetDate: IMoment) => {
+  public jumpToDay = (targetDate: IMoment): Promise<void> => {
     this.currentLeftColumnIndex = 0;
     this.props.removeDays(0, daysStore.days.length);
 
     this.renderedDaysIds = [];
     const requiredDays = [targetDate];
     this.deleteShifts();
+
+    let resolver: () => void;
 
     this.instantRender.value = true;
     this.setState(
@@ -853,10 +855,14 @@ export default class CalendarCard extends React.Component<IProps, IState> {
             setTimeout(() => (this.instantRender.value = false));
 
             this.updateCurrentDayData();
+
+            resolver();
           });
         });
       },
     );
+
+    const promise: Promise<void> = new Promise(resolve => (resolver = resolve));
 
     const container = this.calendarContainerRef.current as HTMLDivElement;
 
@@ -869,6 +875,8 @@ export default class CalendarCard extends React.Component<IProps, IState> {
 
     gridsContainer.scrollLeft = 0;
     timeRowsContainer.scrollLeft = 0;
+
+    return promise;
   };
 
   public updateDaysWidth() {

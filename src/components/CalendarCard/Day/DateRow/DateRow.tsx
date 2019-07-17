@@ -22,7 +22,7 @@ const daySpaceBetweenMin = parseFloat(DateRowVariables.daySpaceBetweenMin);
 
 export interface IProps {
   visitsPerDay: { [dayIndex: number]: number };
-  dayJumpCallback: (targetDay: IMoment) => void;
+  dayJumpCallback: (targetDay: IMoment) => Promise<void>;
 }
 
 export interface IState {
@@ -119,7 +119,9 @@ export default class DateRow extends React.Component<IProps, IState> {
         () => rootStore.uiStore.currentDay.valueOf(),
         () => {
           this.scrollToDay(rootStore.uiStore.currentDay).then(() =>
-            this.updateBorders(true, false),
+            this.updateBorders(true, false).then(
+              () => (this.isAnimating = false),
+            ),
           );
           this.currentChosenDay = rootStore.uiStore.currentDay;
         },
@@ -158,6 +160,17 @@ export default class DateRow extends React.Component<IProps, IState> {
     if (!dayElement) throw new Error('Very strange error');
 
     const { id } = dayElement;
+
+    if (this.hoveredDayId && this.hoveredDayId !== id) {
+      const dateRowWrapper = this.dateRowWrapperRef.current;
+      if (!dateRowWrapper) throw new Error('Very strange error');
+
+      const previousHoveredDay = dateRowWrapper.querySelector(
+        `#${this.hoveredDayId}`,
+      );
+      if (previousHoveredDay) previousHoveredDay.classList.remove('hovered');
+    }
+
     this.hoveredDayId = id;
 
     dayElement.classList.add('hovered');
@@ -282,7 +295,6 @@ export default class DateRow extends React.Component<IProps, IState> {
         const dx = offset - this.offset;
 
         this.handleDragging({ dx } as any, true);
-        this.isAnimating = false;
 
         resolver();
       } else {
@@ -338,6 +350,7 @@ export default class DateRow extends React.Component<IProps, IState> {
 
   public clickHandler = (day: IMoment) => {
     if (this.isAnimating) return;
+    this.isAnimating = true;
 
     this.currentChosenDay = day;
     this.forceUpdate();
@@ -346,7 +359,8 @@ export default class DateRow extends React.Component<IProps, IState> {
     this.updateBorders(false, false);
     this.scrollToDay(day)
       .then(() => this.updateBorders(true, false))
-      .then(() => this.props.dayJumpCallback(day));
+      .then(() => this.props.dayJumpCallback(day))
+      .then(() => (this.isAnimating = false));
   };
 
   public smoothSnap(speed = 0, sign = 1) {
@@ -373,7 +387,7 @@ export default class DateRow extends React.Component<IProps, IState> {
     const offsetDelta = newOffset - this.offset;
 
     return this.scrollDelta(offsetDelta, 700).then(() =>
-      this.updateBorders(false, false),
+      this.updateBorders(false, false).then(() => (this.isAnimating = false)),
     );
   }
 
