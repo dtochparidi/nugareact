@@ -55,7 +55,7 @@ export function updateStickyElements(force = false) {
   }
 
   const stickyElement = document.querySelector(
-    '.viewPortContainer',
+    '.timeRowsContainer .stickyContainer',
   ) as IStickyHTMLElement;
   const { dataset }: { dataset: IStickyProps } = stickyElement;
   const { initialized } = dataset;

@@ -149,36 +149,102 @@ $top-row-height: $time-row-height + $dateRow-height + $monthRow-height +
       width: 100%;
       overflow: hidden;
 
-      .topRow {
-        margin-bottom: $monthRow-margin-bottom;
-      }
+      margin-top: $monthRow-margin-top;
 
-      .viewPortContainer {
-        width: 100%;
-        overflow: hidden;
+      .stickyContainer {
+        .topRow {
+          margin-bottom: $monthRow-margin-bottom;
+          overflow: hidden;
 
-        &.sticky > .stickyDaysRow {
-          display: block;
+          margin-left: $time-column-width;
+          margin-right: $time-column-width;
         }
 
-        .stickyDaysRow {
-          background: $color-calendar-background;
+        background: $color-calendar-background;
 
-          width: 100%;
-          display: none;
-
-          margin-left: $time-column-width; // - $thin-width / 2;
-        }
-
-        .scrollingContainer {
+        .timeLineWrapper {
           width: 100%;
           overflow: hidden;
 
-          margin-left: $time-column-width; // - $thin-width / 2;
-
-          .stickyContainer {
+          .timeLine {
             display: grid;
             grid-auto-flow: column;
+
+            margin-left: $time-column-width;
+
+            .timeRow {
+              display: flex;
+              z-index: 101;
+
+              height: $time-row-height;
+              overflow: hidden;
+              will-change: left, width;
+
+              .item {
+                flex: 1 1;
+
+                border-left: none;
+                border-right: none;
+
+                justify-content: left;
+
+                .wrapper {
+                  display: flex;
+                  flex-direction: column;
+
+                  margin-left: $time-column-offset;
+
+                  .time {
+                    .hours {
+                      @extend .font-time;
+                    }
+
+                    .minutes {
+                      @extend .font-time-secondary;
+                      vertical-align: top;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      .stickyContainer.sticky {
+        .topRow {
+          margin-bottom: 0;
+          overflow: hidden;
+
+          margin-left: $time-column-width;
+          margin-right: $time-column-width;
+
+          .monthRowWrapper {
+            margin-bottom: $monthRow-margin-bottom / 2;
+            .monthName {
+              @extend .font-middle-semibold;
+            }
+          }
+
+          .dateRowWrapper .dateRow {
+            height: auto;
+            .day .main .weekdayVisits {
+              display: none;
+            }
+          }
+        }
+
+        background: $color-calendar-background;
+
+        .timeLineWrapper {
+          width: 100%;
+          overflow: hidden;
+
+          .timeLine {
+            display: grid;
+            grid-auto-flow: column;
+
+            margin-left: $time-column-width;
 
             .timeRow {
               display: flex;

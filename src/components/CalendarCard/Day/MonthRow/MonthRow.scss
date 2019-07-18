@@ -8,11 +8,7 @@
   display: flex;
 
   background: $color-calendar-background;
-
   height: $monthRow-height;
-  padding-left: $time-column-width; // + $time-column-offset; //  - 12px
-
-  margin-top: $monthRow-margin-top;
   margin-bottom: $monthRow-margin-bottom;
 
   justify-content: flex-start;
