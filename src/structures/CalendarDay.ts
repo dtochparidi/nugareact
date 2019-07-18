@@ -3,10 +3,13 @@ import ICalendarDay from 'interfaces/ICalendarDay';
 import { action, observable } from 'mobx';
 import { Moment as IMoment } from 'moment';
 import * as moment from 'moment';
+// import moize, { collectStats } from 'moize';
 
 import Appointment from './Appointment';
 
 export default class CalendarDay implements ICalendarDay {
+  // public static fromIdMoized = moize(CalendarDay.fromId, {equals: (s1: string, s2: string) => s1 === s2});
+
   public static fromId(id: string) {
     const arr = id.split('_');
     return {

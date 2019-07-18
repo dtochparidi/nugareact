@@ -9,7 +9,7 @@ import bezierEasing from 'bezier-easing';
 
 import './DateRow.scss';
 import * as DateRowVariables from './DateRow.scss';
-import moize from 'moize';
+import moize, { collectStats } from 'moize';
 import rootStore from 'stores/RootStore';
 import MonthRow from '../MonthRow';
 import * as Moment from 'moment';
@@ -20,8 +20,15 @@ const moment = extendMoment(Moment);
 const dayWidth = parseFloat(DateRowVariables.dayWidth);
 const daySpaceBetweenMin = parseFloat(DateRowVariables.daySpaceBetweenMin);
 
+collectStats();
+
+setInterval(
+  () => console.log((moize as any).getStats('visitsPerDayGenerator')),
+  1500,
+);
+
 export interface IProps {
-  visitsPerDay: { [dayIndex: number]: number };
+  visitsPerDay: { [dayIndex: string]: number };
   dayJumpCallback: (targetDay: IMoment) => Promise<void>;
 }
 
@@ -295,6 +302,7 @@ export default class DateRow extends React.Component<IProps, IState> {
         const dx = offset - this.offset;
 
         this.handleDragging({ dx } as any, true);
+        this.isAnimating = false;
 
         resolver();
       } else {
@@ -413,10 +421,9 @@ export default class DateRow extends React.Component<IProps, IState> {
     this.loadVisitsId = setTimeout(func, this.loadVisitsDelay);
   }
 
-  public render() {
-    // console.log('daterow render');
-
-    const visitsPerDay = Object.entries(this.props.visitsPerDay)
+  /* tslint:disable-next-line */
+  public visitsPerDayGenerator = (visitsPerDay: Array<[string, number]>) =>
+    visitsPerDay
       .map(([dayId, visitsCount]) => [
         CalendarDay.fromId(dayId).date,
         visitsCount,
@@ -425,6 +432,30 @@ export default class DateRow extends React.Component<IProps, IState> {
         acc[date.valueOf()] = visitsCount;
         return acc;
       }, {});
+
+  /* tslint:disable-next-line */
+  public visitsPerDayGeneratorMoized = moize(this.visitsPerDayGenerator, {
+    equals: (
+      prevVisits: Array<[string, number]>,
+      nowVisits: Array<[string, number]>,
+    ) =>
+      prevVisits.length === nowVisits.length &&
+      !prevVisits.reduce(
+        (acc, [key, value]) => acc || value === nowVisits[key],
+        false,
+      ),
+    profileName: 'visitsPerDayGenerator',
+  });
+
+  public render() {
+    // console.log('daterow render');
+
+    const visitsPerDay = this.visitsPerDayGeneratorMoized(
+      Object.entries(this.props.visitsPerDay),
+    );
+    // const visitsPerDay = this.visitsPerDayGenerator(
+    //   Object.entries(this.props.visitsPerDay),
+    // );
 
     const { leftBorder, rightBorder } = this.state;
 
