@@ -9,7 +9,7 @@ import bezierEasing from 'bezier-easing';
 
 import './DateRow.scss';
 import * as DateRowVariables from './DateRow.scss';
-import moize, { collectStats } from 'moize';
+import moize from 'moize';
 import rootStore from 'stores/RootStore';
 import MonthRow from '../MonthRow';
 import * as Moment from 'moment';
@@ -20,12 +20,12 @@ const moment = extendMoment(Moment);
 const dayWidth = parseFloat(DateRowVariables.dayWidth);
 const daySpaceBetweenMin = parseFloat(DateRowVariables.daySpaceBetweenMin);
 
-collectStats();
+// collectStats();
 
-setInterval(
-  () => console.log((moize as any).getStats('visitsPerDayGenerator')),
-  1500,
-);
+// setInterval(
+//   () => console.log((moize as any).getStats('visitsPerDayGenerator')),
+//   1500,
+// );
 
 export interface IProps {
   visitsPerDay: { [dayIndex: string]: number };
@@ -148,6 +148,8 @@ export default class DateRow extends React.Component<IProps, IState> {
   public unhoverHandler = (
     event: React.MouseEvent<HTMLDivElement, MouseEvent>,
   ) => {
+    if (this.isAnimating) return;
+
     // console.log('unhoverHandler');
     const dayElement = event.currentTarget;
     if (!dayElement) throw new Error('Very strange error');
@@ -160,7 +162,7 @@ export default class DateRow extends React.Component<IProps, IState> {
   public hoverHandler = (
     event: React.MouseEvent<HTMLDivElement, MouseEvent>,
   ) => {
-    // if (this.isAnimating) return;
+    if (this.isAnimating) return;
 
     // console.log('hoverHandler');
     const dayElement = event.currentTarget;
