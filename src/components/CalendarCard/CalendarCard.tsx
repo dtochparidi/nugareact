@@ -5,7 +5,7 @@ import * as React from 'react';
 
 import ICalendarDay from '../../interfaces/ICalendarDay';
 import Card from '../Card';
-import Day, { DateRow, GridP, StickyDaysRow } from './Day';
+import Day, { DateRow, GridP } from './Day';
 import LeftColumn from './LeftColumn';
 
 import * as StyleVariables from '../../common/variables.scss';
@@ -717,7 +717,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       '.daysContainer',
     ) as HTMLElement;
     const timeRowsContainer = container.querySelector(
-      '.timeRowsContainer .scrollingContainer',
+      '.timeLineWrapper',
     ) as HTMLElement;
 
     const daysListWidth =
@@ -870,7 +870,7 @@ export default class CalendarCard extends React.Component<IProps, IState> {
       '.gridsContainer',
     ) as HTMLElement;
     const timeRowsContainer = container.querySelector(
-      '.timeRowsContainer .scrollingContainer',
+      '.timeLineWrapper',
     ) as HTMLElement;
 
     gridsContainer.scrollLeft = 0;
@@ -938,28 +938,25 @@ export default class CalendarCard extends React.Component<IProps, IState> {
               visibility: !this.state.firstLoad ? 'visible' : 'hidden',
             }}
           >
-            <DateRow
-              dayJumpCallback={this.jumpToDay}
-              visitsPerDay={daysStore.visitsPerDay}
-            />
-            <div className="stickyWrapper">
-              <div className="viewPortContainer">
-                <StickyDaysRow />
-                <div className="scrollingContainer">
-                  <div className="stickyContainer">
-                    {daysStore.days.map(day => {
-                      const k = day.date.startOf('day').format('DD:MM:YYYY');
-                      return (
-                        <TopRow
-                          visible={true}
-                          stamps={stamps}
-                          keyStamp={k}
-                          key={k}
-                          style={{ width: dayWidth }}
-                        />
-                      );
-                    })}
-                  </div>
+            <div className="stickyContainer">
+              <DateRow
+                dayJumpCallback={this.jumpToDay}
+                visitsPerDay={daysStore.visitsPerDay}
+              />
+              <div className="timeLineWrapper">
+                <div className="timeLine">
+                  {daysStore.days.map(day => {
+                    const k = day.date.startOf('day').format('DD:MM:YYYY');
+                    return (
+                      <TopRow
+                        visible={true}
+                        stamps={stamps}
+                        keyStamp={k}
+                        key={k}
+                        style={{ width: dayWidth }}
+                      />
+                    );
+                  })}
                 </div>
               </div>
             </div>
